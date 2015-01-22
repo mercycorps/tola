@@ -66,7 +66,7 @@ class ProjectProposalForm(forms.ModelForm):
                         'Proposal',
                         Field('project_description', rows="3", css_class='input-xlarge'),
                         Field('rej_letter', rows="3", css_class='input-xlarge'),
-                        'project_code', 'prop_status',
+                        'project_code', 'prop_status', 'proposal_review', 'proposal_review_2',
                     ),
                 ),
 

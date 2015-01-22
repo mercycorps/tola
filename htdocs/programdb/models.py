@@ -200,6 +200,8 @@ class ProjectProposal(models.Model):
     approval_remarks = models.CharField("Approval Remarks", max_length=255, blank=True)
     device_id = models.CharField("Device ID", max_length=255, blank=True)
     date_approved = models.DateTimeField(null=True, blank=True)
+    proposal_review = models.FileField("Proposal Review", upload_to='uploads', blank=True, null=True)
+    proposal_review_2 = models.FileField("Proposal Review Additional", upload_to='uploads', blank=True, null=True)
     today = models.DateTimeField(null=True, blank=True)
     start_time = models.DateTimeField(null=True, blank=True)
     end_time = models.DateTimeField(null=True, blank=True)
