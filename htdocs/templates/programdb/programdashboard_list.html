@@ -1,0 +1,82 @@
+{% extends "base.html" %}
+{% block page_title %}Program Dashboard{% endblock %}
+
+{% block content %}
+<div>
+<div class="dropdown">
+  <button class="btn btn-default dropdown-toggle" type="button" id="dropdownMenu1" data-toggle="dropdown" aria-expanded="true">
+    Programs
+    <span class="caret"></span>
+  </button>
+  <ul class="dropdown-menu" role="menu" aria-labelledby="dropdownMenu1">
+    {% for program in getPrograms %}
+        <li role="presentation"><a role="menuitem" tabindex="-1" href="#">{{ program.name }}</a></li>
+    {% endfor %}
+  </ul>
+</div>
+<hr/>
+<br/>
+</div>
+<ul class="list-group">
+{% for proposal in getDashboard %}
+    {{ proposal.create_date|date }}
+
+    <h4>Project Proposals</h4>
+    <div class="progress">
+      <div class="progress-bar progress-bar-success" style="width: {% widthratio proposal.project_proposal_approved proposal.project_proposal 100 %}%">
+        {% widthratio proposal.project_proposal_approved proposal.project_proposal 100 %}% Complete (success)
+      </div>
+    </div>
+    <ul class="list-group">
+        <li class="list-group-item">
+            Number of Proposals Submitted:
+            <button class="btn btn-primary" type="button">
+              Open <span class="badge">{{ proposal.project_proposal }}</span>
+            </button>
+            <button class="btn btn-success" type="button">
+              Approved <span class="badge">{{ proposal.project_proposal_approved }}</span>
+            </button>
+         </li>
+    </ul>
+
+    <h4>Project Agreement</h4>
+    <div class="progress">
+      <div class="progress-bar progress-bar-success" style="width: {% widthratio proposal.project_agreement_approved proposal.project_agreement 100 %}%">
+        {% widthratio proposal.project_agreement_approved proposal.project_agreement 100 %}% Complete (success)
+      </div>
+    </div>
+    <ul class="list-group">
+        <li class="list-group-item">
+            Project Agreemnt Forms Submitted:
+            <button class="btn btn-primary" type="button">
+              Open <span class="badge">{{ proposal.project_agreement }}</span>
+            </button>
+            <button class="btn btn-success" type="button">
+              Approved <span class="badge">{{ proposal.project_agreement_approved }}</span>
+            </button>
+         </li>
+    </ul>
+
+    <h4>Project Completion</h4>
+
+    <div class="progress">
+      <div class="progress-bar progress-bar-success" style="width: {% widthratio proposal.project_completion_approved proposal.project_completion 100 %}%">
+        {% widthratio proposal.project_completion_approved proposal.project_completion 100 %}% Complete (success)
+      </div>
+    </div>
+    <ul class="list-group">
+        <li class="list-group-item">
+            Project Completion Forms Submitted:
+            <button class="btn btn-primary" type="button">
+              Open <span class="badge">{{ proposal.project_completion }}</span>
+            </button>
+            <button class="btn btn-success" type="button">
+              Approved <span class="badge">{{ proposal.project_completion_approved }}</span>
+            </button>
+         </li>
+    </ul>
+{% empty %}
+    <li class="list-group-item">No proposals yet.</li>
+{% endfor %}
+</ul>
+{% endblock content %}

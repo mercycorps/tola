@@ -1,0 +1,20 @@
+{% extends "base.html" %}
+{% block page_title %}Project Proposal List{% endblock %}
+
+{% block content %}
+<div>
+<a href="/programdb/projectproposal_add" class="btn btn-large btn-success">New Project Proposal</a> &nbsp;
+<a href="/programdb/projectproposal_import" class="btn btn-large btn-info">Import Project Proposal</a>
+<hr/>
+<br/>
+</div>
+<ul class="list-group">
+{% for proposal in object_list %}
+    <li class="list-group-item">{{ proposal.create_date|date }} - {{ proposal.project_title }} {{ proposal.proposal_num }}</li>
+    <li class="list-group-item"><a href="/programdb/projectproposal_update/{{ proposal.id }}" class="btn btn-sm btn-warning">Update Proposal</a>
+    <a href="/programdb/projectproposal_delete/{{ proposal.id }}" class="btn btn-sm btn-danger">Delete Proposal</a></li>
+{% empty %}
+    <li class="list-group-item">No proposals yet.</li>
+{% endfor %}
+</ul>
+{% endblock content %}

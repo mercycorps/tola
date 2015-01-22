@@ -1,0 +1,43 @@
+{% extends "base.html" %} 
+{% block page_title %}Program Indicators{% endblock %} 
+
+{% block content %}
+	<p>Indicators</br>
+	<a class="btn btn-default btn-xs" role="button" href="/indicators/indicator/{{ program.id }}/">New Indicator</a>
+	</p>
+{{ formset.non_form_errors }}
+<table id="formset" class="paleblue" border="1">
+{% for form in formset.forms %}
+  {# TODO: showing form.non_field_errors #}
+  {% if forloop.first %}
+  <thead><tr>
+    {% for field in form.visible_fields %}
+    <th>{{ field.label|capfirst }}</th>
+    {% endfor %}
+    <th>&nbsp;</th>
+  </tr></thead>
+  {% endif %}
+  <tr class="{% cycle odd,even %}">
+  <form action="" method="post">
+  {{ formset.management_form }}
+  {% for field in form.visible_fields %}
+    <td>
+    {# Include the hidden fields in the form #}
+    {% if forloop.first %}
+      {% for hidden in form.hidden_fields %}
+      {{ hidden }}
+      {% endfor %}
+    {% endif %}
+      {{ field.errors.as_ul }}
+      {{ field }}
+    </td>
+  {% endfor %}
+  	<td>
+    	<input type="submit" name="button" value="update" class="btn btn-default btn-xs">
+  	</td>
+  </form>
+  </tr>
+{% endfor %}
+</table>
+
+{% endblock content %}

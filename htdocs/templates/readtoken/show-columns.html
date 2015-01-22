@@ -1,0 +1,24 @@
+{% extends "base.html" %} 
+{% block page_title %}Importing JSON Data{% endblock %} 
+
+{% block content %}
+	<p>Please Confirm data below, then select a unique record indicator field</p>
+	<form action="/readtoken/update/" method="post">
+	<table border="1">
+	<tr>
+		<th>Column</th>
+		<th>Unique Row Identifier</th>
+	</tr>
+	{% for item in getFields %}
+		<tr>
+			<td>{{ item.name }}</td>
+			<td align="middle"><input type="checkbox" name="is_uid" value="{{ item.id }}"></td>
+		</tr>
+	{% endfor %}
+	</table>
+	<br>
+	<input type="hidden" name="silo_id" value="{{ silo_id }}">
+	<input type="submit" value="Submit" />
+	</form>
+
+{% endblock content %}
