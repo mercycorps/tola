@@ -1,11 +1,11 @@
 from django.views.generic.edit import CreateView, UpdateView, DeleteView
 from django.views.generic.list import ListView
-from .models import ProjectProposal, ProgramDashboard, Program, Country, Province, Village, District
+from .models import ProjectProposal, ProgramDashboard, Program, Country, Province, Village, District, ProjectAgreement
 from silo.models import Silo, ValueStore, DataField
 from django.contrib import messages
 from django.http import HttpResponseRedirect
 from django.utils import timezone
-from .forms import ProjectProposalForm, ProgramDashboardForm
+from .forms import ProjectProposalForm, ProgramDashboardForm, ProjectAgreementForm, ProjectAgreementFormSet
 import logging
 from django.shortcuts import render
 from django.contrib import messages
@@ -123,6 +123,81 @@ class ProjectProposalDelete(DeleteView):
         return HttpResponseRedirect('/programdb/success')
 
     form_class = ProjectProposalForm
+
+
+class ProjectAgreementCreate(CreateView):
+    """
+    Project Agreement Form
+    """
+
+    model = ProjectAgreement
+
+    def get_context_data(self, **kwargs):
+        data = super(ProjectAgreementCreate, self).get_context_data(**kwargs)
+        if self.request.POST:
+            data['ProjectAgreement'] = ProjectAgreementFormSet(self.request.POST)
+        else:
+            data['ProjectAgreement'] = ProjectAgreementFormSet()
+        return data
+
+    def form_invalid(self, form):
+
+        messages.error(self.request, 'Invalid Form', fail_silently=False)
+
+        return self.render_to_response(self.get_context_data(form=form))
+
+    def form_valid(self, form):
+
+        form.save()
+
+        return HttpResponseRedirect('/programdb/success')
+
+    form_class = ProjectAgreementForm
+
+
+class ProjectAgreementUpdate(UpdateView):
+    """
+    Project Agreement Form
+    """
+
+    model = ProjectAgreement
+
+    def form_invalid(self, form):
+
+        messages.error(self.request, 'Invalid Form', fail_silently=False)
+
+        return self.render_to_response(self.get_context_data(form=form))
+
+    def form_valid(self, form):
+
+        form.save()
+        messages.success(self.request, 'Success, form updated!')
+
+        return self.render_to_response(self.get_context_data(form=form))
+
+    form_class = ProjectAgreementForm
+
+
+class ProjectAgreementDelete(DeleteView):
+    """
+    Project Agreement Delete
+    """
+
+    model = ProjectAgreement
+
+    def form_invalid(self, form):
+
+        messages.error(self.request, 'Invalid Form', fail_silently=False)
+
+        return self.render_to_response(self.get_context_data(form=form))
+
+    def form_valid(self, form):
+
+        form.save()
+
+        return HttpResponseRedirect('/programdb/success')
+
+    form_class = ProjectAgreementForm
 
 
 def doImport(request, pk):

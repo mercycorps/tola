@@ -145,6 +145,32 @@ class ClusterAdmin(admin.ModelAdmin):
     list_display = ('name', 'district', 'create_date', 'edit_date')
     display = 'Cluster'
 
+#Sector
+class Sector(models.Model):
+    sector = models.CharField("Sector Name", max_length=255, blank=True)
+    create_date = models.DateTimeField(null=True, blank=True)
+    edit_date = models.DateTimeField(null=True, blank=True)
+
+    class Meta:
+        ordering = ('sector',)
+
+    #onsave add create date or update edit date
+    def save(self, *args, **kwargs):
+        if self.create_date == None:
+            self.create_date = datetime.now()
+        self.edit_date = datetime.now()
+        super(Sector, self).save()
+
+    #displayed in admin templates
+    def __unicode__(self):
+        return self.name
+
+
+#Cluster Admin Interface
+class SectorAdmin(admin.ModelAdmin):
+    list_display = ('sector', 'create_date', 'edit_date')
+    display = 'Sector'
+
 
 #Village
 class Village(models.Model):
@@ -265,6 +291,47 @@ class ProgramDashboard(models.Model):
 class ProgramDashboardAdmin(admin.ModelAdmin):
     list_display = ('program', 'project_proposal', 'project_proposal_approved', 'create_date', 'edit_date')
     display = 'Program Dashboard'
+
+#Project Agreement Form
+class ProjectAgreement(models.Model):
+    project_proposal = models.ForeignKey(ProjectProposal, null=False, blank=False)
+    field_office =  models.CharField("Office Name", max_length=255, blank=True)
+    cod_num =  models.CharField("Project COD #", max_length=255, blank=True)
+    sector =  models.ForeignKey("Sector", blank=True)
+    project_activity =  models.CharField("Project Activity", max_length=255, blank=True)
+    account_code =  models.CharField("Account Code", max_length=255, blank=True)
+    sub_code =  models.CharField("Account Sub Code", max_length=255, blank=True)
+    community =  models.CharField("Community", max_length=255, blank=True)
+    staff_responsible =  models.CharField("MC Staff Responsible", max_length=255, blank=True)
+    partners =  models.CharField("Partners", max_length=255, blank=True)
+    name_of_partners =  models.CharField("Name of Partners", max_length=255, blank=True)
+    program_objectives =  models.TextField("What Program Objectives does this help fulfill?", blank=True)
+    mc_objectives =  models.TextField("What MC strategic Objectives does this help fulfill?", blank=True)
+    effect_or_impact =  models.TextField("What is the anticipated effect of impact of this project?", blank=True)
+    expected_start_date =  models.DateTimeField(blank=True)
+    expected_end_date =  models.DateTimeField(blank=True)
+    beneficiary_type =  models.CharField("Type of direct beneficiaries", max_length=255, blank=True)
+    num_direct_beneficiaries =  models.CharField("Number of direct beneficiaries", max_length=255, blank=True)
+    total_estimated_budget =  models.CharField(max_length=255, blank=True)
+    mc_estimated_budget =  models.CharField(max_length=255, blank=True)
+    other_budget =  models.CharField(max_length=255, blank=True)
+    estimation_date =  models.DateTimeField(blank=True)
+    estimated_by = models.ForeignKey(settings.AUTH_USER_MODEL, blank=True, null=True, related_name="estimating")
+    checked_by = models.ForeignKey(settings.AUTH_USER_MODEL, blank=True, null=True, related_name="checking")
+    reviewed_by = models.ForeignKey(settings.AUTH_USER_MODEL, blank=True, null=True, related_name="reviewing")
+    approved_by = models.ForeignKey(settings.AUTH_USER_MODEL, blank=True, null=True, related_name="approving_agreement")
+    justification_background =  models.TextField("General background and problem statement", blank=True)
+    justification_description_community_selection =  models.TextField("Description of community selection criteria", blank=True)
+    description_of_project_activities =  models.TextField(blank=True)
+    description_of_government_involvement =  models.TextField(blank=True)
+    description_of_community_involvement =  models.TextField(blank=True)
+    documentation_government_approval = models.FileField("Upload Government Documentation of Approval", upload_to='uploads', blank=True, null=True)
+    documentation_community_approval = models.FileField("Upload Community Documentation of Approval", upload_to='uploads', blank=True, null=True)
+
+
+class ProjectAgreementAdmin(admin.ModelAdmin):
+    list_display = ('project_proposal')
+    display = 'project_proposal'
 
 
 #Merge Map
