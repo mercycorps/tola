@@ -88,18 +88,17 @@ def customFeed(request,id):
     id = Silo
     """
     #get all of the data fields for the silo
-    queryset = DataField.objects.filter(silo__id=id)
+    #queryset = DataField.objects.filter(silo__id=id)
+    queryset = ValueStore.objects.filter(field__silo=id).order_by('row_number','id').select_related('field').values('char_store', 'field__name')
 
     formatted_data = []
 
     #loop over the labels and populate the first list with lables
-    for label in queryset:
+    for row in queryset:
         #append the label to the list
-        formatted_data.append(label.name)
-        valueset = ValueStore.objects.filter(field__id=label.id)
-        #loop over the values and append the values for each label
-        for val in valueset:
-            formatted_data.append(val.char_store)
+        formatted_data.append(row['field__name'])
+
+        formatted_data.append(row['char_store'])
 
     #output list to json
     jsonData = simplejson.dumps(formatted_data)
@@ -119,7 +118,7 @@ def createFeed(request):
     """
     Create an XML or JSON Feed from a given Silo
     """
-    getSilo = ValueStore.objects.filter(field__silo__id=request.POST['silo_id'])
+    getSilo = ValueStore.objects.filter(field__silo__id=request.POST['silo_id']).order_by('row_number')
 
     #return a dict with label value pair data
     formatted_data = siloToDict(getSilo)
@@ -138,7 +137,7 @@ def export_silo(request, id):
     Export a silo to a CSV file
     id = Silo
     """
-    getSiloRows = ValueStore.objects.all().filter(field__silo__id=id).values('row_number').distinct()
+    getSiloRows = ValueStore.objects.all().filter(field__silo__id=id).values('row_number').distinct().order_by('row_number')
     getColumns = DataField.objects.all().filter(silo__id=id).values('name').distinct()
 
     # Create the HttpResponse object with the appropriate CSV header.

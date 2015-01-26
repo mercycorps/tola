@@ -202,7 +202,9 @@ def updateUID(request):
     Set the PK for each row by allowing the user to select a column
     """
     for row in request.POST['is_uid']:
-        update_uid = DataField.objects.update(is_uid=1)
+        print row
+        update_uid = DataField.objects.filter(pk=row).update(is_uid=1)
+
 
     get_silo = ValueStore.objects.all().filter(field__silo_id=request.POST['silo_id'])
 
@@ -221,11 +223,22 @@ def saveData(new_value, new_label, silo_id, row_num):
     today.strftime('%Y-%m-%d')
     today = str(today)
     if new_value is not "" and new_value is not None:
-        new_field = DataField(silo=current_silo, name=new_label, create_date=today, edit_date=today)
-        new_field.save()
-        #get the field id
-        latest = DataField.objects.latest('id')
+        #check to see if the field exists if it does use that field
+        check_for_field = DataField.objects.all().filter(silo=current_silo, name=new_label)
+        if check_for_field.exists():
+            field_id = check_for_field[0].id
+            print "OLD"
+            print field_id
+        else:
+            new_field = DataField(silo=current_silo, name=new_label, create_date=today, edit_date=today)
+            new_field.save()
+            #get the field id
+            latest = DataField.objects.latest('id')
+            field_id = latest.id
 
-        new_value = ValueStore(field_id=latest.id, char_store=new_value, create_date=today, edit_date=today, row_number=row_num)
+            print "NEW"
+            print field_id
+
+        new_value = ValueStore(field_id=field_id, char_store=new_value, create_date=today, edit_date=today, row_number=row_num)
 
         new_value.save()

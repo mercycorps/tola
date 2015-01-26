@@ -48,9 +48,9 @@ def siloDetail(request,id):
     Show silo source details
     """
     silo_id = id
-    getSilo = ValueStore.objects.all().filter(field__silo_id=silo_id)
+    #getSilo = ValueStore.objects.filter(field__silo_id=silo_id).order_by('row_number').select_related('field')
 
-    table = SiloTable(ValueStore.objects.all().filter(field__silo_id=silo_id))
+    table = SiloTable(ValueStore.objects.all().filter(field__silo_id=silo_id).order_by('row_number', 'id').select_related('field'))
 
     #send the keys and vars from the json data to the template along with submitted feed info and silos for new form
     return render(request, "display/stored_values.html", {'getSilo':table})

@@ -152,7 +152,7 @@ class ProjectAgreementCreate(CreateView):
 
         return HttpResponseRedirect('/programdb/success')
 
-    form_class = ProjectAgreementForm
+    form_class = ProjectAgreementFormSet
 
 
 class ProjectAgreementUpdate(UpdateView):
