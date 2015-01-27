@@ -255,7 +255,6 @@ def google_export(request, id):
         # Get the spreadsheet_key of the newly created Spreadsheet
         spreadsheet_key = google_spreadsheet['id']
         
-        
         # Create OAuth2Token for authorizing the SpreadsheetClient
         token = gdata.gauth.OAuth2Token(
             client_id = credential_json['client_id'], 
@@ -308,7 +307,8 @@ def google_export(request, id):
         
         # Finally send the CellBatchUpdate object to Google
         sp_client.batch(batch, force=True)
-        messages.success(request, "Blabla")
+        link = "Your exported data is available at <a href=" + google_spreadsheet['alternateLink'] + " target='_blank'>Google Spreadsheet</a>"
+        messages.success(request, link)
     return HttpResponseRedirect("/")
 
 @login_required
