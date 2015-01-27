@@ -301,7 +301,7 @@ def google_export(request, id):
         for i, col_name in enumerate(column_names):
             row_index = 1
             col_index = i + 1
-            batch.add_set_cell(1, col_index, col_name)
+            batch.add_set_cell(row_index, col_index, col_name)
         
         # Populate the CellBatchUpdate object with data
         for row in silo_data:
