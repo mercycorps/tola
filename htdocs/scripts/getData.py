@@ -14,14 +14,16 @@ import unicodedata
 import sys
 import urllib2
 from datetime import date
+from programdb.models import Country, Program
 
 def run():
     print "Uploading JSON data"
 
-type = "country"
+type = "Program"
+program_country = 1
 
 
-def getAllData(url, type):
+def getAllData(url, type, program_country):
 
     # set url for json feed here
     json_file = urllib2.urlopen(url)
@@ -38,7 +40,7 @@ def getAllData(url, type):
         save_keys = keys_to_sql
         keys_to_sql = ", ".join(map(str, keys_to_sql))
 
-        query = "INSERT INTO programdb_country (%s) VALUES %s" % (keys_to_sql, tuple(vars_to_sql))
+        query = "INSERT INTO programdb_country (country,code) VALUES ('%s','%s')" % (vars_to_sql[0], vars_to_sql[1])
         print query
 
         try:
@@ -50,7 +52,7 @@ def getAllData(url, type):
             value = 1
             country = vars_to_sql[0]
             if type == "country":
-                query_update = "UPDATE programdb_country set %s = %s where lower(%(type)s) = '%s'" % (
+                query_update = "UPDATE programdb_country set country = %s where lower(%(type)s) = '%s'" % (
                     column, value, country.lower())
             try:
                 cursor.execute(query_update)
@@ -58,15 +60,18 @@ def getAllData(url, type):
             except Exception, err:
                 sys.stderr.write('ERROR: %s\n' % str(err))
             return 1
-        pass
+    pass
 
-        #query to mysql database after parsing json data
-    def savePrograms(keys_to_sql, vars_to_sql):
+    #query to mysql database after parsing json data
+    def savePrograms(keys_to_sql, vars_to_sql,program_country):
         #save the original keys list for update in case we need to run that
         save_keys = keys_to_sql
         keys_to_sql = ", ".join(map(str, keys_to_sql))
 
-        query = "INSERT INTO programdb_program (%s) VALUES %s" % (keys_to_sql, tuple(vars_to_sql))
+        var_to_tuple = tuple(vars_to_sql)
+        print var_to_tuple
+
+        query = "INSERT INTO programdb_program (%s) VALUES %s" % (keys_to_sql, var_to_tuple)
         print query
 
         try:
@@ -74,19 +79,12 @@ def getAllData(url, type):
             transaction.commit()
         except Exception, err:
             sys.stderr.write('ERROR: %s\n' % str(err))
-            column = save_keys[1]
-            value = 1
-            country = vars_to_sql[0]
-            if type == "country":
-                query_update = "UPDATE programdb_program set %s = %s where lower(%(type)s) = '%s'" % (
-                    column, value, country.lower())
-            try:
-                cursor.execute(query_update)
-                transaction.commit()
-            except Exception, err:
-                sys.stderr.write('ERROR: %s\n' % str(err))
-            return 1
         pass
+
+        latest = Program.objects.latest('id')
+
+        query2 = "INSERT INTO programdb_programcountry (country_id,program_id) VALUES (%s,%s)" % (latest.id, program_country)
+
 
     for row in data:
         print row
@@ -98,16 +96,26 @@ def getAllData(url, type):
                 new_value = new_value.encode('ascii','ignore')
             except Exception, err:
                 sys.stderr.write('ERROR: %s\n' % str(err))
-            print new_key
-            print new_value
-            if new_value:
-                #country or region related columns only
-                if new_key in ('country','region','iso_code'):
-                    #change iso_code to code for DB table
-                    if new_key == 'iso_code':
-                        new_key = 'code'
-                    keys_to_sql.append(new_key)
-                    vars_to_sql.append(new_value)
+            #print new_key
+            #print new_value
+            if type == "Country":
+                if new_value:
+                    #country or region related columns only
+                    if new_key in ('country','region','iso_code'):
+                        #change iso_code to code for DB table
+                        if new_key == 'iso_code':
+                            new_key = 'code'
+                        keys_to_sql.append(new_key)
+                        vars_to_sql.append(new_value)
+            elif type == "Program":
+                if new_value:
+                    #country or region related columns only
+                    if new_key in ('gaitid','fundingstatus','granttitle'):
+                        #change iso_code to code for DB table
+                        if new_key == 'granttitle':
+                            new_key = 'name'
+                        keys_to_sql.append(new_key)
+                        vars_to_sql.append(new_value)
 
         #add create_date to comma seperated list of columns
         keys_to_sql.append("create_date")
@@ -123,17 +131,22 @@ def getAllData(url, type):
         #append todays date to var
         vars_to_sql.append("")
 
-        if type == "country":
+        if type == "Country":
             saveCountries(keys_to_sql, vars_to_sql)
-        elif type == "program":
-            savePrograms(keys_to_sql, vars_to_sql)
+        elif type == "Program":
+            savePrograms(keys_to_sql, vars_to_sql, program_country)
 
 # get an updated json data file for the hub and update or insert new records
-print "Country"
-getAllData("https://mcapi.mercycorps.org/authoritativecountry/?gait=True&format=json", "country")
+#print "Country"
+#getAllData("https://mcapi.mercycorps.org/authoritativecountry/?gait=True&format=json", "Country")
 
 #get an updated json data file for the hub and update or insert new records
-#print "Program"
-#getAllData(" http://gtapi.mercycorps.org/cgi-bin/mm", "program")
+print "Program"
+getCountries = Country.objects.all()
+for country in getCountries:
+    print country.country
+    program_url = "http://mcapi.mercycorps.org/gaitprogram/?country_name=%s&format=json" % (country.country)
+    print program_url
+    getAllData(program_url, "Program", country.id)
 
 print "Alright, all done."

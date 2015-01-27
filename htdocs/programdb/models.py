@@ -4,34 +4,7 @@ from django.conf import settings
 from datetime import datetime
 from read.models import Read
 
-#Programs
-class Program(models.Model):
-    name = models.CharField("Program Name", max_length=255, blank=True)
-    description = models.CharField("Program Description", max_length=765, blank=True)
-    create_date = models.DateTimeField(null=True, blank=True)
-    edit_date = models.DateTimeField(null=True, blank=True)
 
-    class Meta:
-        ordering = ('create_date',)
-
-    #onsave add create date or update edit date
-    def save(self, *args, **kwargs):
-        if not 'force_insert' in kwargs:
-            kwargs['force_insert'] = False
-        if self.create_date == None:
-            self.create_date = datetime.now()
-        self.edit_date = datetime.now()
-        super(Program, self).save()
-
-    #displayed in admin templates
-    def __unicode__(self):
-        return self.name
-
-
-#Programs Admin Interface
-class ProgramAdmin(admin.ModelAdmin):
-    list_display = ('name', 'description', 'create_date', 'edit_date')
-    display = 'Program'
 
 
 #Countires
@@ -61,6 +34,38 @@ class Country(models.Model):
 class CountryAdmin(admin.ModelAdmin):
     list_display = ('name', 'create_date', 'edit_date')
     display = 'Country'
+
+
+#Programs
+class Program(models.Model):
+    gaitid = models.CharField("GAITID", max_length=255, blank=True)
+    name = models.CharField("Program Name", max_length=255, blank=True)
+    description = models.CharField("Program Description", max_length=765, blank=True)
+    create_date = models.DateTimeField(null=True, blank=True)
+    edit_date = models.DateTimeField(null=True, blank=True)
+    country = models.ManyToManyField(Country)
+
+    class Meta:
+        ordering = ('create_date',)
+
+    #onsave add create date or update edit date
+    def save(self, *args, **kwargs):
+        if not 'force_insert' in kwargs:
+            kwargs['force_insert'] = False
+        if self.create_date == None:
+            self.create_date = datetime.now()
+        self.edit_date = datetime.now()
+        super(Program, self).save()
+
+    #displayed in admin templates
+    def __unicode__(self):
+        return self.name
+
+
+#Programs Admin Interface
+class ProgramAdmin(admin.ModelAdmin):
+    list_display = ('name', 'description', 'create_date', 'edit_date')
+    display = 'Program'
 
 
 #Province
