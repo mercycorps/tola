@@ -6,6 +6,7 @@ from django.contrib.auth.decorators import login_required
 import json as simplejson
 from tola.util import siloToDict
 
+from django.contrib import messages
 from django.template import RequestContext
 from django.contrib.auth.models import User
 
@@ -218,7 +219,7 @@ FLOW = flow_from_clientsecrets(
     redirect_uri='http://localhost:8000/oauth2callback/')
 
 @login_required
-def google_export(request):
+def google_export(request, id):
     storage = Storage(GoogleCredentialsModel, 'id', request.user, 'credential')
     credential = storage.get()
     if credential is None or credential.invalid == True:
@@ -229,7 +230,7 @@ def google_export(request):
         # 
         credential_json = json.loads(credential.to_json())
         
-        silo_id = 1
+        silo_id = id
         silo_name = Silo.objects.get(pk=silo_id).name
         
         http = httplib2.Http()
@@ -242,18 +243,17 @@ def google_export(request):
         
         # The body of "insert" API call for creating a blank Google Spreadsheet
         body = {
-            'title': "TEST2",
-            'description': "TEST FILE FROM API",
+            'title': silo_name,
+            'description': "Exported Data from Mercy Corps TolaData",
             'mimeType': "application/vnd.google-apps.spreadsheet"
         }
         
         # Create a new blank Google Spreadsheet file in user's Google Drive
         # Uncomment the line below if you want to create a new Google Spreadsheet
-        #google_spreadsheet = service.files().insert(body=body).execute()
+        google_spreadsheet = service.files().insert(body=body).execute()
         
         # Get the spreadsheet_key of the newly created Spreadsheet
-        #spreadsheet_key = google_spreadsheet['id']
-        
+        spreadsheet_key = google_spreadsheet['id']
         
         # Create OAuth2Token for authorizing the SpreadsheetClient
         token = gdata.gauth.OAuth2Token(
@@ -270,16 +270,6 @@ def google_export(request):
         # authorize the SpreadsheetClient object
         sp_client = token.authorize(sp_client)
         
-        # Create a Spreadsheet Query object: Just for testing purposes 
-        # so that I can work with one spreadsheet instead of creating a new spreadsheet every time.
-        spreadsheets_query = gdata.spreadsheets.client.SpreadsheetQuery (title="TEST2", title_exact=True)
-        
-        # Get a XML feed of all the spreadsheets that match the query
-        spreadsheets_feed = sp_client.get_spreadsheets(query = spreadsheets_query)
-        
-        # Get the spreadsheet_key of the first match
-        spreadsheet_key = spreadsheets_feed.entry[0].id.text.rsplit('/',1)[1]
-        
         # Create a WorksheetQuery object to allow for filtering for worksheets by the title
         worksheet_query = gdata.spreadsheets.client.WorksheetQuery(title="Sheet1", title_exact=True)
         
@@ -289,7 +279,7 @@ def google_export(request):
         # Retrieve the worksheet_key from the first match in the worksheets_feed object
         worksheet_key = worksheets_feed.entry[0].id.text.rsplit("/", 1)[1]
         
-        silo_data = ValueStore.objects.all().filter(field__silo__id=silo_id)
+        silo_data = ValueStore.objects.filter(field__silo__id=silo_id).order_by("row_number")
         num_cols = len(silo_data)
         
         # By default a blank Google Spreadsheet has 26 columns but if our data has more column
@@ -301,31 +291,25 @@ def google_export(request):
             # Send the worksheet update call to Google Server
             sp_client.update(worksheet, force=True)
         
-        # Define a Google Spreadsheet range string, where data would be written
-        range = "R1C1:R1C" + str(num_cols)
-        
-        # Create a CellQuery object to query the worksheet for all the cells that are in the range
-        cell_query = gdata.spreadsheets.client.CellQuery(range=range, return_empty='true')
-        
-        # Retrieve all cells thar match the query as a CellFeed
-        cells_feed = sp_client.GetCells(spreadsheet_key, worksheet_key, q=cell_query)
-        
         # Create a CellBatchUpdate object so that all cells update is sent as one http request
         batch = gdata.spreadsheets.data.BuildBatchCellsUpdate(spreadsheet_key, worksheet_key)
         
+        # Get all of the column names for the current silo_id
+        column_names = DataField.objects.filter(silo_id=1).values_list('name', flat=True)
+        
+        # Add column names to the batch object
+        for col_index, col_name in enumerate(column_names):
+            batch.add_set_cell(1, (col_index+1), col_name)
         
         # Populate the CellBatchUpdate object with data
-        n = 0
         for row in silo_data:
-            c = cells_feed.entry[n]
-            c.cell.input_value = str(row.field.name)
-            batch.add_batch_entry(c, c.id.text, batch_id_string=c.title.text, operation_string='update')
-            n = n + 1
+            batch.add_set_cell((row.row_number + 1), row.field.id, row.char_store)
         
         # Finally send the CellBatchUpdate object to Google
         sp_client.batch(batch, force=True)
-
-    return HttpResponse("OK")
+        link = "Your exported data is available at <a href=" + google_spreadsheet['alternateLink'] + " target='_blank'>Google Spreadsheet</a>"
+        messages.success(request, link)
+    return HttpResponseRedirect("/")
 
 @login_required
 def oauth2callback(request):

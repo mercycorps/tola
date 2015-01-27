@@ -121,7 +121,7 @@ urlpatterns = patterns('',
                         url(r'^feed', 'feed.views.listFeeds', name='listFeeds'),
                         url(r'^export/(?P<id>\w+)/$', 'feed.views.export_silo', name='export_silo'),
                         #url(r'^export_google/(?P<id>\w+)/$', 'feed.views.export_google', name='export_google'),
-                        url(r'^google_export/$', 'feed.views.google_export', name='google_export'),
+                        url(r'^export_google/(?P<id>\d+)/$', 'feed.views.google_export', name='export_google'),
                         url(r'^oauth2callback/$', 'feed.views.oauth2callback', name='oauth2callback'),
                         
                         #create a feed
