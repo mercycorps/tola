@@ -289,7 +289,7 @@ def google_export(request):
         # Retrieve the worksheet_key from the first match in the worksheets_feed object
         worksheet_key = worksheets_feed.entry[0].id.text.rsplit("/", 1)[1]
         
-        silo_data = ValueStore.objects.all().filter(field__silo__id=silo_id)
+        silo_data = ValueStore.objects.filter(field__silo__id=silo_id).order_by("row_number")
         num_cols = len(silo_data)
         
         # By default a blank Google Spreadsheet has 26 columns but if our data has more column
@@ -301,26 +301,19 @@ def google_export(request):
             # Send the worksheet update call to Google Server
             sp_client.update(worksheet, force=True)
         
-        # Define a Google Spreadsheet range string, where data would be written
-        range = "R1C1:R1C" + str(num_cols)
-        
-        # Create a CellQuery object to query the worksheet for all the cells that are in the range
-        cell_query = gdata.spreadsheets.client.CellQuery(range=range, return_empty='true')
-        
-        # Retrieve all cells thar match the query as a CellFeed
-        cells_feed = sp_client.GetCells(spreadsheet_key, worksheet_key, q=cell_query)
-        
         # Create a CellBatchUpdate object so that all cells update is sent as one http request
         batch = gdata.spreadsheets.data.BuildBatchCellsUpdate(spreadsheet_key, worksheet_key)
         
+        # Get all of the column names for the current silo_id
+        column_names = DataField.objects.filter(silo_id=1).values_list('name', flat=True)
+        
+        # Add column names to the batch object
+        for c, col in enumerate(column_names):
+            batch.add_set_cell(1, (c+1), col)
         
         # Populate the CellBatchUpdate object with data
-        n = 0
         for row in silo_data:
-            c = cells_feed.entry[n]
-            c.cell.input_value = str(row.field.name)
-            batch.add_batch_entry(c, c.id.text, batch_id_string=c.title.text, operation_string='update')
-            n = n + 1
+            batch.add_set_cell((row.row_number + 1), row.field.id, row.char_store)
         
         # Finally send the CellBatchUpdate object to Google
         sp_client.batch(batch, force=True)
