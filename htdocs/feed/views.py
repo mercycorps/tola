@@ -298,15 +298,21 @@ def google_export(request, id):
         column_names = DataField.objects.filter(silo_id=1).values_list('name', flat=True)
         
         # Add column names to the batch object
-        for col_index, col_name in enumerate(column_names):
-            batch.add_set_cell(1, (col_index+1), col_name)
+        for i, col_name in enumerate(column_names):
+            row_index = 1
+            col_index = i + 1
+            batch.add_set_cell(row_index, col_index, col_name)
         
         # Populate the CellBatchUpdate object with data
         for row in silo_data:
-            batch.add_set_cell((row.row_number + 1), row.field.id, row.char_store)
+            row_index = row.row_number + 1
+            col_index = row.field.id
+            value = row.char_store
+            batch.add_set_cell(row_index, col_index, value)
         
         # Finally send the CellBatchUpdate object to Google
         sp_client.batch(batch, force=True)
+
         link = "Your exported data is available at <a href=" + google_spreadsheet['alternateLink'] + " target='_blank'>Google Spreadsheet</a>"
         messages.success(request, link)
     return HttpResponseRedirect("/")
