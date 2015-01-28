@@ -6,7 +6,7 @@ from functools import partial
 from widgets import GoogleMapsWidget
 import floppyforms as forms
 from django.forms.models import inlineformset_factory
-from .models import ProjectProposal, ProgramDashboard, ProjectAgreement, Sector
+from .models import ProjectProposal, ProgramDashboard, ProjectAgreement, Sector, Program
 
 class ProgramDashboardForm(forms.ModelForm):
 
@@ -30,6 +30,9 @@ class ProjectProposalForm(forms.ModelForm):
         attrs={'width': 700, 'height': 400, 'longitude': 'longitude', 'latitude': 'latitude'}), required=False)
 
     date_of_request = forms.DateInput()
+    #hard coded 1 for country for now until configured in the form
+    #TODO: configure country for each form
+    program = forms.ModelChoiceField(queryset=Program.objects.filter(country='1'))
 
     def __init__(self, *args, **kwargs):
         self.helper = FormHelper()

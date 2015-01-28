@@ -83,7 +83,7 @@ def getAllData(url, type, program_country):
 
         latest = Program.objects.latest('id')
 
-        query2 = "INSERT INTO programdb_programcountry (country_id,program_id) VALUES (%s,%s)" % (latest.id, program_country)
+        query2 = "INSERT INTO programdb_program_country (country_id,program_id) VALUES (%s,%s)" % (latest.id, program_country)
 
 
     for row in data:
