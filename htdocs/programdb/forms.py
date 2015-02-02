@@ -164,4 +164,3 @@ class ProjectAgreementForm(forms.ModelForm):
         )
         super(ProjectAgreementForm, self).__init__(*args, **kwargs)
 
-ProjectAgreementFormSet = inlineformset_factory(ProjectProposal, ProjectAgreement)

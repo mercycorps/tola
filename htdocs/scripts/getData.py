@@ -83,7 +83,15 @@ def getAllData(url, type, program_country):
 
         latest = Program.objects.latest('id')
 
-        query2 = "INSERT INTO programdb_program_country (country_id,program_id) VALUES (%s,%s)" % (latest.id, program_country)
+        query2 = "INSERT INTO programdb_program_country (country_id,program_id) VALUES (%s,%s)" % (program_country, latest.id)
+
+        print query2
+        try:
+            cursor.execute(query2)
+            transaction.commit()
+        except Exception, err:
+            sys.stderr.write('ERROR: %s\n' % str(err))
+        pass
 
 
     for row in data:
@@ -145,7 +153,7 @@ print "Program"
 getCountries = Country.objects.all()
 for country in getCountries:
     print country.country
-    program_url = "http://mcapi.mercycorps.org/gaitprogram/?country_name=%s&format=json" % (country.country)
+    program_url = "http://mcapi.mercycorps.org/gaitprogram/?country=%s&format=json" % (country.country)
     print program_url
     getAllData(program_url, "Program", country.id)
 

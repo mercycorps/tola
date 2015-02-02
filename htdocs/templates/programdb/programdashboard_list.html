@@ -10,7 +10,7 @@
   </button>
   <ul class="dropdown-menu" role="menu" aria-labelledby="dropdownMenu1">
     {% for program in getPrograms %}
-        <li role="presentation"><a role="menuitem" tabindex="-1" href="#">{{ program.name }}</a></li>
+        <li role="presentation"><a role="menuitem" tabindex="-1" href="/programdb/dashboard/{{ program.id }}">{{ program.name }}</a></li>
     {% endfor %}
   </ul>
 </div>

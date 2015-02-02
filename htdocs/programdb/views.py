@@ -5,7 +5,7 @@ from silo.models import Silo, ValueStore, DataField
 from django.contrib import messages
 from django.http import HttpResponseRedirect
 from django.utils import timezone
-from .forms import ProjectProposalForm, ProgramDashboardForm, ProjectAgreementForm, ProjectAgreementFormSet
+from .forms import ProjectProposalForm, ProgramDashboardForm, ProjectAgreementForm
 import logging
 from django.shortcuts import render
 from django.contrib import messages
@@ -35,6 +35,7 @@ class ProgramDash(ListView):
 
 
         return render(request, self.template_name, {'form': form,'getDashboard':getDashboard,'getPrograms':getPrograms})
+
 
 class ProjectProposalList(ListView):
 
@@ -75,7 +76,8 @@ class ProjectProposalCreate(CreateView):
 
         form.save()
 
-        return HttpResponseRedirect('/programdb/success')
+        messages.success(self.request, 'Success, Proposal Created!')
+        return self.render_to_response(self.get_context_data(form=form))
 
     form_class = ProjectProposalForm
 
@@ -96,7 +98,7 @@ class ProjectProposalUpdate(UpdateView):
     def form_valid(self, form):
 
         form.save()
-        messages.success(self.request, 'Success, form updated!')
+        messages.success(self.request, 'Success, Proposal Updated!')
 
         return self.render_to_response(self.get_context_data(form=form))
 
@@ -120,7 +122,8 @@ class ProjectProposalDelete(DeleteView):
 
         form.save()
 
-        return HttpResponseRedirect('/programdb/success')
+        messages.success(self.request, 'Success, Proposal Deleted!')
+        return self.render_to_response(self.get_context_data(form=form))
 
     form_class = ProjectProposalForm
 
@@ -135,9 +138,9 @@ class ProjectAgreementCreate(CreateView):
     def get_context_data(self, **kwargs):
         data = super(ProjectAgreementCreate, self).get_context_data(**kwargs)
         if self.request.POST:
-            data['ProjectAgreement'] = ProjectAgreementFormSet(self.request.POST)
+            data['ProjectAgreement'] = ProjectAgreementForm(self.request.POST)
         else:
-            data['ProjectAgreement'] = ProjectAgreementFormSet()
+            data['ProjectAgreement'] = ProjectAgreementForm()
         return data
 
     def form_invalid(self, form):
@@ -150,9 +153,11 @@ class ProjectAgreementCreate(CreateView):
 
         form.save()
 
-        return HttpResponseRedirect('/programdb/success')
+        messages.success(self.request, 'Success, Agreement Created!')
+        return self.render_to_response(self.get_context_data(form=form))
 
-    form_class = ProjectAgreementFormSet
+    #form_class = ProjectAgreementFormSet(ProjectAgreementHelper)
+    #helper_class = ProjectAgreementHelper()
 
 
 class ProjectAgreementUpdate(UpdateView):
