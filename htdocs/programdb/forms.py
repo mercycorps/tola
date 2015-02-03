@@ -6,7 +6,7 @@ from functools import partial
 from widgets import GoogleMapsWidget
 import floppyforms as forms
 from django.forms.models import inlineformset_factory
-from .models import ProjectProposal, ProgramDashboard, ProjectAgreement, Sector, Program
+from .models import ProjectProposal, ProgramDashboard, ProjectAgreement, ProjectComplete, Sector, Program
 
 class ProgramDashboardForm(forms.ModelForm):
 
@@ -72,7 +72,6 @@ class ProjectProposalForm(forms.ModelForm):
                         'project_code', 'prop_status', 'proposal_review', 'proposal_review_2',
                     ),
                 ),
-
                 Tab('Approval',
                     Fieldset('Approval',
                              Field('approval', label="approved "), 'approved_by', 'approval_submitted_by',
@@ -124,6 +123,8 @@ class ProjectAgreementForm(forms.ModelForm):
                         'expected_end_date','beneficiary_type','num_beneficiaries','total_estimated_budget','mc_estimated_budget',
                         'estimation_date', 'estimated_by','checked_by','other_budget'
                     ),
+                ),
+                Tab('Location',
                     Fieldset('Location',
                              'country', 'district', 'province', 'village', 'cluster'
                             ),
@@ -147,7 +148,6 @@ class ProjectAgreementForm(forms.ModelForm):
 
                     ),
                 ),
-
                 Tab('Approval',
                     Fieldset('Approval',
                              Field('approval', label="approved "), 'approved_by', 'approval_submitted_by',
@@ -163,4 +163,96 @@ class ProjectAgreementForm(forms.ModelForm):
             )
         )
         super(ProjectAgreementForm, self).__init__(*args, **kwargs)
+
+
+class ProjectCompleteForm(forms.ModelForm):
+
+    class Meta:
+        model = ProjectComplete
+        fields = '__all__'
+
+    map = forms.CharField(widget=GoogleMapsWidget(
+        attrs={'width': 700, 'height': 400, 'longitude': 'longitude', 'latitude': 'latitude'}), required=False)
+
+    date_of_request = forms.DateInput()
+
+    def __init__(self, *args, **kwargs):
+        self.helper = FormHelper()
+        self.helper.form_method = 'post'
+        self.helper.form_class = 'form-horizontal'
+        self.helper.label_class = 'col-sm-2'
+        self.helper.field_class = 'col-sm-6'
+        self.helper.form_error_title = 'Form Errors'
+        self.helper.error_text_inline = True
+        self.helper.help_text_inline = True
+        self.helper.html5_required = True
+        self.helper.layout = Layout(
+
+            HTML("""<br/>"""),
+            TabHolder(
+                Tab('Executive Summary',
+                    Fieldset('Program', 'program', 'project_proposal', 'activity_code','project_name'
+                    ),
+                ),
+                Tab('Location',
+                    Fieldset('Location',
+                             'country', 'district', 'province', 'village', 'cluster'
+                            ),
+                    Fieldset('Map',
+                     'map', 'latitude', 'longitude'
+                    ),
+                ),
+                Tab('Justification and Description',
+                    Fieldset(
+                        'Justification',
+                        'expected_start_date','expected_end_date', 'expected_duration', 'actual_start_date', 'actual_end_date', 'actual_suration',
+                        'on_time','no_explanation',
+                    ),
+                     Fieldset(
+                        'Description',
+                        Field('description_of_project_activities', rows="3", css_class='input-xlarge'),
+                        Field('description_of_government_involvement', rows="3", css_class='input-xlarge'),
+                        'documentation_government_approval',
+                        Field('description_of_community_involvement', rows="3", css_class='input-xlarge'),
+                        'documentation_government_approval',
+
+                    ),
+                ),
+                Tab('Budget and Issues',
+                    Fieldset(
+                        'Budget',
+                        'estimated_budget','actual_budget', 'budget_variance', 'explanation_of_variance', 'actual_contribution', 'direct_beneficiaries',
+                        'on_time','no_explanation',
+                    ),
+                     Fieldset(
+                        'Jobs',
+                        'jobs_created','jobs_part_time','jobs_full_time','government_involvement','capacity_built',
+
+                    ),
+                     Fieldset(
+                        'Issues',
+                        'issues_and_challenges','lessons_learned','qualitative_outputs'
+
+                    ),
+                ),
+                Tab('Documentation',
+                    Fieldset('Documents and Links',
+                        'documentation',
+                    ),
+                ),
+                Tab('Approval',
+                    Fieldset('Approval',
+                             Field('approval', label="approved "), 'approved_by', 'approval_submitted_by',
+                             Field('approval_remarks', rows="3", css_class='input-xlarge')
+                    ),
+                ),
+            ),
+
+            HTML("""<br/>"""),
+            FormActions(
+                Submit('submit', 'Submit', css_class='btn-default'),
+                Reset('reset', 'Reset', css_class='btn-warning')
+            )
+        )
+        super(ProjectCompleteForm, self).__init__(*args, **kwargs)
 

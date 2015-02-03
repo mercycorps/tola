@@ -1,11 +1,11 @@
 from django.views.generic.edit import CreateView, UpdateView, DeleteView
 from django.views.generic.list import ListView
-from .models import ProjectProposal, ProgramDashboard, Program, Country, Province, Village, District, ProjectAgreement
+from .models import ProjectProposal, ProgramDashboard, Program, Country, Province, Village, District, ProjectAgreement, ProjectComplete
 from silo.models import Silo, ValueStore, DataField
 from django.contrib import messages
 from django.http import HttpResponseRedirect
 from django.utils import timezone
-from .forms import ProjectProposalForm, ProgramDashboardForm, ProjectAgreementForm
+from .forms import ProjectProposalForm, ProgramDashboardForm, ProjectAgreementForm, ProjectCompleteForm
 import logging
 from django.shortcuts import render
 from django.contrib import messages
@@ -27,7 +27,10 @@ class ProgramDash(ListView):
         set_country = "1"
         form = ProgramDashboardForm
         getDashboard = ProgramDashboard.objects.all()
-        getPrograms = Program.objects.all().filter(funding_status="Funded", country=set_country)
+        if self.request.GET.get('id'):
+            getPrograms = Program.objects.all().filter(funding_status="Funded", country=set_country, program_id=self.request.GET.get('id'))
+        else:
+            getPrograms = Program.objects.all().filter(funding_status="Funded", country=set_country)
 
         return render(request, self.template_name, {'form': form,'getDashboard':getDashboard,'getPrograms':getPrograms})
 
@@ -224,6 +227,99 @@ class ProjectAgreementDelete(DeleteView):
         return HttpResponseRedirect('/programdb/success')
 
     form_class = ProjectAgreementForm
+
+
+class ProjectCompleteCreate(CreateView):
+    """
+    Project Agreement Form
+    """
+
+    model = ProjectComplete
+
+    def get_context_data(self, **kwargs):
+        data = super(ProjectCompleteCreate, self).get_context_data(**kwargs)
+        if self.request.POST:
+            data['ProjectComplete'] = ProjectCompleteForm(self.request.POST)
+        else:
+            data['ProjectComplete'] = ProjectCompleteForm()
+        return data
+
+    def form_invalid(self, form):
+
+        messages.error(self.request, 'Invalid Form', fail_silently=False)
+
+        return self.render_to_response(self.get_context_data(form=form))
+
+    def form_valid(self, form):
+
+        form.save()
+
+        latest = ProjectComplete.objects.latest('id')
+        getComplete = ProjectComplete.objects.get(id=latest.id)
+
+        update_dashboard = ProgramDashboard.objects.filter(project_agreement__id=self.request.GET.get('project_agreement')).update(project_complete=getComplete)
+
+        messages.success(self.request, 'Success, Completion Form Created!')
+        return self.render_to_response(self.get_context_data(form=form))
+
+    form_class = ProjectCompleteForm
+
+
+class ProjectCompleteUpdate(UpdateView):
+    """
+    Project Complete Form
+    """
+
+    model = ProjectComplete
+
+    def form_invalid(self, form):
+
+        messages.error(self.request, 'Invalid Form', fail_silently=False)
+
+        return self.render_to_response(self.get_context_data(form=form))
+
+    def form_valid(self, form):
+
+        form.save()
+        messages.success(self.request, 'Success, form updated!')
+
+        return self.render_to_response(self.get_context_data(form=form))
+
+    form_class = ProjectCompleteForm
+
+
+class ProjectCompleteDelete(DeleteView):
+    """
+    Project Complete Delete
+    """
+
+    model = ProjectComplete
+
+    def form_invalid(self, form):
+
+        messages.error(self.request, 'Invalid Form', fail_silently=False)
+
+        return self.render_to_response(self.get_context_data(form=form))
+
+    def form_valid(self, form):
+
+        form.save()
+
+        return HttpResponseRedirect('/programdb/success')
+
+    form_class = ProjectCompleteForm
+
+
+class ProjectCompleteImport(ListView):
+
+    model = Silo
+
+    def get_context_data(self, **kwargs):
+        context = super(ProjectCompleteImport, self).get_context_data(**kwargs)
+        context['now'] = timezone.now()
+        return context
+
+    template_name = 'programdb/projectcomplete_import.html'
 
 
 def doImport(request, pk):

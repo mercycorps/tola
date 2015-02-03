@@ -178,6 +178,84 @@ class SectorAdmin(admin.ModelAdmin):
     display = 'Sector'
 
 
+#Contribution
+class Contribution(models.Model):
+    contributor = models.CharField("Contributor", max_length=255, blank=True)
+    description = models.CharField("Description of Contribution", max_length=255, blank=True)
+    value = models.CharField("Value of Contribution", max_length=255, blank=True)
+    actual = models.BooleanField("Is an Actual Contribution", default=None)
+    create_date = models.DateTimeField(null=True, blank=True)
+    edit_date = models.DateTimeField(null=True, blank=True)
+
+    class Meta:
+        ordering = ('contributor',)
+
+    #onsave add create date or update edit date
+    def save(self, *args, **kwargs):
+        if self.create_date == None:
+            self.create_date = datetime.now()
+        self.edit_date = datetime.now()
+        super(Contribution, self).save()
+
+    #displayed in admin templates
+    def __unicode__(self):
+        return self.name
+
+
+#Cluster Admin Interface
+class ContributionAdmin(admin.ModelAdmin):
+    list_display = ('contributor', 'create_date', 'edit_date')
+    display = 'Contribution'
+
+#Quantitative Outpust
+class QuantitativeOutputs(models.Model):
+    number_achieved = models.CharField("Contributor", max_length=255, blank=True)
+    description = models.CharField("Description of Contribution", max_length=255, blank=True)
+    in_logframe = models.BooleanField("Is this Indicator in the Logframe?", default=None)
+    create_date = models.DateTimeField(null=True, blank=True)
+    edit_date = models.DateTimeField(null=True, blank=True)
+
+    class Meta:
+        ordering = ('description',)
+
+    #onsave add create date or update edit date
+    def save(self, *args, **kwargs):
+        if self.create_date == None:
+            self.create_date = datetime.now()
+        self.edit_date = datetime.now()
+        super(QuantitativeOutputs, self).save()
+
+    #displayed in admin templates
+    def __unicode__(self):
+        return self.name
+
+
+#Cluster Admin Interface
+class QuantitativeOutputsAdmin(admin.ModelAdmin):
+    list_display = ('descrption', 'number_achieved', 'create_date', 'edit_date')
+    display = 'Quantitative Outputs'
+
+
+# Documentation Photos, FIles or URLS
+class Documentation(models.Model):
+    name = models.CharField("Name of Document", max_length=135)
+    documentation_type = models.CharField("Type (File, Photo or URL)", max_length=135)
+    description = models.CharField(max_length=255)
+    file_field = models.ImageField(upload_to="uploads", blank=True, null=True)
+    create_date = models.DateTimeField(null=True, blank=True)
+    edit_date = models.DateTimeField(null=True, blank=True)
+
+
+    def __unicode__(self):
+        return self.name
+
+    class Meta:
+        ordering = ('name',)
+
+class DocumentationAdmin(admin.ModelAdmin):
+    list_display = ('name', 'description', 'documentation_type', 'file_field', 'create_date', 'edit_date')
+    display = 'Incident Photos'
+
 #Village
 class Village(models.Model):
     name = models.CharField("Village Name", max_length=255, blank=True)
@@ -224,9 +302,9 @@ class ProjectProposal(models.Model):
     community_mobilizer = models.CharField("Community Mobilizer", max_length=255, blank=True, null=True)
     prop_status = models.CharField("Proposal Status", max_length=255, blank=True, null=True)
     rej_letter = models.TextField("Rejection Letter", blank=True, null=True)
-    project_code = models.CharField("Project Code", max_length=255, blank=True, null=True)
+    activity_code = models.CharField("Activity Code", max_length=255, blank=True, null=True)
     project_description = models.TextField("Project Description", blank=True, null=True)
-    approval = models.BooleanField("Approval", default="0")
+    approval = models.BooleanField("Approval", default=None)
     approved_by = models.ForeignKey(settings.AUTH_USER_MODEL, blank=True, null=True, related_name="approving")
     approval_submitted_by = models.ForeignKey(settings.AUTH_USER_MODEL, blank=True, null=True, related_name="requesting")
     approval_remarks = models.CharField("Approval Remarks", max_length=255, blank=True, null=True)
@@ -288,8 +366,8 @@ class ProjectAgreement(models.Model):
     community_mobilizer = models.CharField("Community Mobilizer", max_length=255, blank=True, null=True)
     prop_status = models.CharField("Proposal Status", max_length=255, blank=True, null=True)
     rej_letter = models.TextField("Rejection Letter", blank=True, null=True)
-    project_code = models.CharField("Project Code", max_length=255, blank=True, null=True)
-    field_office = models.CharField("Office Name", max_length=255, blank=True, null=True)
+    activity_code = models.CharField("Activity Code", max_length=255, blank=True, null=True)
+    office_code = models.CharField("Office Code", max_length=255, blank=True, null=True)
     cod_num = models.CharField("Project COD #", max_length=255, blank=True, null=True)
     sector = models.ForeignKey("Sector", blank=True, null=True)
     project_activity = models.CharField("Project Activity", max_length=255, blank=True, null=True)
@@ -328,15 +406,33 @@ class ProjectAgreementAdmin(admin.ModelAdmin):
     display = 'project_title'
 
 # Project Proposal Form
-class ProjectCompletion(models.Model):
+class ProjectComplete(models.Model):
     program = models.ForeignKey(Program, null=True, blank=True)
     project_proposal = models.ForeignKey(ProjectProposal)
     project_agreement = models.ForeignKey(ProjectAgreement)
-    profile_code = models.CharField("Profile Code", max_length=255, blank=True, null=True)
-    proposal_num = models.CharField("Proposal Number", max_length=255, blank=True, null=True)
-    date_of_request = models.DateTimeField("Date of Request", blank=True, null=True)
-    project_title = models.CharField("Project Title", max_length=255, blank=True, null=True)
-    project_type = models.CharField("Proposal Number", max_length=255, blank=True, null=True)
+    activity_code = models.CharField("Activity Code", max_length=255, blank=True, null=True)
+    project_name = models.CharField("Project Name", max_length=255, blank=True, null=True)
+    expected_start_date = models.DateTimeField(blank=True, null=True)
+    expected_end_date = models.DateTimeField(blank=True, null=True)
+    actual_start_date = models.DateTimeField(blank=True, null=True)
+    actual_end_date = models.DateTimeField(blank=True, null=True)
+    on_time = models.BooleanField(default=None)
+    no_explanation = models.TextField("If not on time explain delay", blank=True, null=True)
+    estimated_budget = models.CharField("Estimated Budget", max_length=255, null=True, blank=True)
+    actual_budget = models.CharField("Actual Budget", max_length=255, null=True, blank=True)
+    budget_variance = models.CharField("Budget Variance", blank=True, null=True, max_length=255)
+    explanation_of_variance = models.CharField("Explanation of variance", blank=True, null=True, max_length=255)
+    actual_contribution = models.ForeignKey(Contribution)
+    direct_beneficiaries = models.CharField("Actual Direct Beneficiaries", max_length=255, blank=True, null=True)
+    jobs_created = models.CharField("Number of Jobs Created", max_length=255, blank=True, null=True)
+    jobs_part_time = models.CharField("Part Time Jobs", max_length=255, blank=True, null=True)
+    jobs_full_time = models.CharField("Full Time Jobs", max_length=255, blank=True, null=True)
+    government_involvement = models.CharField("Government Involvement", max_length=255, blank=True, null=True)
+    capacity_built = models.CharField("What capacity was built to ensure sustainability?", max_length=255, blank=True, null=True)
+    issues_and_challenges = models.TextField("List any issues or challenges faced (include reasons for delays)", blank=True, null=True)
+    lessons_learned= models.TextField("Lessons learned", blank=True, null=True)
+    qualitative_outputs = models.ForeignKey(QuantitativeOutputs)
+    documentation = models.ForeignKey(Documentation, blank=True, null=True)
     country = models.ForeignKey(Country)
     province = models.ForeignKey(Province, null=True, blank=True)
     district = models.ForeignKey(District, null=True, blank=True)
@@ -344,20 +440,23 @@ class ProjectCompletion(models.Model):
     cluster = models.ForeignKey(Cluster, null=True, blank=True)
     latitude = models.CharField("Latitude (Coordinates)", max_length=255, blank=True, null=True)
     longitude = models.CharField("Longitude (Coordinates)", max_length=255, blank=True, null=True)
-    community_rep = models.CharField("Community Representative", max_length=255, blank=True, null=True)
-    community_rep_contact = models.CharField("Community Representative Contact", max_length=255, blank=True, null=True)
-    community_mobilizer = models.CharField("Community Mobilizer", max_length=255, blank=True, null=True)
+    estimated_by = models.ForeignKey(settings.AUTH_USER_MODEL, blank=True, null=True, related_name="estimating_complete")
+    checked_by = models.ForeignKey(settings.AUTH_USER_MODEL, blank=True, null=True, related_name="checking_complete")
+    reviewed_by = models.ForeignKey(settings.AUTH_USER_MODEL, blank=True, null=True, related_name="reviewing_complete")
+    approved_by = models.ForeignKey(settings.AUTH_USER_MODEL, blank=True, null=True, related_name="approving_agreement_complete")
 
-class ProjectCompletionAdmin(admin.ModelAdmin):
-    list_display = ('project_title')
-    display = 'project_title'
+
+class ProjectCompleteAdmin(admin.ModelAdmin):
+    list_display = ('program', 'project_name', 'activity_code')
+    display = 'project_name'
 
 #Merge Map
+
 class MergeMap(models.Model):
     read = models.ForeignKey(Read, null=False, blank=False)
     project_proposal = models.ForeignKey(ProjectProposal, null=True, blank=False)
     project_agreement = models.ForeignKey(ProjectAgreement, null=True, blank=False)
-    project_completion = models.ForeignKey(ProjectCompletion, null=True, blank=False)
+    project_completion = models.ForeignKey(ProjectComplete, null=True, blank=False)
     from_column = models.CharField(max_length=255, blank=True)
     to_column = models.CharField(max_length=255, blank=True)
 
@@ -366,6 +465,7 @@ class MergeMapAdmin(admin.ModelAdmin):
     list_display = ('read', 'project_proposal', 'project_agreement', 'project_completion', 'from_column', 'to_column')
     display = 'project_proposal'
 
+
 #Dashboard
 class ProgramDashboard(models.Model):
     program = models.ForeignKey(Program, null=True, blank=True)
@@ -373,7 +473,7 @@ class ProgramDashboard(models.Model):
     project_proposal_approved = models.IntegerField(null=True,blank=True)
     project_agreement = models.ForeignKey(ProjectAgreement, null=True, blank=True)
     project_agreement_approved = models.IntegerField(null=True,blank=True)
-    project_completion = models.ForeignKey(ProjectCompletion, null=True, blank=True)
+    project_completion = models.ForeignKey(ProjectComplete, null=True, blank=True)
     project_completion_approved = models.IntegerField(null=True,blank=True)
     create_date = models.DateTimeField(null=True, blank=True)
     edit_date = models.DateTimeField(null=True, blank=True)

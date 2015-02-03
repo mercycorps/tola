@@ -1,5 +1,5 @@
 from django.contrib import admin
-from .models import Country, Province, Cluster, Village, Program, ProgramDashboard, ProjectProposal, ProjectAgreement
+from .models import Country, Province, Cluster, Village, Program, ProgramDashboard, ProjectProposal, ProjectAgreement, ProjectComplete
 
 admin.site.register(Country)
 admin.site.register(Province)
@@ -9,3 +9,4 @@ admin.site.register(Program)
 admin.site.register(ProgramDashboard)
 admin.site.register(ProjectProposal)
 admin.site.register(ProjectAgreement)
+admin.site.register(ProjectComplete)
