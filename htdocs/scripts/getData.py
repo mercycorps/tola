@@ -118,7 +118,7 @@ def getAllData(url, type, program_country):
             elif type == "Program":
                 if new_value:
                     #country or region related columns only
-                    if new_key in ('gaitid','fundingstatus','granttitle'):
+                    if new_key in ('gaitid','funding_status','granttitle'):
                         #change iso_code to code for DB table
                         if new_key == 'granttitle':
                             new_key = 'name'

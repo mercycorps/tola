@@ -10,11 +10,8 @@
 </div>
 <ul class="list-group">
 {% for proposal in object_list %}
-    <li class="list-group-item">{{ proposal.create_date|date }} - {{ proposal.project_title }} {{ proposal.proposal_num }}</li>
-    <li class="list-group-item"><a href="/programdb/projectproposal_update/{{ proposal.id }}" class="btn btn-sm btn-warning">Update Proposal</a>
-    <a href="/programdb/projectproposal_delete/{{ proposal.id }}" class="btn btn-sm btn-danger">Delete Proposal</a></li>
-    <br/>
-    <li class="list-group-item"><a href="/programdb/projectagreement_add" class="btn btn-sm btn-warning">Create an Agreement</a>
+    <li class="list-group-item"><b>{{ proposal.create_date|date }} - {{ proposal.project_title }} {{ proposal.proposal_num }}</b></li>
+    <li class="list-group-item"><a href="/programdb/projectproposal_update/{{ proposal.id }}" class="btn btn-sm btn-warning">Update Proposal</a> <a href="/programdb/projectproposal_delete/{{ proposal.id }}" class="btn btn-sm btn-danger">Delete Proposal</a> <a href="/programdb/projectagreement_add" class="btn btn-sm btn-info">Create an Agreement</a></li>
 {% empty %}
     <li class="list-group-item">No proposals yet.</li>
 {% endfor %}

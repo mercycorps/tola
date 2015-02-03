@@ -32,7 +32,7 @@ class ProjectProposalForm(forms.ModelForm):
     date_of_request = forms.DateInput()
     #hard coded 1 for country for now until configured in the form
     #TODO: configure country for each form
-    program = forms.ModelChoiceField(queryset=Program.objects.filter(country='1'))
+    program = forms.ModelChoiceField(queryset=Program.objects.filter(country='1', funding_status="Funded"))
 
     def __init__(self, *args, **kwargs):
         self.helper = FormHelper()
@@ -115,7 +115,7 @@ class ProjectAgreementForm(forms.ModelForm):
             HTML("""<br/>"""),
             TabHolder(
                 Tab('Executive Summary',
-                    Fieldset('Program', 'program', 'profile_code', 'project_cod', 'sector', 'project_title', 'project_type',
+                    Fieldset('Program', 'program', 'project_proposal', 'profile_code', 'project_cod', 'sector', 'project_title', 'project_type',
                              'project_activity','account_code','sub_code','community','mc_staff_responsible'
                     ),
                     Fieldset(

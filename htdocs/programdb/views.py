@@ -20,10 +20,14 @@ class ProgramDash(ListView):
 
     template_name = 'programdb/programdashboard_list.html'
 
+
     def get(self, request, *args, **kwargs):
+        #set country to afghanistan for now until we have user data on country
+        #use self.request.user to get users country
+        set_country = "1"
         form = ProgramDashboardForm
         getDashboard = ProgramDashboard.objects.all()
-        getPrograms = Program.objects.all()
+        getPrograms = Program.objects.all().filter(funding_status="Funded", country=set_country)
 
         return render(request, self.template_name, {'form': form,'getDashboard':getDashboard,'getPrograms':getPrograms})
 
@@ -76,6 +80,14 @@ class ProjectProposalCreate(CreateView):
 
         form.save()
 
+        #create a new dashbaord entry for the project
+        latest = ProjectProposal.objects.latest('id')
+        getProposal = ProjectProposal.objects.get(id=latest.id)
+        getProgram = Program.objects.get(id=latest.program_id)
+
+        create_dashboard_entry = ProgramDashboard(program=getProgram, project_proposal=getProposal)
+        create_dashboard_entry.save()
+
         messages.success(self.request, 'Success, Proposal Created!')
         return self.render_to_response(self.get_context_data(form=form))
 
@@ -99,6 +111,11 @@ class ProjectProposalUpdate(UpdateView):
 
         form.save()
         messages.success(self.request, 'Success, Proposal Updated!')
+
+        is_approved = self.request.GET.get('approved')
+
+        if is_approved:
+            update_dashboard = ProgramDashboard.objects.filter(project_proposal__id=self.request.GET.get('id')).update(project_proposal_approved=True)
 
         return self.render_to_response(self.get_context_data(form=form))
 
@@ -153,11 +170,15 @@ class ProjectAgreementCreate(CreateView):
 
         form.save()
 
+        latest = ProjectAgreement.objects.latest('id')
+        getAgreement = ProjectAgreement.objects.get(id=latest.id)
+
+        update_dashboard = ProgramDashboard.objects.filter(project_proposal__id=self.request.GET.get('project_proposal')).update(project_agreement=getAgreement)
+
         messages.success(self.request, 'Success, Agreement Created!')
         return self.render_to_response(self.get_context_data(form=form))
 
-    #form_class = ProjectAgreementFormSet(ProjectAgreementHelper)
-    #helper_class = ProjectAgreementHelper()
+    form_class = ProjectAgreementForm
 
 
 class ProjectAgreementUpdate(UpdateView):
