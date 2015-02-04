@@ -199,7 +199,7 @@ class Contribution(models.Model):
 
     #displayed in admin templates
     def __unicode__(self):
-        return self.name
+        return self.contributor
 
 
 #Cluster Admin Interface
@@ -227,7 +227,7 @@ class QuantitativeOutputs(models.Model):
 
     #displayed in admin templates
     def __unicode__(self):
-        return self.name
+        return self.description
 
 
 #Cluster Admin Interface
