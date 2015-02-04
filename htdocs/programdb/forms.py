@@ -6,7 +6,9 @@ from functools import partial
 from widgets import GoogleMapsWidget
 import floppyforms as forms
 from django.forms.models import inlineformset_factory
-from .models import ProjectProposal, ProgramDashboard, ProjectAgreement, ProjectComplete, Sector, Program
+from .models import ProjectProposal, ProgramDashboard, ProjectAgreement, ProjectComplete, Sector, Program, Documentation
+
+from multiupload.fields import MultiFileField
 
 class ProgramDashboardForm(forms.ModelForm):
 
@@ -19,6 +21,7 @@ class DatePicker(forms.DateInput):
     template_name = 'datepicker.html'
 
 DateInput = partial(forms.DateInput, {'class': 'datepicker'})
+
 
 class ProjectProposalForm(forms.ModelForm):
 
@@ -74,8 +77,8 @@ class ProjectProposalForm(forms.ModelForm):
                 ),
                 Tab('Approval',
                     Fieldset('Approval',
-                             Field('approval', label="approved "), 'approved_by', 'approval_submitted_by',
-                             Field('approval_remarks', rows="3", css_class='input-xlarge')
+                        Field('approval', label="approved "), 'approved_by', 'approval_submitted_by',
+                        Field('approval_remarks', rows="3", css_class='input-xlarge')
                     ),
                 ),
             ),
@@ -99,6 +102,11 @@ class ProjectAgreementForm(forms.ModelForm):
 
     date_of_request = forms.DateInput()
 
+    program = forms.ModelChoiceField(queryset=Program.objects.filter(country='1', funding_status="Funded"))
+
+    documentation_government_approval = forms.FileField(required=False)
+    documentation_community_approval = forms.FileField(required=False)
+
     def __init__(self, *args, **kwargs):
         self.helper = FormHelper()
         self.helper.form_method = 'post'
@@ -119,7 +127,7 @@ class ProjectAgreementForm(forms.ModelForm):
                     ),
                     Fieldset(
                         'Partners',
-                        'name_of_partners','program_objectives','mc_objectives','effect_or_impact','expected_Start_date',
+                        'name_of_partners','program_objectives','mc_objectives','effect_or_impact','expected_start_date',
                         'expected_end_date','beneficiary_type','num_beneficiaries','total_estimated_budget','mc_estimated_budget',
                         'estimation_date', 'estimated_by','checked_by','other_budget'
                     ),
@@ -144,7 +152,7 @@ class ProjectAgreementForm(forms.ModelForm):
                         Field('description_of_government_involvement', rows="3", css_class='input-xlarge'),
                         'documentation_government_approval',
                         Field('description_of_community_involvement', rows="3", css_class='input-xlarge'),
-                        'documentation_government_approval',
+                        'documentation_community_approval',
 
                     ),
                 ),
@@ -175,6 +183,19 @@ class ProjectCompleteForm(forms.ModelForm):
         attrs={'width': 700, 'height': 400, 'longitude': 'longitude', 'latitude': 'latitude'}), required=False)
 
     date_of_request = forms.DateInput()
+
+    program = forms.ModelChoiceField(queryset=Program.objects.filter(country='1', funding_status="Funded"))
+
+    documentation = MultiFileField(max_num=10, min_num=0, max_file_size=1024*1024*5)
+
+    def save(self, commit=True):
+        super(ProjectCompleteForm, self).save(commit=commit)
+
+        for each in self.cleaned_data['documentation']:
+            att = Documentation(parent=self.instance, file=each)
+            att.save()
+
+        return self.instance
 
     def __init__(self, *args, **kwargs):
         self.helper = FormHelper()
@@ -231,7 +252,7 @@ class ProjectCompleteForm(forms.ModelForm):
                     ),
                      Fieldset(
                         'Issues',
-                        'issues_and_challenges','lessons_learned','qualitative_outputs'
+                        'issues_and_challenges','lessons_learned','quantitative_outputs'
 
                     ),
                 ),

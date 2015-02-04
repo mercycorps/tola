@@ -1,6 +1,6 @@
 from django.views.generic.edit import CreateView, UpdateView, DeleteView
 from django.views.generic.list import ListView
-from .models import ProjectProposal, ProgramDashboard, Program, Country, Province, Village, District, ProjectAgreement, ProjectComplete
+from .models import ProjectProposal, ProgramDashboard, Program, Country, Province, Village, District, ProjectAgreement, ProjectComplete, Documentation
 from silo.models import Silo, ValueStore, DataField
 from django.contrib import messages
 from django.http import HttpResponseRedirect
@@ -171,8 +171,6 @@ class ProjectAgreementCreate(CreateView):
 
     def form_valid(self, form):
 
-        form.save()
-
         latest = ProjectAgreement.objects.latest('id')
         getAgreement = ProjectAgreement.objects.get(id=latest.id)
 
@@ -231,7 +229,7 @@ class ProjectAgreementDelete(DeleteView):
 
 class ProjectCompleteCreate(CreateView):
     """
-    Project Agreement Form
+    Project Complete Form
     """
 
     model = ProjectComplete

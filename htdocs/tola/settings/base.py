@@ -201,6 +201,7 @@ THIRD_PARTY_APPS = (
     'crispy_forms',
     'floppyforms',
     'django_extensions',
+    'multiupload'
 
     #'mongoengine'
 )

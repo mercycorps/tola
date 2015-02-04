@@ -241,7 +241,7 @@ class Documentation(models.Model):
     name = models.CharField("Name of Document", max_length=135)
     documentation_type = models.CharField("Type (File, Photo or URL)", max_length=135)
     description = models.CharField(max_length=255)
-    file_field = models.ImageField(upload_to="uploads", blank=True, null=True)
+    file_field = models.FileField(upload_to="uploads", blank=True, null=True)
     create_date = models.DateTimeField(null=True, blank=True)
     edit_date = models.DateTimeField(null=True, blank=True)
 
@@ -431,7 +431,7 @@ class ProjectComplete(models.Model):
     capacity_built = models.CharField("What capacity was built to ensure sustainability?", max_length=255, blank=True, null=True)
     issues_and_challenges = models.TextField("List any issues or challenges faced (include reasons for delays)", blank=True, null=True)
     lessons_learned= models.TextField("Lessons learned", blank=True, null=True)
-    qualitative_outputs = models.ForeignKey(QuantitativeOutputs)
+    quantitative_outputs = models.ForeignKey(QuantitativeOutputs)
     documentation = models.ForeignKey(Documentation, blank=True, null=True)
     country = models.ForeignKey(Country)
     province = models.ForeignKey(Province, null=True, blank=True)
