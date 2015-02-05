@@ -20,7 +20,7 @@ class ProgramDashboardForm(forms.ModelForm):
 class DatePicker(forms.DateInput):
     template_name = 'datepicker.html'
 
-DateInput = partial(forms.DateInput, {'class': 'datepicker'})
+    DateInput = partial(forms.DateInput, {'class': 'datepicker'})
 
 
 class ProjectProposalForm(forms.ModelForm):
@@ -32,10 +32,11 @@ class ProjectProposalForm(forms.ModelForm):
     map = forms.CharField(widget=GoogleMapsWidget(
         attrs={'width': 700, 'height': 400, 'longitude': 'longitude', 'latitude': 'latitude'}), required=False)
 
-    date_of_request = forms.DateInput()
     #hard coded 1 for country for now until configured in the form
     #TODO: configure country for each form
     program = forms.ModelChoiceField(queryset=Program.objects.filter(country='1', funding_status="Funded"))
+
+    date_of_request = forms.DateField(widget=DatePicker.DateInput())
 
     def __init__(self, *args, **kwargs):
         self.helper = FormHelper()
@@ -100,7 +101,9 @@ class ProjectAgreementForm(forms.ModelForm):
     map = forms.CharField(widget=GoogleMapsWidget(
         attrs={'width': 700, 'height': 400, 'longitude': 'longitude', 'latitude': 'latitude'}), required=False)
 
-    date_of_request = forms.DateInput()
+    expected_start_date = forms.DateField(widget=DatePicker.DateInput())
+    expected_end_date = forms.DateField(widget=DatePicker.DateInput())
+    estimation_date = forms.DateField(widget=DatePicker.DateInput())
 
     program = forms.ModelChoiceField(queryset=Program.objects.filter(country='1', funding_status="Funded"))
 
@@ -137,8 +140,8 @@ class ProjectAgreementForm(forms.ModelForm):
                              'country', 'district', 'province', 'village', 'cluster'
                             ),
                     Fieldset('Map',
-                     'map', 'latitude', 'longitude'
-                    ),
+                            'map', 'latitude', 'longitude'
+                            ),
                 ),
                 Tab('Justification and Description',
                     Fieldset(
@@ -182,7 +185,11 @@ class ProjectCompleteForm(forms.ModelForm):
     map = forms.CharField(widget=GoogleMapsWidget(
         attrs={'width': 700, 'height': 400, 'longitude': 'longitude', 'latitude': 'latitude'}), required=False)
 
-    date_of_request = forms.DateInput()
+    expected_start_date = forms.DateField(widget=DatePicker.DateInput())
+    expected_end_date = forms.DateField(widget=DatePicker.DateInput())
+    actual_start_date = forms.DateField(widget=DatePicker.DateInput())
+    actual_end_date = forms.DateField(widget=DatePicker.DateInput())
+
 
     program = forms.ModelChoiceField(queryset=Program.objects.filter(country='1', funding_status="Funded"))
 
@@ -226,7 +233,7 @@ class ProjectCompleteForm(forms.ModelForm):
                 Tab('Justification and Description',
                     Fieldset(
                         'Justification',
-                        'expected_start_date','expected_end_date', 'expected_duration', 'actual_start_date', 'actual_end_date', 'actual_suration',
+                        'expected_start_date','expected_end_date', 'expected_duration', 'actual_start_date', 'actual_end_date', 'actual_duration',
                         'on_time','no_explanation',
                     ),
                      Fieldset(
