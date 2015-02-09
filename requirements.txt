@@ -18,6 +18,7 @@ django-registration==1.0
 django-rest-swagger==0.2.6
 django-tables2==0.15.0
 djangorestframework==3.0.2
+django-multiupload==0.3
 gdata==2.0.18
 google-api-python-client==1.2
 httplib2==0.9
