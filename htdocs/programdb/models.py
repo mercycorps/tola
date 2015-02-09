@@ -151,6 +151,36 @@ class ClusterAdmin(admin.ModelAdmin):
     list_display = ('name', 'district', 'create_date', 'edit_date')
     display = 'Cluster'
 
+
+#Village
+class Village(models.Model):
+    name = models.CharField("Village Name", max_length=255, blank=True)
+    district = models.ForeignKey(District)
+    create_date = models.DateTimeField(null=True, blank=True)
+    edit_date = models.DateTimeField(null=True, blank=True)
+
+    class Meta:
+        ordering = ('name',)
+
+    #onsave add create date or update edit date
+    def save(self, *args, **kwargs):
+        if self.create_date == None:
+            self.create_date = datetime.now()
+        self.edit_date = datetime.now()
+        super(Village, self).save()
+
+    #displayed in admin templates
+    def __unicode__(self):
+        return self.name
+
+
+#Village Admin Interface
+class VillageAdmin(admin.ModelAdmin):
+    list_display = ('name', 'district', 'create_date', 'edit_date')
+    display = 'Village'
+
+
+
 #Sector
 class Sector(models.Model):
     sector = models.CharField("Sector Name", max_length=255, blank=True)
@@ -177,6 +207,40 @@ class SectorAdmin(admin.ModelAdmin):
     list_display = ('sector', 'create_date', 'edit_date')
     display = 'Sector'
 
+#Community
+class Community(models.Model):
+    name = models.CharField("Community", max_length=255, blank=True, null=True)
+    country = models.ForeignKey(Country)
+    province = models.ForeignKey(Province, null=True, blank=True)
+    district = models.ForeignKey(District, null=True, blank=True)
+    village = models.ForeignKey(Village, null=True, blank=True)
+    cluster = models.ForeignKey(Cluster, null=True, blank=True)
+    latitude = models.CharField("Latitude (Coordinates)", max_length=255, blank=True, null=True)
+    longitude = models.CharField("Longitude (Coordinates)", max_length=255, blank=True, null=True)
+    community_rep = models.CharField("Community Representative", max_length=255, blank=True, null=True)
+    community_rep_contact = models.CharField("Community Representative Contact", max_length=255, blank=True, null=True)
+    community_mobilizer = models.CharField("Community Mobilizer", max_length=255, blank=True, null=True)
+    create_date = models.DateTimeField(null=True, blank=True)
+    edit_date = models.DateTimeField(null=True, blank=True)
+
+    class Meta:
+        ordering = ('name',)
+
+    #onsave add create date or update edit date
+    def save(self, *args, **kwargs):
+        if self.create_date == None:
+            self.create_date = datetime.now()
+        self.edit_date = datetime.now()
+        super(Community, self).save()
+
+    #displayed in admin templates
+    def __unicode__(self):
+        return self.name
+
+#Cluster Admin Interface
+class CommunityAdmin(admin.ModelAdmin):
+    list_display = ('name','country','district','province','village','cluster', 'longitude','latitude','create_date', 'edit_date')
+    display = 'Community'
 
 #Contribution
 class Contribution(models.Model):
@@ -236,53 +300,31 @@ class QuantitativeOutputsAdmin(admin.ModelAdmin):
     display = 'Quantitative Outputs'
 
 
-# Documentation Photos, FIles or URLS
-class Documentation(models.Model):
+# Documentation Templates
+class Template(models.Model):
     name = models.CharField("Name of Document", max_length=135)
-    documentation_type = models.CharField("Type (File, Photo or URL)", max_length=135)
+    documentation_type = models.CharField("Type (File or URL)", max_length=135)
     description = models.CharField(max_length=255)
     file_field = models.FileField(upload_to="uploads", blank=True, null=True)
     create_date = models.DateTimeField(null=True, blank=True)
     edit_date = models.DateTimeField(null=True, blank=True)
 
-
-    def __unicode__(self):
-        return self.name
-
-    class Meta:
-        ordering = ('name',)
-
-class DocumentationAdmin(admin.ModelAdmin):
-    list_display = ('name', 'description', 'documentation_type', 'file_field', 'create_date', 'edit_date')
-    display = 'Incident Photos'
-
-#Village
-class Village(models.Model):
-    name = models.CharField("Village Name", max_length=255, blank=True)
-    district = models.ForeignKey(District)
-    create_date = models.DateTimeField(null=True, blank=True)
-    edit_date = models.DateTimeField(null=True, blank=True)
-
-    class Meta:
-        ordering = ('name',)
-
-    #onsave add create date or update edit date
+     #onsave add create date or update edit date
     def save(self, *args, **kwargs):
         if self.create_date == None:
             self.create_date = datetime.now()
         self.edit_date = datetime.now()
-        super(Village, self).save()
+        super(Template, self).save()
 
-    #displayed in admin templates
     def __unicode__(self):
         return self.name
 
+    class Meta:
+        ordering = ('name',)
 
-#Village Admin Interface
-class VillageAdmin(admin.ModelAdmin):
-    list_display = ('name', 'district', 'create_date', 'edit_date')
-    display = 'Village'
-
+class TemplateAdmin(admin.ModelAdmin):
+    list_display = ('name', 'description', 'documentation_type', 'file_field', 'create_date', 'edit_date')
+    display = 'Template'
 
 # Project Proposal Form
 class ProjectProposal(models.Model):
@@ -290,16 +332,9 @@ class ProjectProposal(models.Model):
     profile_code = models.CharField("Profile Code", max_length=255, blank=True, null=True)
     proposal_num = models.CharField("Proposal Number", max_length=255, blank=True, null=True)
     date_of_request = models.DateTimeField("Date of Request", null=True, blank=True)
-    project_title = models.CharField("Project Title", max_length=255)
-    project_type = models.CharField("Proposal Number", max_length=255, blank=True, null=True)
-    country = models.ForeignKey(Country)
-    province = models.ForeignKey(Province, null=True, blank=True)
-    district = models.ForeignKey(District, null=True, blank=True)
-    village = models.ForeignKey(Village, null=True, blank=True)
-    cluster = models.ForeignKey(Cluster, null=True, blank=True)
-    community_rep = models.CharField("Community Representative", max_length=255, blank=True, null=True)
-    community_rep_contact = models.CharField("Community Representative Contact", max_length=255, blank=True, null=True)
-    community_mobilizer = models.CharField("Community Mobilizer", max_length=255, blank=True, null=True)
+    project_title = models.CharField("Project Title", max_length=255, blank=True, null=True)
+    project_type = models.CharField("Project Type", max_length=255, blank=True, null=True)
+    community = models.ManyToManyField(Community, blank=True, null=True)
     prop_status = models.CharField("Proposal Status", max_length=255, blank=True, null=True)
     rej_letter = models.TextField("Rejection Letter", blank=True, null=True)
     activity_code = models.CharField("Activity Code", max_length=255, blank=True, null=True)
@@ -354,16 +389,7 @@ class ProjectAgreement(models.Model):
     date_of_request = models.DateTimeField("Date of Request", blank=True, null=True)
     project_title = models.CharField("Project Title", max_length=255, blank=True, null=True)
     project_type = models.CharField("Proposal Number", max_length=255, blank=True, null=True)
-    country = models.ForeignKey(Country)
-    province = models.ForeignKey(Province, null=True, blank=True)
-    district = models.ForeignKey(District, null=True, blank=True)
-    village = models.ForeignKey(Village, null=True, blank=True)
-    cluster = models.ForeignKey(Cluster, null=True, blank=True)
-    latitude = models.CharField("Latitude (Coordinates)", max_length=255, blank=True, null=True)
-    longitude = models.CharField("Longitude (Coordinates)", max_length=255, blank=True, null=True)
-    community_rep = models.CharField("Community Representative", max_length=255, blank=True, null=True)
-    community_rep_contact = models.CharField("Community Representative Contact", max_length=255, blank=True, null=True)
-    community_mobilizer = models.CharField("Community Mobilizer", max_length=255, blank=True, null=True)
+    community = models.ManyToManyField(Community, blank=True, null=True)
     prop_status = models.CharField("Proposal Status", max_length=255, blank=True, null=True)
     rej_letter = models.TextField("Rejection Letter", blank=True, null=True)
     activity_code = models.CharField("Activity Code", max_length=255, blank=True, null=True)
@@ -399,6 +425,22 @@ class ProjectAgreement(models.Model):
     description_of_community_involvement = models.TextField(blank=True, null=True)
     documentation_government_approval = models.FileField("Upload Government Documentation of Approval", upload_to='uploads', blank=True, null=True)
     documentation_community_approval = models.FileField("Upload Community Documentation of Approval", upload_to='uploads', blank=True, null=True)
+    create_date = models.DateTimeField("Date Created", null=True, blank=True)
+    edit_date = models.DateTimeField("Last Edit Date", null=True, blank=True)
+
+    class Meta:
+        ordering = ('create_date',)
+
+    #onsave add create date or update edit date
+    def save(self, *args, **kwargs):
+        if self.create_date == None:
+            self.create_date = datetime.now()
+        self.edit_date = datetime.now()
+        super(ProjectAgreement, self).save()
+
+    #displayed in admin templates
+    def __unicode__(self):
+        return self.project_title
 
 
 class ProjectAgreementAdmin(admin.ModelAdmin):
@@ -432,19 +474,27 @@ class ProjectComplete(models.Model):
     issues_and_challenges = models.TextField("List any issues or challenges faced (include reasons for delays)", blank=True, null=True)
     lessons_learned= models.TextField("Lessons learned", blank=True, null=True)
     quantitative_outputs = models.ForeignKey(QuantitativeOutputs)
-    documentation = models.ForeignKey(Documentation, blank=True, null=True)
-    country = models.ForeignKey(Country)
-    province = models.ForeignKey(Province, null=True, blank=True)
-    district = models.ForeignKey(District, null=True, blank=True)
-    village = models.ForeignKey(Village, null=True, blank=True)
-    cluster = models.ForeignKey(Cluster, null=True, blank=True)
-    latitude = models.CharField("Latitude (Coordinates)", max_length=255, blank=True, null=True)
-    longitude = models.CharField("Longitude (Coordinates)", max_length=255, blank=True, null=True)
+    community = models.ManyToManyField(Community, blank=True, null=True)
     estimated_by = models.ForeignKey(settings.AUTH_USER_MODEL, blank=True, null=True, related_name="estimating_complete")
     checked_by = models.ForeignKey(settings.AUTH_USER_MODEL, blank=True, null=True, related_name="checking_complete")
     reviewed_by = models.ForeignKey(settings.AUTH_USER_MODEL, blank=True, null=True, related_name="reviewing_complete")
     approved_by = models.ForeignKey(settings.AUTH_USER_MODEL, blank=True, null=True, related_name="approving_agreement_complete")
+    create_date = models.DateTimeField("Date Created", null=True, blank=True)
+    edit_date = models.DateTimeField("Last Edit Date", null=True, blank=True)
 
+    class Meta:
+        ordering = ('create_date',)
+
+    #onsave add create date or update edit date
+    def save(self, *args, **kwargs):
+        if self.create_date == None:
+            self.create_date = datetime.now()
+        self.edit_date = datetime.now()
+        super(ProjectComplete, self).save()
+
+    #displayed in admin templates
+    def __unicode__(self):
+        return self.project_title
 
 class ProjectCompleteAdmin(admin.ModelAdmin):
     list_display = ('program', 'project_name', 'activity_code')
@@ -498,3 +548,30 @@ class ProgramDashboardAdmin(admin.ModelAdmin):
     list_display = ('program', 'project_proposal', 'project_proposal_approved', 'create_date', 'edit_date')
     display = 'Program Dashboard'
 
+# Documentation  Files or URLS
+class Documentation(models.Model):
+    name = models.CharField("Name of Document", max_length=135)
+    documentation_type = models.CharField("Type (File or URL)", max_length=135)
+    description = models.CharField(max_length=255)
+    template = models.ForeignKey(Template, blank=True, null=True)
+    file_field = models.FileField(upload_to="uploads", blank=True, null=True)
+    project_proposal_id = models.ForeignKey(ProjectProposal, blank=True, null=True)
+    create_date = models.DateTimeField(null=True, blank=True)
+    edit_date = models.DateTimeField(null=True, blank=True)
+
+     #onsave add create date or update edit date
+    def save(self, *args, **kwargs):
+        if self.create_date == None:
+            self.create_date = datetime.now()
+        self.edit_date = datetime.now()
+        super(Documentation, self).save()
+
+    def __unicode__(self):
+        return self.name
+
+    class Meta:
+        ordering = ('name',)
+
+class DocumentationAdmin(admin.ModelAdmin):
+    list_display = ('name', 'description', 'documentation_type', 'file_field', 'project_proposal_id', 'program_id', 'create_date', 'edit_date')
+    display = 'Documentation'

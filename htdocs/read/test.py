@@ -1,5 +1,5 @@
 from django.test import TestCase
-from read.models import Read, ReadType
+from .models import Read, ReadType
 from django.utils import timezone
 from django.contrib.auth.models import User
 

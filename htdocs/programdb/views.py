@@ -1,17 +1,16 @@
 from django.views.generic.edit import CreateView, UpdateView, DeleteView
 from django.views.generic.list import ListView
-from .models import ProjectProposal, ProgramDashboard, Program, Country, Province, Village, District, ProjectAgreement, ProjectComplete, Documentation
+from .models import ProjectProposal, ProgramDashboard, Program, Country, Province, Village, District, ProjectAgreement, ProjectComplete, Community, Documentation
 from silo.models import Silo, ValueStore, DataField
 from django.contrib import messages
 from django.http import HttpResponseRedirect
 from django.utils import timezone
-from .forms import ProjectProposalForm, ProgramDashboardForm, ProjectAgreementForm, ProjectCompleteForm
+from .forms import ProjectProposalForm, ProgramDashboardForm, ProjectAgreementForm, ProjectCompleteForm, DocumentationForm, CommunityForm
 import logging
 from django.shortcuts import render
 from django.contrib import messages
 from django.db import connections
 from django.contrib.auth.models import User
-
 
 # Get an instance of a logger
 logger = logging.getLogger(__name__)
@@ -24,13 +23,17 @@ class ProgramDash(ListView):
     def get(self, request, *args, **kwargs):
         #set country to afghanistan for now until we have user data on country
         #use self.request.user to get users country
+        #self.kwargs.pk = ID of program from dropdown
         set_country = "1"
         form = ProgramDashboardForm
-        getDashboard = ProgramDashboard.objects.all()
-        if self.request.GET.get('id'):
-            getPrograms = Program.objects.all().filter(funding_status="Funded", country=set_country, program_id=self.request.GET.get('id'))
+        getPrograms = Program.objects.all().filter(funding_status="Funded", country=set_country)
+        print int(self.kwargs['pk'])
+
+        if int(self.kwargs['pk']) == 0:
+            print "000"
+            getDashboard = ProgramDashboard.objects.all()
         else:
-            getPrograms = Program.objects.all().filter(funding_status="Funded", country=set_country)
+             getDashboard = ProgramDashboard.objects.all().filter(program_id=self.kwargs['pk'])
 
         return render(request, self.template_name, {'form': form,'getDashboard':getDashboard,'getPrograms':getPrograms})
 
@@ -43,7 +46,9 @@ class ProgramDash(ListView):
 
         return render(request, self.template_name, {'form': form,'getDashboard':getDashboard,'getPrograms':getPrograms})
 
-
+"""
+Project Proposal
+"""
 class ProjectProposalList(ListView):
 
     model = ProjectProposal
@@ -147,6 +152,18 @@ class ProjectProposalDelete(DeleteView):
 
     form_class = ProjectProposalForm
 
+"""
+Project Agreement
+"""
+class ProjectAgreementList(ListView):
+
+    model = ProjectAgreement
+
+    def get_context_data(self, **kwargs):
+        context = super(ProjectAgreementList, self).get_context_data(**kwargs)
+        context['now'] = timezone.now()
+        return context
+
 
 class ProjectAgreementCreate(CreateView):
     """
@@ -171,10 +188,12 @@ class ProjectAgreementCreate(CreateView):
 
     def form_valid(self, form):
 
+        form.save()
+
         latest = ProjectAgreement.objects.latest('id')
         getAgreement = ProjectAgreement.objects.get(id=latest.id)
 
-        update_dashboard = ProgramDashboard.objects.filter(project_proposal__id=self.request.GET.get('project_proposal')).update(project_agreement=getAgreement)
+        update_dashboard = ProgramDashboard.objects.filter(project_proposal__id=self.request.POST['project_proposal']).update(project_agreement=getAgreement)
 
         messages.success(self.request, 'Success, Agreement Created!')
         return self.render_to_response(self.get_context_data(form=form))
@@ -226,6 +245,18 @@ class ProjectAgreementDelete(DeleteView):
 
     form_class = ProjectAgreementForm
 
+"""
+Project Complete
+"""
+class ProjectCompleteList(ListView):
+
+    model = ProjectComplete
+
+    def get_context_data(self, **kwargs):
+        context = super(ProjectCompleteList, self).get_context_data(**kwargs)
+        context['now'] = timezone.now()
+        return context
+
 
 class ProjectCompleteCreate(CreateView):
     """
@@ -255,7 +286,7 @@ class ProjectCompleteCreate(CreateView):
         latest = ProjectComplete.objects.latest('id')
         getComplete = ProjectComplete.objects.get(id=latest.id)
 
-        update_dashboard = ProgramDashboard.objects.filter(project_agreement__id=self.request.GET.get('project_agreement')).update(project_complete=getComplete)
+        update_dashboard = ProgramDashboard.objects.filter(project_agreement__id=self.request.POST['project_proposal']).update(project_complete=getComplete)
 
         messages.success(self.request, 'Success, Completion Form Created!')
         return self.render_to_response(self.get_context_data(form=form))
@@ -318,6 +349,171 @@ class ProjectCompleteImport(ListView):
         return context
 
     template_name = 'programdb/projectcomplete_import.html'
+
+
+"""
+Documentation
+"""
+class DocumentationList(ListView):
+
+    model = Documentation
+
+    def get_context_data(self, **kwargs):
+        context = super(DocumentationList, self).get_context_data(**kwargs)
+        context['now'] = timezone.now()
+        return context
+
+
+class DocumentationCreate(CreateView):
+    """
+    Documentation Form
+    """
+
+    model = Documentation
+
+    def form_invalid(self, form):
+
+        messages.error(self.request, 'Invalid Form', fail_silently=False)
+
+        return self.render_to_response(self.get_context_data(form=form))
+
+    def form_valid(self, form):
+
+        form.save()
+
+        messages.success(self.request, 'Success, Documentation Created!')
+        return self.render_to_response(self.get_context_data(form=form))
+
+    form_class = DocumentationForm
+
+
+class DocumentationUpdate(UpdateView):
+    """
+    Documentation Form
+    """
+
+    model = ProjectProposal
+
+    def form_invalid(self, form):
+
+        messages.error(self.request, 'Invalid Form', fail_silently=False)
+
+        return self.render_to_response(self.get_context_data(form=form))
+
+    def form_valid(self, form):
+
+        form.save()
+        messages.success(self.request, 'Success, Documentation Updated!')
+
+        return self.render_to_response(self.get_context_data(form=form))
+
+    form_class = DocumentationForm
+
+
+class DocumentationDelete(DeleteView):
+    """
+    Documentation Form
+    """
+
+    model = Documentation
+
+    def form_invalid(self, form):
+
+        messages.error(self.request, 'Invalid Form', fail_silently=False)
+
+        return self.render_to_response(self.get_context_data(form=form))
+
+    def form_valid(self, form):
+
+        form.save()
+
+        messages.success(self.request, 'Success, Documentation Deleted!')
+        return self.render_to_response(self.get_context_data(form=form))
+
+    form_class = DocumentationForm
+
+
+"""
+Community
+"""
+
+class CommunityList(ListView):
+
+    model = Community
+
+    def get_context_data(self, **kwargs):
+        context = super(CommunityList, self).get_context_data(**kwargs)
+        context['now'] = timezone.now()
+        return context
+
+
+class CommunityCreate(CreateView):
+    """
+    Community Form
+    """
+
+    model = Community
+
+    def form_invalid(self, form):
+
+        messages.error(self.request, 'Invalid Form', fail_silently=False)
+
+        return self.render_to_response(self.get_context_data(form=form))
+
+    def form_valid(self, form):
+
+        form.save()
+
+        messages.success(self.request, 'Success, Community Created!')
+        return self.render_to_response(self.get_context_data(form=form))
+
+    form_class = CommunityForm
+
+
+class CommunityUpdate(UpdateView):
+    """
+    Community Form
+    """
+
+    model = Community
+
+    def form_invalid(self, form):
+
+        messages.error(self.request, 'Invalid Form', fail_silently=False)
+
+        return self.render_to_response(self.get_context_data(form=form))
+
+    def form_valid(self, form):
+
+        form.save()
+        messages.success(self.request, 'Success, Community Updated!')
+
+        return self.render_to_response(self.get_context_data(form=form))
+
+    form_class = CommunityForm
+
+
+class CommunityDelete(DeleteView):
+    """
+    Community Form
+    """
+
+    model = Community
+
+    def form_invalid(self, form):
+
+        messages.error(self.request, 'Invalid Form', fail_silently=False)
+
+        return self.render_to_response(self.get_context_data(form=form))
+
+    def form_valid(self, form):
+
+        form.save()
+
+        messages.success(self.request, 'Success, Community Deleted!')
+        return self.render_to_response(self.get_context_data(form=form))
+
+    form_class = CommunityForm
 
 
 def doImport(request, pk):

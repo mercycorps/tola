@@ -9,6 +9,7 @@
     <span class="caret"></span>
   </button>
   <ul class="dropdown-menu" role="menu" aria-labelledby="dropdownMenu1">
+    <li role="presentation"><a role="menuitem" tabindex="-1" href="/programdb/dashboard/0/">All Programs</a></li>
     {% for program in getPrograms %}
         <li role="presentation"><a role="menuitem" tabindex="-1" href="/programdb/dashboard/{{ program.id }}">{{ program.gaitid}} - {{ program.name }}</a></li>
     {% endfor %}
@@ -19,8 +20,9 @@
 </div>
 <ul class="list-group">
 {% for proposal in getDashboard %}
-    <h3>GAITID:{{ proposal.program.gaitid }} - {{ proposal.program.name }}</h3>
+    <div class="jumbotron">
 
+    <h3>{{ proposal.program.gaitid }} - {{ proposal.program.name }}</h3>
     <ul class="list-group">
         <li class="list-group-item list-group-item-info">
             <h4>Project Proposals</h4>
@@ -101,8 +103,15 @@
              </li>
         </ul>
     {% endif %}
+    <button class="btn btn-primary" type="button">
+        Documentation <span class="badge">4</span>
+    </button>
+    <a href="/programdb/projectproposal_add" class="btn btn-large btn-success">New Project Proposal</a> &nbsp;
+    <a href="/programdb/projectproposal_import" class="btn btn-large btn-info">Import Project Proposal</a>
+    </div>
 {% empty %}
     <li class="list-group-item">No proposals yet.</li>
+    </div>
 {% endfor %}
 </ul>
 {% endblock content %}
