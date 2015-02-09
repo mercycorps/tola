@@ -1,6 +1,6 @@
 from django.views.generic.edit import CreateView, UpdateView, DeleteView
 from django.views.generic.list import ListView
-from .models import ProjectProposal, ProgramDashboard, Program, Country, Province, Village, District, ProjectAgreement, ProjectComplete, Documentation
+from .models import ProjectProposal, ProgramDashboard, Program, Country, Province, Village, District, ProjectAgreement, ProjectComplete
 from silo.models import Silo, ValueStore, DataField
 from django.contrib import messages
 from django.http import HttpResponseRedirect
@@ -11,7 +11,6 @@ from django.shortcuts import render
 from django.contrib import messages
 from django.db import connections
 from django.contrib.auth.models import User
-
 
 # Get an instance of a logger
 logger = logging.getLogger(__name__)
@@ -24,13 +23,17 @@ class ProgramDash(ListView):
     def get(self, request, *args, **kwargs):
         #set country to afghanistan for now until we have user data on country
         #use self.request.user to get users country
+        #self.kwargs.pk = ID of program from dropdown
         set_country = "1"
         form = ProgramDashboardForm
-        getDashboard = ProgramDashboard.objects.all()
-        if self.request.GET.get('id'):
-            getPrograms = Program.objects.all().filter(funding_status="Funded", country=set_country, program_id=self.request.GET.get('id'))
+        getPrograms = Program.objects.all().filter(funding_status="Funded", country=set_country)
+        print int(self.kwargs['pk'])
+
+        if int(self.kwargs['pk']) == 0:
+            print "000"
+            getDashboard = ProgramDashboard.objects.all()
         else:
-            getPrograms = Program.objects.all().filter(funding_status="Funded", country=set_country)
+             getDashboard = ProgramDashboard.objects.all().filter(program_id=self.kwargs['pk'])
 
         return render(request, self.template_name, {'form': form,'getDashboard':getDashboard,'getPrograms':getPrograms})
 
@@ -171,10 +174,12 @@ class ProjectAgreementCreate(CreateView):
 
     def form_valid(self, form):
 
+        form.save()
+
         latest = ProjectAgreement.objects.latest('id')
         getAgreement = ProjectAgreement.objects.get(id=latest.id)
 
-        update_dashboard = ProgramDashboard.objects.filter(project_proposal__id=self.request.GET.get('project_proposal')).update(project_agreement=getAgreement)
+        update_dashboard = ProgramDashboard.objects.filter(project_proposal__id=self.request.POST['project_proposal']).update(project_agreement=getAgreement)
 
         messages.success(self.request, 'Success, Agreement Created!')
         return self.render_to_response(self.get_context_data(form=form))
@@ -255,7 +260,7 @@ class ProjectCompleteCreate(CreateView):
         latest = ProjectComplete.objects.latest('id')
         getComplete = ProjectComplete.objects.get(id=latest.id)
 
-        update_dashboard = ProgramDashboard.objects.filter(project_agreement__id=self.request.GET.get('project_agreement')).update(project_complete=getComplete)
+        update_dashboard = ProgramDashboard.objects.filter(project_agreement__id=self.request.POST['project_proposal']).update(project_complete=getComplete)
 
         messages.success(self.request, 'Success, Completion Form Created!')
         return self.render_to_response(self.get_context_data(form=form))

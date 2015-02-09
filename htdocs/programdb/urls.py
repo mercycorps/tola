@@ -12,14 +12,14 @@ except ImportError:  # django < 1.4
 urlpatterns = patterns('',
 
                        ###PROGRAMDB
-                       url(r'^dashboard', ProgramDash.as_view(), name='dashboard'),
+                       url(r'^dashboard/(?P<pk>\w+)/$', ProgramDash.as_view(), name='dashboard'),
 
                        #project proposal
                        url(r'^projectproposal_list', ProjectProposalList.as_view(), name='projectproposal_list'),
                        url(r'^projectproposal_add', ProjectProposalCreate.as_view(), name='projectproposal_add'),
                        url(r'^projectproposal_update/(?P<pk>\w+)/$', ProjectProposalUpdate.as_view(), name='projectproposal_update'),
                        url(r'^projectproposal_delete/(?P<pk>\w+)/$', ProjectProposalDelete.as_view(), name='projectproposal_delete'),
-                       url(r'^projectagreement_add/(?P<pk>\w+)/$', ProjectAgreementCreate.as_view(), name='projectagreement_add'),
+                       url(r'^projectagreement_add', ProjectAgreementCreate.as_view(), name='projectagreement_add'),
                        url(r'^projectagreement_update/(?P<pk>\w+)/$', ProjectAgreementUpdate.as_view(), name='projectagreement_update'),
                        url(r'^projectagreement_delete/(?P<pk>\w+)/$', ProjectAgreementDelete.as_view(), name='projectagreement_delete'),
                        url(r'^projectproposal_import', ProjectProposalImport.as_view(), name='projectproposal_import'),

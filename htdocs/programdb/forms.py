@@ -5,10 +5,9 @@ from crispy_forms.layout import Layout, Submit, Reset, Field
 from functools import partial
 from widgets import GoogleMapsWidget
 import floppyforms as forms
-from django.forms.models import inlineformset_factory
-from .models import ProjectProposal, ProgramDashboard, ProjectAgreement, ProjectComplete, Sector, Program, Documentation
 
-from multiupload.fields import MultiFileField
+from .models import ProjectProposal, ProgramDashboard, ProjectAgreement, ProjectComplete, Sector, Program
+
 
 class ProgramDashboardForm(forms.ModelForm):
 
@@ -18,6 +17,9 @@ class ProgramDashboardForm(forms.ModelForm):
 
 
 class DatePicker(forms.DateInput):
+    """
+    Use in form to create a Jquery datepicker element
+    """
     template_name = 'datepicker.html'
 
     DateInput = partial(forms.DateInput, {'class': 'datepicker'})
@@ -91,6 +93,7 @@ class ProjectProposalForm(forms.ModelForm):
             )
         )
         super(ProjectProposalForm, self).__init__(*args, **kwargs)
+
 
 class ProjectAgreementForm(forms.ModelForm):
 
@@ -190,19 +193,8 @@ class ProjectCompleteForm(forms.ModelForm):
     actual_start_date = forms.DateField(widget=DatePicker.DateInput())
     actual_end_date = forms.DateField(widget=DatePicker.DateInput())
 
-
     program = forms.ModelChoiceField(queryset=Program.objects.filter(country='1', funding_status="Funded"))
 
-    documentation = MultiFileField(max_num=10, min_num=0, max_file_size=1024*1024*5)
-
-    def save(self, commit=True):
-        super(ProjectCompleteForm, self).save(commit=commit)
-
-        for each in self.cleaned_data['documentation']:
-            att = Documentation(parent=self.instance, file=each)
-            att.save()
-
-        return self.instance
 
     def __init__(self, *args, **kwargs):
         self.helper = FormHelper()
@@ -263,11 +255,7 @@ class ProjectCompleteForm(forms.ModelForm):
 
                     ),
                 ),
-                Tab('Documentation',
-                    Fieldset('Documents and Links',
-                        'documentation',
-                    ),
-                ),
+
                 Tab('Approval',
                     Fieldset('Approval',
                              Field('approval', label="approved "), 'approved_by', 'approval_submitted_by',
@@ -283,4 +271,5 @@ class ProjectCompleteForm(forms.ModelForm):
             )
         )
         super(ProjectCompleteForm, self).__init__(*args, **kwargs)
+
 

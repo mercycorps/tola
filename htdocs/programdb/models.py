@@ -236,15 +236,21 @@ class QuantitativeOutputsAdmin(admin.ModelAdmin):
     display = 'Quantitative Outputs'
 
 
-# Documentation Photos, FIles or URLS
-class Documentation(models.Model):
+# Documentation Templates
+class Template(models.Model):
     name = models.CharField("Name of Document", max_length=135)
-    documentation_type = models.CharField("Type (File, Photo or URL)", max_length=135)
+    documentation_type = models.CharField("Type (File or URL)", max_length=135)
     description = models.CharField(max_length=255)
     file_field = models.FileField(upload_to="uploads", blank=True, null=True)
     create_date = models.DateTimeField(null=True, blank=True)
     edit_date = models.DateTimeField(null=True, blank=True)
 
+     #onsave add create date or update edit date
+    def save(self, *args, **kwargs):
+        if self.create_date == None:
+            self.create_date = datetime.now()
+        self.edit_date = datetime.now()
+        super(Documentation, self).save()
 
     def __unicode__(self):
         return self.name
@@ -254,7 +260,37 @@ class Documentation(models.Model):
 
 class DocumentationAdmin(admin.ModelAdmin):
     list_display = ('name', 'description', 'documentation_type', 'file_field', 'create_date', 'edit_date')
-    display = 'Incident Photos'
+    display = 'Template'
+
+
+# Documentation  Files or URLS
+class Documentation(models.Model):
+    name = models.CharField("Name of Document", max_length=135)
+    documentation_type = models.CharField("Type (File or URL)", max_length=135)
+    description = models.CharField(max_length=255)
+    template = models.ForeignKey(Template)
+    file_field = models.FileField(upload_to="uploads", blank=True, null=True)
+    program_id = models.ForeignKey(Program)
+    project_proposal_id = modesl.ForeignKey(ProjectProposal)
+    create_date = models.DateTimeField(null=True, blank=True)
+    edit_date = models.DateTimeField(null=True, blank=True)
+
+     #onsave add create date or update edit date
+    def save(self, *args, **kwargs):
+        if self.create_date == None:
+            self.create_date = datetime.now()
+        self.edit_date = datetime.now()
+        super(Documentation, self).save()
+
+    def __unicode__(self):
+        return self.name
+
+    class Meta:
+        ordering = ('name',)
+
+class DocumentationAdmin(admin.ModelAdmin):
+    list_display = ('name', 'description', 'documentation_type', 'file_field', 'project_proposal_id', 'program_id', 'create_date', 'edit_date')
+    display = 'Documentation'
 
 #Village
 class Village(models.Model):
@@ -352,7 +388,7 @@ class ProjectAgreement(models.Model):
     profile_code = models.CharField("Profile Code", max_length=255, blank=True, null=True)
     proposal_num = models.CharField("Proposal Number", max_length=255, blank=True, null=True)
     date_of_request = models.DateTimeField("Date of Request", blank=True, null=True)
-    project_title = models.CharField("Project Title", max_length=255, blank=True, null=True)
+    project_title = models.CharField("Project Title", max_length=255)
     project_type = models.CharField("Proposal Number", max_length=255, blank=True, null=True)
     country = models.ForeignKey(Country)
     province = models.ForeignKey(Province, null=True, blank=True)
@@ -399,6 +435,22 @@ class ProjectAgreement(models.Model):
     description_of_community_involvement = models.TextField(blank=True, null=True)
     documentation_government_approval = models.FileField("Upload Government Documentation of Approval", upload_to='uploads', blank=True, null=True)
     documentation_community_approval = models.FileField("Upload Community Documentation of Approval", upload_to='uploads', blank=True, null=True)
+    create_date = models.DateTimeField("Date Created", null=True, blank=True)
+    edit_date = models.DateTimeField("Last Edit Date", null=True, blank=True)
+
+    class Meta:
+        ordering = ('create_date',)
+
+    #onsave add create date or update edit date
+    def save(self, *args, **kwargs):
+        if self.create_date == None:
+            self.create_date = datetime.now()
+        self.edit_date = datetime.now()
+        super(ProjectAgreement, self).save()
+
+    #displayed in admin templates
+    def __unicode__(self):
+        return self.project_title
 
 
 class ProjectAgreementAdmin(admin.ModelAdmin):
@@ -411,7 +463,7 @@ class ProjectComplete(models.Model):
     project_proposal = models.ForeignKey(ProjectProposal)
     project_agreement = models.ForeignKey(ProjectAgreement)
     activity_code = models.CharField("Activity Code", max_length=255, blank=True, null=True)
-    project_name = models.CharField("Project Name", max_length=255, blank=True, null=True)
+    project_name = models.CharField("Project Name", max_length=255)
     expected_start_date = models.DateTimeField(blank=True, null=True)
     expected_end_date = models.DateTimeField(blank=True, null=True)
     actual_start_date = models.DateTimeField(blank=True, null=True)
@@ -444,7 +496,22 @@ class ProjectComplete(models.Model):
     checked_by = models.ForeignKey(settings.AUTH_USER_MODEL, blank=True, null=True, related_name="checking_complete")
     reviewed_by = models.ForeignKey(settings.AUTH_USER_MODEL, blank=True, null=True, related_name="reviewing_complete")
     approved_by = models.ForeignKey(settings.AUTH_USER_MODEL, blank=True, null=True, related_name="approving_agreement_complete")
+    create_date = models.DateTimeField("Date Created", null=True, blank=True)
+    edit_date = models.DateTimeField("Last Edit Date", null=True, blank=True)
 
+    class Meta:
+        ordering = ('create_date',)
+
+    #onsave add create date or update edit date
+    def save(self, *args, **kwargs):
+        if self.create_date == None:
+            self.create_date = datetime.now()
+        self.edit_date = datetime.now()
+        super(ProjectComplete, self).save()
+
+    #displayed in admin templates
+    def __unicode__(self):
+        return self.project_title
 
 class ProjectCompleteAdmin(admin.ModelAdmin):
     list_display = ('program', 'project_name', 'activity_code')
