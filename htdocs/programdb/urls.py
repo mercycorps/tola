@@ -1,8 +1,8 @@
 
 from .views import ProjectProposalImport, ProjectProposalList, ProjectProposalCreate, ProjectProposalUpdate, ProjectProposalDelete, \
-    ProgramDash, ProjectAgreementCreate, ProjectAgreementList, ProjectAgreementUpdate, ProjectAgreementDelete, ProjectCompleteCreate, ProjectCompleteUpdate,\
+    ProgramDash, ProjectAgreementCreate, ProjectAgreementList, ProjectAgreementUpdate, ProjectAgreementDelete, ProjectAgreementImport, ProjectCompleteCreate, ProjectCompleteUpdate,\
     ProjectCompleteList, ProjectCompleteDelete, ProjectCompleteImport, CommunityList, CommunityCreate, CommunityUpdate, CommunityDelete,\
-    DocumentationList, DocumentationCreate, DocumentationUpdate, DocumentationDelete
+    DocumentationList, DocumentationCreate, DocumentationUpdate, DocumentationDelete,ProjectDash, ProposalDash
 
 
 try:
@@ -15,7 +15,9 @@ except ImportError:  # django < 1.4
 urlpatterns = patterns('',
 
                        ###PROGRAMDB
-                       url(r'^dashboard/(?P<pk>\w+)/$', ProgramDash.as_view(), name='dashboard'),
+                       url(r'^dashboard/0/', ProgramDash.as_view(), name='dashboard'),
+                       url(r'^dashboard/project/(?P<pk>\w+)/$', ProjectDash.as_view(), name='project_dashboard'),
+                       url(r'^dashboard/proposal/(?P<pk>\w+)/$', ProposalDash.as_view(), name='proposal_dashboard'),
 
                        #project proposal
                        url(r'^projectproposal_list', ProjectProposalList.as_view(), name='projectproposal_list'),
@@ -28,12 +30,12 @@ urlpatterns = patterns('',
                        url(r'^projectagreement_add', ProjectAgreementCreate.as_view(), name='projectagreement_add'),
                        url(r'^projectagreement_update/(?P<pk>\w+)/$', ProjectAgreementUpdate.as_view(), name='projectagreement_update'),
                        url(r'^projectagreement_delete/(?P<pk>\w+)/$', ProjectAgreementDelete.as_view(), name='projectagreement_delete'),
-                       url(r'^projectproposal_import', ProjectProposalImport.as_view(), name='projectproposal_import'),
+                       url(r'^projectagreement_import', ProjectAgreementImport.as_view(), name='projectagreement_import'),
 
                        url(r'^projectcomplete_list', ProjectCompleteList.as_view(), name='projectcomplete_list'),
-                       url(r'^projectcomplete_add/(?P<pk>\w+)/$', ProjectCompleteCreate.as_view(), name='projectproposal_add'),
-                       url(r'^projectcomplete_update/(?P<pk>\w+)/$', ProjectCompleteUpdate.as_view(), name='projectagreement_update'),
-                       url(r'^projectcomplete_delete/(?P<pk>\w+)/$', ProjectCompleteDelete.as_view(), name='projectagreement_delete'),
+                       url(r'^projectcomplete_add/(?P<pk>\w+)/$', ProjectCompleteCreate.as_view(), name='projectcomplete_add'),
+                       url(r'^projectcomplete_update/(?P<pk>\w+)/$', ProjectCompleteUpdate.as_view(), name='projectcomplete_update'),
+                       url(r'^projectcomplete_delete/(?P<pk>\w+)/$', ProjectCompleteDelete.as_view(), name='projectcomplete_delete'),
                        url(r'^projectcomplete_import', ProjectCompleteImport.as_view(), name='projectcomplete_import'),
 
                        url(r'^community_list', CommunityList.as_view(), name='community_list'),
@@ -48,6 +50,5 @@ urlpatterns = patterns('',
 
                        url(r'^doimport/(?P<pk>\w+)/$', 'programdb.views.doImport' , name='doImport'),
                        url(r'^doMerge/(?P<pk>\w+)/$', 'programdb.views.doMerge', name='doMerge'),
-
 
                        )

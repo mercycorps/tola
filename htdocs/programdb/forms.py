@@ -31,9 +31,6 @@ class ProjectProposalForm(forms.ModelForm):
         model = ProjectProposal
         fields = '__all__'
 
-    map = forms.CharField(widget=GoogleMapsWidget(
-        attrs={'width': 700, 'height': 400, 'longitude': 'longitude', 'latitude': 'latitude'}), required=False)
-
     #hard coded 1 for country for now until configured in the form
     #TODO: configure country for each form
     program = forms.ModelChoiceField(queryset=Program.objects.filter(country='1', funding_status="Funded"))
@@ -59,15 +56,7 @@ class ProjectProposalForm(forms.ModelForm):
                     ),
                     Fieldset(
                         'Community',
-                        'community_rep','community_rep_contact','community_mobilizer'
-                    ),
-                ),
-                Tab('Location',
-                    Fieldset('Location',
-                             'country', 'district', 'province', 'village', 'cluster'
-                            ),
-                    Fieldset('Map',
-                     'map', 'latitude', 'longitude'
+                        'community', 'community_rep', 'community_rep_contact', 'community_mobilizer'
                     ),
                 ),
                 Tab('Description',
@@ -80,7 +69,7 @@ class ProjectProposalForm(forms.ModelForm):
                 ),
                 Tab('Approval',
                     Fieldset('Approval',
-                        Field('approval', label="approved "), 'approved_by', 'approval_submitted_by',
+                        PrependedText('approval', ''), 'approved_by', 'approval_submitted_by',
                         Field('approval_remarks', rows="3", css_class='input-xlarge')
                     ),
                 ),
@@ -138,14 +127,6 @@ class ProjectAgreementForm(forms.ModelForm):
                         'estimation_date', 'estimated_by','checked_by','other_budget'
                     ),
                 ),
-                Tab('Location',
-                    Fieldset('Location',
-                             'country', 'district', 'province', 'village', 'cluster'
-                            ),
-                    Fieldset('Map',
-                            'map', 'latitude', 'longitude'
-                            ),
-                ),
                 Tab('Justification and Description',
                     Fieldset(
                         'Justification',
@@ -164,7 +145,7 @@ class ProjectAgreementForm(forms.ModelForm):
                 ),
                 Tab('Approval',
                     Fieldset('Approval',
-                             Field('approval', label="approved "), 'approved_by', 'approval_submitted_by',
+                             PrependedText('approval', ''), 'approved_by', 'approval_submitted_by',
                              Field('approval_remarks', rows="3", css_class='input-xlarge')
                     ),
                 ),
@@ -213,36 +194,16 @@ class ProjectCompleteForm(forms.ModelForm):
                 Tab('Executive Summary',
                     Fieldset('Program', 'program', 'project_proposal', 'activity_code','project_name'
                     ),
-                ),
-                Tab('Location',
-                    Fieldset('Location',
-                             'country', 'district', 'province', 'village', 'cluster'
-                            ),
-                    Fieldset('Map',
-                     'map', 'latitude', 'longitude'
-                    ),
-                ),
-                Tab('Justification and Description',
                     Fieldset(
-                        'Justification',
+                        'Dates',
                         'expected_start_date','expected_end_date', 'expected_duration', 'actual_start_date', 'actual_end_date', 'actual_duration',
-                        'on_time','no_explanation',
-                    ),
-                     Fieldset(
-                        'Description',
-                        Field('description_of_project_activities', rows="3", css_class='input-xlarge'),
-                        Field('description_of_government_involvement', rows="3", css_class='input-xlarge'),
-                        'documentation_government_approval',
-                        Field('description_of_community_involvement', rows="3", css_class='input-xlarge'),
-                        'documentation_government_approval',
-
                     ),
                 ),
                 Tab('Budget and Issues',
                     Fieldset(
                         'Budget',
                         'estimated_budget','actual_budget', 'budget_variance', 'explanation_of_variance', 'actual_contribution', 'direct_beneficiaries',
-                        'on_time','no_explanation',
+                        PrependedText('on_time', ''),'no_explanation',
                     ),
                      Fieldset(
                         'Jobs',
@@ -277,7 +238,7 @@ class CommunityForm(forms.ModelForm):
 
     class Meta:
         model = Community
-        fields = '__all__'
+        exclude = ['create_date', 'edit_date']
 
     map = forms.CharField(widget=GoogleMapsWidget(
         attrs={'width': 700, 'height': 400, 'longitude': 'longitude', 'latitude': 'latitude'}), required=False)
@@ -296,19 +257,20 @@ class CommunityForm(forms.ModelForm):
 
             HTML("""<br/>"""),
 
-                Fieldset('Location',
-                         'country', 'district', 'province', 'village', 'cluster'
-                        ),
-                Fieldset('Map',
-                 'map', 'latitude', 'longitude'
-                ),
+                'name','community_rep','community_rep_contact','community_mobilizer',
+                'country','province','district','village','cluster', 'latitude','longitude',
 
-            HTML("""<br/>"""),
+            Fieldset(
+                'Map',
+                'map',
+
+            ),
             FormActions(
                 Submit('submit', 'Submit', css_class='btn-default'),
                 Reset('reset', 'Reset', css_class='btn-warning')
             )
-        ),
+        )
+
         super(CommunityForm, self).__init__(*args, **kwargs)
 
 
@@ -316,7 +278,8 @@ class DocumentationForm(forms.ModelForm):
 
     class Meta:
         model = Documentation
-        fields = '__all__'
+        exclude = ['create_date', 'edit_date']
+
 
     def __init__(self, *args, **kwargs):
         self.helper = FormHelper()
@@ -329,20 +292,17 @@ class DocumentationForm(forms.ModelForm):
         self.helper.help_text_inline = True
         self.helper.html5_required = True
         self.helper.layout = Layout(
-            HTML("""<br/>"""),
-
-                Fieldset('Documentation',
-                         'name', 'project_proposal_id', 'Description', 'template'
-                        ),
-                Fieldset('Map',
-                 'file_field', 'documentation_type'
-                ),
 
             HTML("""<br/>"""),
+
+                'name', 'documentation_type', Field('description', rows="3", css_class='input-xlarge'), 'template',
+                'file_field','project_proposal_id',
+
             FormActions(
                 Submit('submit', 'Submit', css_class='btn-default'),
                 Reset('reset', 'Reset', css_class='btn-warning')
             )
-        ),
+        )
+
         super(DocumentationForm, self).__init__(*args, **kwargs)
 

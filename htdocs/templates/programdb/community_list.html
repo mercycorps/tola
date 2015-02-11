@@ -11,7 +11,7 @@
 <ul class="list-group">
 {% for item in object_list %}
     <li class="list-group-item"><b>{{ item.create_date|date }} - {{ item.name }}</b></li>
-    <li class="list-group-item"><a href="/programdb/community_update/{{ item.id }}" class="btn btn-sm btn-warning">Update Community</a> <a href="/programdb/community_delete/{{ item.id }}" class="btn btn-sm btn-danger">Delete Community</a> <a href="/programdb/community_add" class="btn btn-sm btn-info">Create a Community</a></li>
+    <li class="list-group-item"><a href="/programdb/community_update/{{ item.id }}" class="btn btn-sm btn-warning">Update Community</a> <a href="/programdb/community_delete/{{ item.id }}" class="btn btn-sm btn-danger">Delete Community</a></li>
 {% empty %}
     <li class="list-group-item">No communities yet.</li>
 {% endfor %}

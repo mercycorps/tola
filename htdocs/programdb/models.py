@@ -5,9 +5,6 @@ from datetime import datetime
 from read.models import Read
 
 
-
-
-#Countires
 class Country(models.Model):
     country = models.CharField("Country Name", max_length=255, blank=True)
     code = models.CharField("2 Letter Country Code", max_length=4, blank=True)
@@ -30,13 +27,11 @@ class Country(models.Model):
         return self.country
 
 
-#Country Admin Interface
 class CountryAdmin(admin.ModelAdmin):
     list_display = ('name', 'create_date', 'edit_date')
     display = 'Country'
 
 
-#Programs
 class Program(models.Model):
     gaitid = models.CharField("GAITID", max_length=255, blank=True, unique=True)
     name = models.CharField("Program Name", max_length=255, blank=True)
@@ -63,13 +58,11 @@ class Program(models.Model):
         return self.name
 
 
-#Programs Admin Interface
 class ProgramAdmin(admin.ModelAdmin):
     list_display = ('name', 'description', 'create_date', 'edit_date')
     display = 'Program'
 
 
-#Province
 class Province(models.Model):
     name = models.CharField("Province Name", max_length=255, blank=True)
     country = models.ForeignKey(Country)
@@ -91,13 +84,11 @@ class Province(models.Model):
         return self.name
 
 
-#Province Admin Interface
 class ProvinceAdmin(admin.ModelAdmin):
     list_display = ('name', 'country', 'create_date', 'edit_date')
     display = 'Province'
 
 
-#District
 class District(models.Model):
     name = models.CharField("District Name", max_length=255, blank=True)
     province = models.ForeignKey(Province)
@@ -119,12 +110,11 @@ class District(models.Model):
         return self.name
 
 
-#District Admin Interface
 class DistrictAdmin(admin.ModelAdmin):
     list_display = ('name', 'province', 'create_date', 'edit_date')
     display = 'District'
 
-#Cluster
+
 class Cluster(models.Model):
     name = models.CharField("Cluster Name", max_length=255, blank=True)
     district = models.ForeignKey(District)
@@ -146,13 +136,11 @@ class Cluster(models.Model):
         return self.name
 
 
-#Cluster Admin Interface
 class ClusterAdmin(admin.ModelAdmin):
     list_display = ('name', 'district', 'create_date', 'edit_date')
     display = 'Cluster'
 
 
-#Village
 class Village(models.Model):
     name = models.CharField("Village Name", max_length=255, blank=True)
     district = models.ForeignKey(District)
@@ -174,14 +162,11 @@ class Village(models.Model):
         return self.name
 
 
-#Village Admin Interface
 class VillageAdmin(admin.ModelAdmin):
     list_display = ('name', 'district', 'create_date', 'edit_date')
     display = 'Village'
 
 
-
-#Sector
 class Sector(models.Model):
     sector = models.CharField("Sector Name", max_length=255, blank=True)
     create_date = models.DateTimeField(null=True, blank=True)
@@ -202,12 +187,11 @@ class Sector(models.Model):
         return self.name
 
 
-#Cluster Admin Interface
 class SectorAdmin(admin.ModelAdmin):
     list_display = ('sector', 'create_date', 'edit_date')
     display = 'Sector'
 
-#Community
+
 class Community(models.Model):
     name = models.CharField("Community", max_length=255, blank=True, null=True)
     country = models.ForeignKey(Country)
@@ -237,12 +221,12 @@ class Community(models.Model):
     def __unicode__(self):
         return self.name
 
-#Cluster Admin Interface
+
 class CommunityAdmin(admin.ModelAdmin):
     list_display = ('name','country','district','province','village','cluster', 'longitude','latitude','create_date', 'edit_date')
     display = 'Community'
 
-#Contribution
+
 class Contribution(models.Model):
     contributor = models.CharField("Contributor", max_length=255, blank=True)
     description = models.CharField("Description of Contribution", max_length=255, blank=True)
@@ -266,12 +250,11 @@ class Contribution(models.Model):
         return self.contributor
 
 
-#Cluster Admin Interface
 class ContributionAdmin(admin.ModelAdmin):
     list_display = ('contributor', 'create_date', 'edit_date')
     display = 'Contribution'
 
-#Quantitative Outpust
+
 class QuantitativeOutputs(models.Model):
     number_achieved = models.CharField("Contributor", max_length=255, blank=True)
     description = models.CharField("Description of Contribution", max_length=255, blank=True)
@@ -294,13 +277,11 @@ class QuantitativeOutputs(models.Model):
         return self.description
 
 
-#Cluster Admin Interface
 class QuantitativeOutputsAdmin(admin.ModelAdmin):
     list_display = ('descrption', 'number_achieved', 'create_date', 'edit_date')
     display = 'Quantitative Outputs'
 
 
-# Documentation Templates
 class Template(models.Model):
     name = models.CharField("Name of Document", max_length=135)
     documentation_type = models.CharField("Type (File or URL)", max_length=135)
@@ -308,63 +289,6 @@ class Template(models.Model):
     file_field = models.FileField(upload_to="uploads", blank=True, null=True)
     create_date = models.DateTimeField(null=True, blank=True)
     edit_date = models.DateTimeField(null=True, blank=True)
-
-    #onsave add create date or update edit date
-    def save(self, *args, **kwargs):
-        if self.create_date == None:
-            self.create_date = datetime.now()
-        self.edit_date = datetime.now()
-        super(Documentation, self).save()
-
-    def __unicode__(self):
-        return self.name
-
-    class Meta:
-        ordering = ('name',)
-
-class DocumentationAdmin(admin.ModelAdmin):
-    list_display = ('name', 'description', 'documentation_type', 'file_field', 'create_date', 'edit_date')
-    display = 'Template'
-
-
-# Documentation  Files or URLS
-class Documentation(models.Model):
-    name = models.CharField("Name of Document", max_length=135)
-    documentation_type = models.CharField("Type (File or URL)", max_length=135)
-    description = models.CharField(max_length=255)
-    template = models.ForeignKey(Template)
-    file_field = models.FileField(upload_to="uploads", blank=True, null=True)
-    program_id = models.ForeignKey(Program)
-    project_proposal_id = modesl.ForeignKey(ProjectProposal)
-    create_date = models.DateTimeField(null=True, blank=True)
-    edit_date = models.DateTimeField(null=True, blank=True)
-
-     #onsave add create date or update edit date
-    def save(self, *args, **kwargs):
-        if self.create_date == None:
-            self.create_date = datetime.now()
-        self.edit_date = datetime.now()
-        super(Documentation, self).save()
-
-    def __unicode__(self):
-        return self.name
-
-    class Meta:
-        ordering = ('name',)
-
-class DocumentationAdmin(admin.ModelAdmin):
-    list_display = ('name', 'description', 'documentation_type', 'file_field', 'project_proposal_id', 'program_id', 'create_date', 'edit_date')
-    display = 'Documentation'
-
-#Village
-class Village(models.Model):
-    name = models.CharField("Village Name", max_length=255, blank=True)
-    district = models.ForeignKey(District)
-    create_date = models.DateTimeField(null=True, blank=True)
-    edit_date = models.DateTimeField(null=True, blank=True)
-
-    class Meta:
-        ordering = ('name',)
 
     #onsave add create date or update edit date
     def save(self, *args, **kwargs):
@@ -379,13 +303,14 @@ class Village(models.Model):
     class Meta:
         ordering = ('name',)
 
+
 class TemplateAdmin(admin.ModelAdmin):
     list_display = ('name', 'description', 'documentation_type', 'file_field', 'create_date', 'edit_date')
     display = 'Template'
 
-# Project Proposal Form
+
 class ProjectProposal(models.Model):
-    program = models.ForeignKey(Program, null=True, blank=True)
+    program = models.ForeignKey(Program, null=True, blank=True, related_name="proposal")
     profile_code = models.CharField("Profile Code", max_length=255, blank=True, null=True)
     proposal_num = models.CharField("Proposal Number", max_length=255, blank=True, null=True)
     date_of_request = models.DateTimeField("Date of Request", null=True, blank=True)
@@ -437,14 +362,18 @@ class ProjectProposal(models.Model):
         return self.project_title
 
 
-#Project Agreement Form
+class ProjectProposalAdmin(admin.ModelAdmin):
+    list_display = ('project_title')
+    display = 'project_title'
+
+
 class ProjectAgreement(models.Model):
     project_proposal = models.ForeignKey(ProjectProposal, null=False, blank=False)
-    program = models.ForeignKey(Program, null=True, blank=True)
+    program = models.ForeignKey(Program, null=True, blank=True, related_name="agreement")
     profile_code = models.CharField("Profile Code", max_length=255, blank=True, null=True)
     proposal_num = models.CharField("Proposal Number", max_length=255, blank=True, null=True)
     date_of_request = models.DateTimeField("Date of Request", blank=True, null=True)
-    project_title = models.CharField("Project Title", max_length=255)
+    project_title = models.CharField("Project Title", max_length=255, blank=True, null=True)
     project_type = models.CharField("Proposal Number", max_length=255, blank=True, null=True)
     community = models.ManyToManyField(Community, blank=True, null=True)
     prop_status = models.CharField("Proposal Status", max_length=255, blank=True, null=True)
@@ -504,13 +433,13 @@ class ProjectAgreementAdmin(admin.ModelAdmin):
     list_display = ('project_title')
     display = 'project_title'
 
-# Project Proposal Form
+
 class ProjectComplete(models.Model):
-    program = models.ForeignKey(Program, null=True, blank=True)
+    program = models.ForeignKey(Program, null=True, blank=True, related_name="complete")
     project_proposal = models.ForeignKey(ProjectProposal)
     project_agreement = models.ForeignKey(ProjectAgreement)
     activity_code = models.CharField("Activity Code", max_length=255, blank=True, null=True)
-    project_name = models.CharField("Project Name", max_length=255)
+    project_name = models.CharField("Project Name", max_length=255, blank=True, null=True)
     expected_start_date = models.DateTimeField(blank=True, null=True)
     expected_end_date = models.DateTimeField(blank=True, null=True)
     actual_start_date = models.DateTimeField(blank=True, null=True)
@@ -553,11 +482,40 @@ class ProjectComplete(models.Model):
     def __unicode__(self):
         return self.project_title
 
+
 class ProjectCompleteAdmin(admin.ModelAdmin):
     list_display = ('program', 'project_name', 'activity_code')
     display = 'project_name'
 
-#Merge Map
+
+class Documentation(models.Model):
+    name = models.CharField("Name of Document", max_length=135)
+    documentation_type = models.CharField("Type (File or URL)", max_length=135)
+    description = models.CharField(max_length=255)
+    template = models.ForeignKey(Template, blank=True, null=True)
+    file_field = models.FileField(upload_to="uploads", blank=True, null=True)
+    project_proposal_id = models.ForeignKey(ProjectProposal, blank=True, null=True)
+    create_date = models.DateTimeField(null=True, blank=True)
+    edit_date = models.DateTimeField(null=True, blank=True)
+
+     #onsave add create date or update edit date
+    def save(self, *args, **kwargs):
+        if self.create_date == None:
+            self.create_date = datetime.now()
+        self.edit_date = datetime.now()
+        super(Documentation, self).save()
+
+    def __unicode__(self):
+        return self.name
+
+    class Meta:
+        ordering = ('name',)
+
+
+class DocumentationAdmin(admin.ModelAdmin):
+    list_display = ('name', 'description', 'documentation_type', 'file_field', 'project_proposal_id', 'program_id', 'create_date', 'edit_date')
+    display = 'Documentation'
+
 
 class MergeMap(models.Model):
     read = models.ForeignKey(Read, null=False, blank=False)
@@ -573,7 +531,6 @@ class MergeMapAdmin(admin.ModelAdmin):
     display = 'project_proposal'
 
 
-#Dashboard
 class ProgramDashboard(models.Model):
     program = models.ForeignKey(Program, null=True, blank=True)
     project_proposal = models.ForeignKey(ProjectProposal, null=True, blank=True)
@@ -600,35 +557,7 @@ class ProgramDashboard(models.Model):
         return unicode(self.program)
 
 
-#District Admin Interface
 class ProgramDashboardAdmin(admin.ModelAdmin):
     list_display = ('program', 'project_proposal', 'project_proposal_approved', 'create_date', 'edit_date')
     display = 'Program Dashboard'
 
-# Documentation  Files or URLS
-class Documentation(models.Model):
-    name = models.CharField("Name of Document", max_length=135)
-    documentation_type = models.CharField("Type (File or URL)", max_length=135)
-    description = models.CharField(max_length=255)
-    template = models.ForeignKey(Template, blank=True, null=True)
-    file_field = models.FileField(upload_to="uploads", blank=True, null=True)
-    project_proposal_id = models.ForeignKey(ProjectProposal, blank=True, null=True)
-    create_date = models.DateTimeField(null=True, blank=True)
-    edit_date = models.DateTimeField(null=True, blank=True)
-
-     #onsave add create date or update edit date
-    def save(self, *args, **kwargs):
-        if self.create_date == None:
-            self.create_date = datetime.now()
-        self.edit_date = datetime.now()
-        super(Documentation, self).save()
-
-    def __unicode__(self):
-        return self.name
-
-    class Meta:
-        ordering = ('name',)
-
-class DocumentationAdmin(admin.ModelAdmin):
-    list_display = ('name', 'description', 'documentation_type', 'file_field', 'project_proposal_id', 'program_id', 'create_date', 'edit_date')
-    display = 'Documentation'

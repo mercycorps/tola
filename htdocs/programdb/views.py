@@ -11,11 +11,49 @@ from django.shortcuts import render
 from django.contrib import messages
 from django.db import connections
 from django.contrib.auth.models import User
+from django.db.models import Count
+from django.db.models import Q
 
 # Get an instance of a logger
 logger = logging.getLogger(__name__)
 
+
+class ProjectDash(ListView):
+
+    template_name = 'programdb/projectdashboard_list.html'
+
+    def get(self, request, *args, **kwargs):
+
+        #set country to afghanistan for now until we have user data on country
+        #use self.request.user to get users country
+        #self.kwargs.pk = ID of program from dropdown
+        set_country = "1"
+        getPrograms = Program.objects.all().filter(funding_status="Funded", country=set_country)
+        form = ProgramDashboardForm
+
+        if int(self.kwargs['pk']) == 0:
+            getDashboard = ProgramDashboard.objects.all()
+        else:
+             getDashboard = ProgramDashboard.objects.all().filter(program_id=self.kwargs['pk'])
+
+        getProgram =Program.objects.get(id=self.kwargs['pk'])
+
+        return render(request, self.template_name, {'form': form, 'getProgram': getProgram, 'getDashboard': getDashboard,'getPrograms':getPrograms})
+
+
 class ProgramDash(ListView):
+
+    template_name = 'programdb/programdashboard_list.html'
+
+
+    def get(self, request, *args, **kwargs):
+        set_country = "1"
+
+        getPrograms = Program.objects.all().filter(funding_status="Funded", country=set_country).filter(Q(agreement__isnull=False) | Q(proposal__isnull=False) | Q(complete__isnull=False)).order_by('name').values('id', 'name', 'gaitid','agreement__id','proposal__id','complete__id')
+
+        return render(request, self.template_name, {'getPrograms':getPrograms})
+
+class ProposalDash(ListView):
 
     template_name = 'programdb/programdashboard_list.html'
 
@@ -27,10 +65,8 @@ class ProgramDash(ListView):
         set_country = "1"
         form = ProgramDashboardForm
         getPrograms = Program.objects.all().filter(funding_status="Funded", country=set_country)
-        print int(self.kwargs['pk'])
 
         if int(self.kwargs['pk']) == 0:
-            print "000"
             getDashboard = ProgramDashboard.objects.all()
         else:
              getDashboard = ProgramDashboard.objects.all().filter(program_id=self.kwargs['pk'])
@@ -45,6 +81,7 @@ class ProgramDash(ListView):
 
 
         return render(request, self.template_name, {'form': form,'getDashboard':getDashboard,'getPrograms':getPrograms})
+
 
 """
 Project Proposal
@@ -163,6 +200,18 @@ class ProjectAgreementList(ListView):
         context = super(ProjectAgreementList, self).get_context_data(**kwargs)
         context['now'] = timezone.now()
         return context
+
+
+class ProjectAgreementImport(ListView):
+
+    model = Silo
+
+    def get_context_data(self, **kwargs):
+        context = super(ProjectAgreementImport, self).get_context_data(**kwargs)
+        context['now'] = timezone.now()
+        return context
+
+    template_name = 'programdb/projectagreement_import.html'
 
 
 class ProjectAgreementCreate(CreateView):
@@ -354,6 +403,8 @@ class ProjectCompleteImport(ListView):
 """
 Documentation
 """
+
+
 class DocumentationList(ListView):
 
     model = Documentation

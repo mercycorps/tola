@@ -1,0 +1,133 @@
+{% extends "base.html" %}
+{% block page_title %}Project Dashboard{% endblock %}
+
+{% block content %}
+<div>
+<div class="dropdown">
+  <button class="btn btn-default dropdown-toggle" type="button" id="dropdownMenu1" data-toggle="dropdown" aria-expanded="true">
+    Programs
+    <span class="caret"></span>
+  </button>
+  <ul class="dropdown-menu" role="menu" aria-labelledby="dropdownMenu1">
+    {% for program in getPrograms %}
+        <li role="presentation"><a role="menuitem" tabindex="-1" href="/programdb/dashboard/project/{{ program.id }}">{{ program.gaitid}} - {{ program.name }}</a></li>
+    {% endfor %}
+  </ul>
+  <a href="/programdb/projectproposal_add" class="btn btn-large btn-success">New Project Proposal</a>
+  <a href="/programdb/projectproposal_import" class="btn btn-large btn-info">Import Project Proposal</a>
+</div>
+
+</div>
+<br/>
+<div>
+<ol class="breadcrumb">
+  <li><a href="/programdb/dashboard/0/">Program Dashboard</a></li>
+  <li class="active">Projects</li>
+</ol>
+</div>
+<ul class="list-group">
+<h3>{{getProgram.gaitid }} - {{ getProgram.name }}</h3>
+{% for proposal in getDashboard %}
+    <div class="jumbotron">
+    <ul class="list-group">
+        <li class="list-group-item list-group-item-info">
+            <h4>Project Proposals</h4>
+        </li>
+
+        <li class="list-group-item"><b>{{ proposal.project_proposal.create_date|date }} - {{ proposal.project_proposal.project_title }} {{ proposal.project_proposal.proposal_num }}</b></li>
+        <li class="list-group-item">
+            <div class="btn-group" role="group" aria-label="...">
+                <button type="button" class="btn btn-sm btn-warning" onclick="location.href='/programdb/projectproposal_update/{{ proposal.project_proposal.id }}'">Update Proposal</button>
+                <button type="button" class="btn btn-sm btn-danger" onclick="location.href='/programdb/projectproposal_delete/{{ proposal.project_proposal.id }}'">Delete Proposal</button>
+                {% if proposal.project_proposal.approved %}
+                    <button type="button" class="btn btn-sm btn-info" onclick="location.href='/programdb/projectagreement_add/{{ proposal.project_proposal.id }}'">Create an Agreement</button>
+                {% else %}
+                    <button data-toggle="tooltip" data-placement="top" title="Once Approved you will be able to click here and create a project agreement" type="button" class="btn btn-sm btn-info">Create an Agreement</button>
+                {% endif %}
+            </div>
+        </li>
+        <li class="list-group-item">
+            {% if proposal.project_proposal.approval %}
+                <button class="btn btn-success" type="button">
+                  Approved
+                </button>
+            {% else %}
+                <button class="btn btn-primary" type="button" onclick="location.href='/programdb/projectproposal_update/{{ proposal.project_proposal.id }}'">
+                  Waiting for Approval
+                </button>
+            {% endif %}
+         </li>
+
+    </ul>
+    {% if proposal.project_agreement %}
+        <ul class="list-group">
+            <li class="list-group-item list-group-item-info">
+                <h4>Project Agreements</h4>
+            </li>
+
+            <li class="list-group-item"><b>{{ proposal.project_agreement.create_date|date }} - {{ proposal.project_agreement.project_title }} {{ proposal.project_agreement.proposal_num }}</b></li>
+            <li class="list-group-item">
+                <div class="btn-group" role="group" aria-label="...">
+                    <button type="button" class="btn btn-sm btn-warning" onclick="location.href='/programdb/projectagreement_update/{{ proposal.project_agreement.id }}'">Update Agreement</button>
+                    <button type="button" class="btn btn-sm btn-danger" onclick="location.href='/programdb/projectagreement_delete/{{ proposal.project_agreement.id }}'">Delete Agreement</button>
+                    {% if proposal.project_proposal.approved %}
+                        <button type="button" class="btn btn-sm btn-info" onclick="location.href='/programdb/projectcomplete_add/{{ proposal.project_agreement.id }}'">Complete Project</button>
+                    {% else %}
+                        <button data-toggle="tooltip" data-placement="top" title="Once Approved you will be able to click here and complete the project" type="button" class="btn btn-sm btn-info">Complete Project</button>
+                    {% endif %}
+
+
+                </div>
+            </li>
+            <li class="list-group-item">
+                {% if proposal.project_agreement.approval %}
+                    <button class="btn btn-success" type="button">
+                      Approved
+                    </button>
+                {% else %}
+                    <button class="btn btn-primary" type="button">
+                      Waiting for Approval
+                    </button>
+                {% endif %}
+             </li>
+        </ul>
+    {% endif %}
+    {% if proposal.project_complete %}
+        <h4>Project Completion</h4>
+        <ul class="list-group">
+            <li class="list-group-item list-group-item-info">
+                <h4>Project Completion</h4>
+            </li>
+
+            <li class="list-group-item"><b>{{ proposal.project_complete.create_date|date }} - {{ proposal.project_complete.project_title }} {{ proposal.project_complete.proposal_num }}</b></li>
+            <li class="list-group-item">
+                <div class="btn-group" role="group" aria-label="...">
+                    <button type="button" class="btn btn-sm btn-warning" onclick="location.href='/programdb/projectagreement_update/{{ proposal.project_complete.id }}'">Update Agreement</button>
+                    <button type="button" class="btn btn-sm btn-danger" onclick="location.href='/programdb/projectagreement_delete/{{ proposal.project_complete.id }}'">Delete Agreement</button>
+                </div>
+            </li>
+            <li class="list-group-item">
+                {% if proposal.project_complete.approval %}
+                    <button class="btn btn-success" type="button">
+                      Approved
+                    </button>
+                {% else %}
+                    <button class="btn btn-primary" type="button">
+                      Open
+                    </button>
+                {% endif %}
+             </li>
+        </ul>
+    {% endif %}
+    <button class="btn btn-primary" type="button">
+        Documentation <span class="badge">4</span>
+    </button>
+    <a href="/programdb/projectproposal_add" class="btn btn-large btn-success">New Project Proposal</a> &nbsp;
+    <a href="/programdb/projectproposal_import" class="btn btn-large btn-info">Import Project Proposal</a>
+    </div>
+{% empty %}
+    <li class="list-group-item">No proposals yet.</li>
+    </div>
+{% endfor %}
+</ul>
+{% endblock content %}
