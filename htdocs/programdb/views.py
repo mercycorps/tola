@@ -2,6 +2,7 @@ from django.views.generic.edit import CreateView, UpdateView, DeleteView
 from django.views.generic.list import ListView
 from .models import ProjectProposal, ProgramDashboard, Program, Country, Province, Village, District, ProjectAgreement, ProjectComplete, Community, Documentation
 from silo.models import Silo, ValueStore, DataField
+from django.core.urlresolvers import reverse_lazy
 from django.contrib import messages
 from django.http import HttpResponseRedirect
 from django.utils import timezone
@@ -173,6 +174,7 @@ class ProjectProposalDelete(DeleteView):
     """
 
     model = ProjectProposal
+    success_url = reverse_lazy('projectproposal_list')
 
     def form_invalid(self, form):
 
@@ -185,6 +187,7 @@ class ProjectProposalDelete(DeleteView):
         form.save()
 
         messages.success(self.request, 'Success, Proposal Deleted!')
+
         return self.render_to_response(self.get_context_data(form=form))
 
     form_class = ProjectProposalForm
@@ -279,6 +282,7 @@ class ProjectAgreementDelete(DeleteView):
     """
 
     model = ProjectAgreement
+    success_url = reverse_lazy('projectagreement_list')
 
     def form_invalid(self, form):
 
@@ -335,7 +339,7 @@ class ProjectCompleteCreate(CreateView):
         latest = ProjectComplete.objects.latest('id')
         getComplete = ProjectComplete.objects.get(id=latest.id)
 
-        update_dashboard = ProgramDashboard.objects.filter(project_agreement__id=self.request.POST['project_proposal']).update(project_complete=getComplete)
+        update_dashboard = ProgramDashboard.objects.filter(project_agreement__id=self.request.POST['project_proposal']).update(project_completion=getComplete)
 
         messages.success(self.request, 'Success, Completion Form Created!')
         return self.render_to_response(self.get_context_data(form=form))
@@ -372,6 +376,7 @@ class ProjectCompleteDelete(DeleteView):
     """
 
     model = ProjectComplete
+    success_url = reverse_lazy('projectcomplete_list')
 
     def form_invalid(self, form):
 
@@ -467,6 +472,7 @@ class DocumentationDelete(DeleteView):
     """
 
     model = Documentation
+    success_url = reverse_lazy('documentation_list')
 
     def form_invalid(self, form):
 
@@ -550,6 +556,7 @@ class CommunityDelete(DeleteView):
     """
 
     model = Community
+    success_url = reverse_lazy('community_list')
 
     def form_invalid(self, form):
 

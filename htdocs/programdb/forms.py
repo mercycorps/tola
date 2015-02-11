@@ -192,7 +192,7 @@ class ProjectCompleteForm(forms.ModelForm):
             HTML("""<br/>"""),
             TabHolder(
                 Tab('Executive Summary',
-                    Fieldset('Program', 'program', 'project_proposal', 'activity_code','project_name'
+                    Fieldset('Program', 'program', 'project_proposal', 'project_agreement', 'activity_code','project_name'
                     ),
                     Fieldset(
                         'Dates',
@@ -219,7 +219,7 @@ class ProjectCompleteForm(forms.ModelForm):
 
                 Tab('Approval',
                     Fieldset('Approval',
-                             Field('approval', label="approved "), 'approved_by', 'approval_submitted_by',
+                             PrependedText('approval', ''), 'approved_by', 'approval_submitted_by',
                              Field('approval_remarks', rows="3", css_class='input-xlarge')
                     ),
                 ),

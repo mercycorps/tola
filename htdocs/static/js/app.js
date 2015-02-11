@@ -1,10 +1,15 @@
 
 
 
-//App specific JavaScript
+//App specific JavaScript//App specific JavaScript
 $(function () {
   $('[data-toggle="tooltip"]').tooltip()
 })
+
+//custom jquery to trigger dat picker, info pop-over and print category text
+$(document).ready(function() {
+    $('.datepicker').datepicker();
+});
 
 
 $('input[type="file"]').each(function() {
