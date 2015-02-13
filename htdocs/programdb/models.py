@@ -441,6 +441,7 @@ class ProjectComplete(models.Model):
     program = models.ForeignKey(Program, null=True, blank=True, related_name="complete")
     project_proposal = models.ForeignKey(ProjectProposal)
     project_agreement = models.ForeignKey(ProjectAgreement)
+    project_title = models.CharField("Project Title", max_length=255, blank=True, null=True)
     activity_code = models.CharField("Activity Code", max_length=255, blank=True, null=True)
     project_name = models.CharField("Project Name", max_length=255, blank=True, null=True)
     expected_start_date = models.DateTimeField(blank=True, null=True)
@@ -494,12 +495,12 @@ class ProjectCompleteAdmin(admin.ModelAdmin):
 
 class Documentation(models.Model):
     name = models.CharField("Name of Document", max_length=135)
-    documentation_type = models.CharField("Type (File or URL)", max_length=135)
+    url = models.CharField("URL (Link to document or document repository)", blank=True, null=True, max_length=135)
     description = models.CharField(max_length=255)
     template = models.ForeignKey(Template, blank=True, null=True)
     silo = models.ForeignKey(Silo, blank=True, null=True)
     file_field = models.FileField(upload_to="uploads", blank=True, null=True)
-    project_proposal_id = models.ForeignKey(ProjectProposal, blank=True, null=True)
+    project = models.ForeignKey(ProjectProposal, blank=True, null=True)
     create_date = models.DateTimeField(null=True, blank=True)
     edit_date = models.DateTimeField(null=True, blank=True)
 

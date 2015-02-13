@@ -46,7 +46,6 @@ class ProgramDash(ListView):
 
     template_name = 'programdb/programdashboard_list.html'
 
-
     def get(self, request, *args, **kwargs):
 
         #set country to afghanistan for now until we have user data on country
@@ -63,7 +62,7 @@ class ProgramDash(ListView):
         else:
             getDashboard = ProgramDashboard.objects.all().filter(program__id=self.kwargs['pk'])
 
-        return render(request, self.template_name, {'form': form, 'getDashboard': getDashboard,'getPrograms':getPrograms})
+        return render(request, self.template_name, {'form': form, 'getDashboard': getDashboard, 'getPrograms':getPrograms})
 
 
 """
@@ -359,7 +358,7 @@ class ProjectCompleteCreate(CreateView):
         latest = ProjectComplete.objects.latest('id')
         getComplete = ProjectComplete.objects.get(id=latest.id)
 
-        update_dashboard = ProgramDashboard.objects.filter(project_agreement__id=self.request.POST['project_proposal']).update(project_completion=getComplete)
+        update_dashboard = ProgramDashboard.objects.filter(project_proposal__id=self.request.POST['project_proposal']).update(project_completion=getComplete)
 
         messages.success(self.request, 'Success, Completion Form Created!')
         return self.render_to_response(self.get_context_data(form=form))

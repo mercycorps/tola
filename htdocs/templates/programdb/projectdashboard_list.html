@@ -22,10 +22,10 @@
     <div class="jumbotron">
     <ul class="list-group">
         <li class="list-group-item list-group-item-info">
-            <h4>Project Proposals</h4>
+            <h4>Project Proposal</h4>
         </li>
 
-        <li class="list-group-item"><b>{{ proposal.project_proposal.create_date|date }} - {{ proposal.project_proposal.project_title }} {{ proposal.project_proposal.proposal_num }}</b></li>
+        <li class="list-group-item"><b>{{ proposal.project_proposal.create_date|date }} - {{ proposal.project_proposal.project_title }} {{ proposal.project_proposal.acivity_code }}</b></li>
         <li class="list-group-item">
             <div class="btn-group" role="group" aria-label="...">
                 <button type="button" class="btn btn-sm btn-warning" onclick="location.href='/programdb/projectproposal_update/{{ proposal.project_proposal.id }}'">Update Proposal</button>
@@ -53,10 +53,10 @@
     {% if proposal.project_agreement %}
         <ul class="list-group">
             <li class="list-group-item list-group-item-info">
-                <h4>Project Agreements</h4>
+                <h4>Project Agreement</h4>
             </li>
 
-            <li class="list-group-item"><b>{{ proposal.project_agreement.create_date|date }} - {{ proposal.project_agreement.project_title }} {{ proposal.project_agreement.proposal_num }}</b></li>
+            <li class="list-group-item"><b>{{ proposal.project_agreement.create_date|date }} - {{ proposal.project_agreement.project_title }} {{ proposal.project_agreement.acivity_code }}</b></li>
             <li class="list-group-item">
                 <div class="btn-group" role="group" aria-label="...">
                     <button type="button" class="btn btn-sm btn-warning" onclick="location.href='/programdb/projectagreement_update/{{ proposal.project_agreement.id }}'">Update Agreement</button>
@@ -76,25 +76,26 @@
                       Approved
                     </button>
                 {% else %}
-                    <button class="btn btn-primary" type="button">
+                    <button class="btn btn-primary" type="button" onclick="location.href='/programdb/projectagreement_update/{{ proposal.project_agreement.id }}'">
                       Waiting for Approval
                     </button>
                 {% endif %}
              </li>
         </ul>
     {% endif %}
-    {% if proposal.project_complete %}
+
+    {% if proposal.project_completion %}
         <h4>Project Completion</h4>
         <ul class="list-group">
             <li class="list-group-item list-group-item-info">
                 <h4>Project Completion</h4>
             </li>
 
-            <li class="list-group-item"><b>{{ proposal.project_complete.create_date|date }} - {{ proposal.project_complete.project_title }} {{ proposal.project_complete.proposal_num }}</b></li>
+            <li class="list-group-item"><b>{{ proposal.project_completion.create_date|date }} - {{ proposal.project_completion.project_title }} {{ proposal.project_completion.acivity_code }}</b></li>
             <li class="list-group-item">
                 <div class="btn-group" role="group" aria-label="...">
-                    <button type="button" class="btn btn-sm btn-warning" onclick="location.href='/programdb/projectagreement_update/{{ proposal.project_complete.id }}'">Update Agreement</button>
-                    <button type="button" class="btn btn-sm btn-danger" onclick="location.href='/programdb/projectagreement_delete/{{ proposal.project_complete.id }}'">Delete Agreement</button>
+                    <button type="button" class="btn btn-sm btn-warning" onclick="location.href='/programdb/projectcomplete_update/{{ proposal.project_completion.id }}'">Update Completion</button>
+                    <button type="button" class="btn btn-sm btn-danger" onclick="location.href='/programdb/projectacomplete_delete/{{ proposal.project_completion.id }}'">Delete Completion</button>
                 </div>
             </li>
             <li class="list-group-item">
@@ -103,18 +104,19 @@
                       Approved
                     </button>
                 {% else %}
-                    <button class="btn btn-primary" type="button">
+                    <button class="btn btn-primary" type="button" onclick="location.href='/programdb/projectcomplete_update/{{ proposal.project_completion.id }}'">
                       Open
                     </button>
                 {% endif %}
              </li>
         </ul>
     {% endif %}
-    <button class="btn btn-primary" type="button">
+    <button class="btn btn-primary" type="button" onclick="location.href='/programdb/documentation_list/{{ proposal.project_proposal.id }}'">
         Documentation <span class="badge">4</span>
     </button>
-    <a href="/programdb/projectproposal_add" class="btn btn-large btn-success">New Project Proposal</a> &nbsp;
-    <a href="/programdb/projectproposal_import" class="btn btn-large btn-info">Import Project Proposal</a>
+    <button class="btn btn-primary" type="button" onclick="location.href='/programdb/community_list/{{ proposal.project_proposal.id }}'">
+        Communities <span class="badge">7</span>
+    </button>
     </div>
 {% empty %}
     <li class="list-group-item">No proposals yet.</li>

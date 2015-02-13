@@ -52,7 +52,7 @@ class ProjectProposalForm(forms.ModelForm):
             HTML("""<br/>"""),
             TabHolder(
                 Tab('Details',
-                    Fieldset('Program', 'program', 'community_code', 'proposal_num', 'date_of_request', 'project_title', 'project_type',
+                    Fieldset('Program', 'program', 'community_code', 'proposal_num', 'date_of_request', 'activity_code','project_title', 'project_type',
                     ),
                     Fieldset(
                         'Community',
@@ -117,7 +117,7 @@ class ProjectAgreementForm(forms.ModelForm):
             HTML("""<br/>"""),
             TabHolder(
                 Tab('Executive Summary',
-                    Fieldset('Program', 'program', 'project_proposal', 'profile_code', 'project_cod', 'sector', 'project_title', 'project_type',
+                    Fieldset('Program', 'program', 'project_proposal', 'activity_code', 'project_title', 'profile_code', 'project_cod', 'sector', 'project_type',
                              'project_activity','account_code','sub_code','community','mc_staff_responsible'
                     ),
                     Fieldset(
@@ -192,7 +192,7 @@ class ProjectCompleteForm(forms.ModelForm):
             HTML("""<br/>"""),
             TabHolder(
                 Tab('Executive Summary',
-                    Fieldset('Program', 'program', 'project_proposal', 'project_agreement', 'activity_code','project_name'
+                    Fieldset('Program', 'program', 'project_proposal', 'project_agreement', 'activity_code', 'project_title'
                     ),
                     Fieldset(
                         'Dates',
@@ -295,8 +295,8 @@ class DocumentationForm(forms.ModelForm):
 
             HTML("""<br/>"""),
 
-                'name', 'documentation_type', Field('description', rows="3", css_class='input-xlarge'), 'template', 'silo',
-                'file_field','project_proposal_id',
+                'name', 'url', Field('description', rows="3", css_class='input-xlarge'), 'template', 'silo',
+                'file_field','project',
 
             FormActions(
                 Submit('submit', 'Submit', css_class='btn-default'),
