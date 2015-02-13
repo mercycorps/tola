@@ -35,9 +35,9 @@ class ProjectDash(ListView):
         if int(self.kwargs['pk']) == 0:
             getDashboard = ProgramDashboard.objects.all()
         else:
-             getDashboard = ProgramDashboard.objects.all().filter(program_id=self.kwargs['pk'])
+            getDashboard = ProgramDashboard.objects.all().filter(project_proposal__id=self.kwargs['pk'])
 
-        getProgram =Program.objects.get(id=self.kwargs['pk'])
+        getProgram =Program.objects.get(proposal__id=self.kwargs['pk'])
 
         return render(request, self.template_name, {'form': form, 'getProgram': getProgram, 'getDashboard': getDashboard,'getPrograms':getPrograms})
 
@@ -48,16 +48,31 @@ class ProgramDash(ListView):
 
 
     def get(self, request, *args, **kwargs):
+
+        #set country to afghanistan for now until we have user data on country
+        #use self.request.user to get users country
+        #self.kwargs.pk = ID of program from dropdown
         set_country = "1"
+        getPrograms = Program.objects.all().filter(funding_status="Funded", country=set_country)
 
-        getPrograms = Program.objects.all().filter(funding_status="Funded", country=set_country).filter(Q(agreement__isnull=False) | Q(proposal__isnull=False) | Q(complete__isnull=False)).order_by('name').values('id', 'name', 'gaitid','agreement__id','proposal__id','complete__id')
+        form = ProgramDashboardForm
 
-        return render(request, self.template_name, {'getPrograms':getPrograms})
+        if int(self.kwargs['pk']) == 0:
+            getDashboard = Program.objects.all().filter(funding_status="Funded", country=set_country).filter(Q(agreement__isnull=False) | Q(proposal__isnull=False) | Q(complete__isnull=False)).order_by('name').values('id', 'name', 'gaitid','agreement__id','proposal__id','complete__id')
 
-class ProposalDash(ListView):
+        else:
+            getDashboard = ProgramDashboard.objects.all().filter(program__id=self.kwargs['pk'])
 
-    template_name = 'programdb/programdashboard_list.html'
+        return render(request, self.template_name, {'form': form, 'getDashboard': getDashboard,'getPrograms':getPrograms})
 
+
+"""
+Project Proposal
+"""
+class ProjectProposalList(ListView):
+
+    model = ProjectProposal
+    template_name = 'programdb/projectproposal_list.html'
 
     def get(self, request, *args, **kwargs):
         #set country to afghanistan for now until we have user data on country
@@ -68,34 +83,13 @@ class ProposalDash(ListView):
         getPrograms = Program.objects.all().filter(funding_status="Funded", country=set_country)
 
         if int(self.kwargs['pk']) == 0:
-            getDashboard = ProgramDashboard.objects.all()
+            getDashboard = ProjectProposal.objects.all()
+            return render(request, self.template_name, {'form': form, 'getDashboard':getDashboard,'getPrograms':getPrograms})
         else:
-             getDashboard = ProgramDashboard.objects.all().filter(program_id=self.kwargs['pk'])
+            getDashboard = ProjectProposal.objects.all().filter(program__id=self.kwargs['pk'])
+            getProgram =Program.objects.get(id=self.kwargs['pk'])
 
-        return render(request, self.template_name, {'form': form,'getDashboard':getDashboard,'getPrograms':getPrograms})
-
-    def post(self, request, *args, **kwargs):
-        form = self.ProgramDashboard(request.POST)
-        if form.is_valid():
-            # <process form cleaned data>
-            getDashboard = ProgramDashboard.objects.all().filter(program=request.FORM("program_id"))
-
-
-        return render(request, self.template_name, {'form': form,'getDashboard':getDashboard,'getPrograms':getPrograms})
-
-
-"""
-Project Proposal
-"""
-class ProjectProposalList(ListView):
-
-    model = ProjectProposal
-
-    def get_context_data(self, **kwargs):
-        context = super(ProjectProposalList, self).get_context_data(**kwargs)
-        context['now'] = timezone.now()
-        return context
-
+            return render(request, self.template_name, {'form': form, 'getProgram': getProgram, 'getDashboard':getDashboard,'getPrograms':getPrograms})
 
 class ProjectProposalImport(ListView):
 
@@ -198,11 +192,24 @@ Project Agreement
 class ProjectAgreementList(ListView):
 
     model = ProjectAgreement
+    template_name = 'programdb/projectagreement_list.html'
 
-    def get_context_data(self, **kwargs):
-        context = super(ProjectAgreementList, self).get_context_data(**kwargs)
-        context['now'] = timezone.now()
-        return context
+    def get(self, request, *args, **kwargs):
+        #set country to afghanistan for now until we have user data on country
+        #use self.request.user to get users country
+        #self.kwargs.pk = ID of program from dropdown
+        set_country = "1"
+        form = ProgramDashboardForm
+        getPrograms = Program.objects.all().filter(funding_status="Funded", country=set_country)
+
+        if int(self.kwargs['pk']) == 0:
+            getDashboard = ProjectAgreement.objects.all()
+            return render(request, self.template_name, {'form': form, 'getDashboard':getDashboard,'getPrograms':getPrograms})
+        else:
+            getDashboard = ProjectAgreement.objects.all().filter(program__id=self.kwargs['pk'])
+            getProgram =Program.objects.get(id=self.kwargs['pk'])
+
+            return render(request, self.template_name, {'form': form, 'getProgram': getProgram, 'getDashboard':getDashboard,'getPrograms':getPrograms})
 
 
 class ProjectAgreementImport(ListView):
@@ -304,11 +311,24 @@ Project Complete
 class ProjectCompleteList(ListView):
 
     model = ProjectComplete
+    template_name = 'programdb/projectcomplete_list.html'
 
-    def get_context_data(self, **kwargs):
-        context = super(ProjectCompleteList, self).get_context_data(**kwargs)
-        context['now'] = timezone.now()
-        return context
+    def get(self, request, *args, **kwargs):
+        #set country to afghanistan for now until we have user data on country
+        #use self.request.user to get users country
+        #self.kwargs.pk = ID of program from dropdown
+        set_country = "1"
+        form = ProgramDashboardForm
+        getPrograms = Program.objects.all().filter(funding_status="Funded", country=set_country)
+
+        if int(self.kwargs['pk']) == 0:
+            getDashboard = ProjectAgreement.objects.all()
+            return render(request, self.template_name, {'form': form, 'getDashboard':getDashboard,'getPrograms':getPrograms})
+        else:
+            getDashboard = ProjectAgreement.objects.all().filter(program__id=self.kwargs['pk'])
+            getProgram =Program.objects.get(id=self.kwargs['pk'])
+
+            return render(request, self.template_name, {'form': form, 'getProgram': getProgram, 'getDashboard':getDashboard,'getPrograms':getPrograms})
 
 
 class ProjectCompleteCreate(CreateView):
@@ -448,7 +468,7 @@ class DocumentationUpdate(UpdateView):
     Documentation Form
     """
 
-    model = ProjectProposal
+    model = Documentation
 
     def form_invalid(self, form):
 

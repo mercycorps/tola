@@ -3,6 +3,8 @@ from django.contrib import admin
 from django.conf import settings
 from datetime import datetime
 from read.models import Read
+from silo.models import Silo
+
 
 
 class Country(models.Model):
@@ -495,6 +497,7 @@ class Documentation(models.Model):
     documentation_type = models.CharField("Type (File or URL)", max_length=135)
     description = models.CharField(max_length=255)
     template = models.ForeignKey(Template, blank=True, null=True)
+    silo = models.ForeignKey(Silo, blank=True, null=True)
     file_field = models.FileField(upload_to="uploads", blank=True, null=True)
     project_proposal_id = models.ForeignKey(ProjectProposal, blank=True, null=True)
     create_date = models.DateTimeField(null=True, blank=True)

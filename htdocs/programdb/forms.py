@@ -295,7 +295,7 @@ class DocumentationForm(forms.ModelForm):
 
             HTML("""<br/>"""),
 
-                'name', 'documentation_type', Field('description', rows="3", css_class='input-xlarge'), 'template',
+                'name', 'documentation_type', Field('description', rows="3", css_class='input-xlarge'), 'template', 'silo',
                 'file_field','project_proposal_id',
 
             FormActions(

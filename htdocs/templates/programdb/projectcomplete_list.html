@@ -3,11 +3,31 @@
 
 {% block content %}
 <div>
-<br/>
+<div class="dropdown">
+  <button class="btn btn-default dropdown-toggle" type="button" id="dropdownMenu1" data-toggle="dropdown" aria-expanded="true">
+    Programs
+    <span class="caret"></span>
+  </button>
+  <ul class="dropdown-menu" role="menu" aria-labelledby="dropdownMenu1">
+    {% for program in getPrograms %}
+        <li role="presentation"><a role="menuitem" tabindex="-1" href="/programdb/projectcomplete_list/{{ program.id }}">{{ program.gaitid}} - {{ program.name }}</a></li>
+    {% endfor %}
+  </ul>
 </div>
+</div>
+<br/>
+<div>
+<ol class="breadcrumb">
+  <li><a href="/programdb/dashboard/0/">Program Dashboard</a></li>
+  <li class="active">Project Complete</li>
+</ol>
+</div>
+{% if getProgram %}
+    <h3>{{getProgram.gaitid }} - {{ getProgram.name }}</h3>
+{% endif %}
 <ul class="list-group">
-{% for item in object_list %}
-    <li class="list-group-item"><b>{{ item.create_date|date }} - {{ item.project_title }}</b></li>
+{% for item in getDashboard %}
+    <li class="list-group-item"><b>{{ item.create_date|date }} - <a href="/programdb/dashboard/project/{{ proposal.id }}/">{{ item.project_title }}</a></b></li>
     <li class="list-group-item"><a href="/programdb/projectcomplete_update/{{ item.id }}" class="btn btn-sm btn-warning">Update Project Complete</a> <a href="/programdb/projectcomplete_delete/{{ item.id }}" class="btn btn-sm btn-danger">Delete Project Complete</a></li>
 {% empty %}
     <li class="list-group-item">No project complete forms yet.</li>

@@ -4,25 +4,16 @@
 {% block content %}
 <div>
 <div class="dropdown">
-  <button class="btn btn-default dropdown-toggle" type="button" id="dropdownMenu1" data-toggle="dropdown" aria-expanded="true">
-    Programs
-    <span class="caret"></span>
-  </button>
-  <ul class="dropdown-menu" role="menu" aria-labelledby="dropdownMenu1">
-    {% for program in getPrograms %}
-        <li role="presentation"><a role="menuitem" tabindex="-1" href="/programdb/dashboard/project/{{ program.id }}">{{ program.gaitid}} - {{ program.name }}</a></li>
-    {% endfor %}
-  </ul>
   <a href="/programdb/projectproposal_add" class="btn btn-large btn-success">New Project Proposal</a>
   <a href="/programdb/projectproposal_import" class="btn btn-large btn-info">Import Project Proposal</a>
 </div>
-
 </div>
 <br/>
 <div>
 <ol class="breadcrumb">
-  <li><a href="/programdb/dashboard/0/">Program Dashboard</a></li>
-  <li class="active">Projects</li>
+  <li><a href="/programdb/dashboard/0/">Program Dashboards</a></li>
+  <li><a href="/programdb/projectproposal_list/{{ getProgram.id }}">Proposal</a></li>
+  <li class="active">Project Dashboard</li>
 </ol>
 </div>
 <ul class="list-group">
