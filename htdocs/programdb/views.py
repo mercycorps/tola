@@ -280,19 +280,6 @@ class ProjectAgreementUpdate(UpdateView):
 
     model = ProjectAgreement
 
-    #get shared data from project agreement and pre-populate form with it
-    def get_initial(self):
-        getProjectAgreement = ProjectAgreement.objects.get(project_proposal__id=self.kwargs['pk'])
-        initial = {
-            'program': getProjectAgreement.program,
-            'project_proposal': getProjectAgreement.project_proposal,
-            'project_title': getProjectAgreement.project_title,
-            'proposal_num': getProjectAgreement.proposal_num,
-            'activity_code': getProjectAgreement.activity_code,
-            }
-
-        return initial
-
     def form_invalid(self, form):
 
         messages.error(self.request, 'Invalid Form', fail_silently=False)
@@ -363,6 +350,20 @@ class ProjectCompleteCreate(CreateView):
     """
 
     model = ProjectComplete
+
+    #get shared data from project agreement and pre-populate form with it
+    def get_initial(self):
+        getProjectAgreement = ProjectAgreement.objects.get(project_proposal__id=self.kwargs['pk'])
+        initial = {
+            'program': getProjectAgreement.program,
+            'project_proposal': getProjectAgreement.project_proposal,
+            'project_agreement': getProjectAgreement.id,
+            'project_title': getProjectAgreement.project_title,
+            'proposal_num': getProjectAgreement.proposal_num,
+            'activity_code': getProjectAgreement.activity_code,
+            }
+
+        return initial
 
     def get_context_data(self, **kwargs):
         data = super(ProjectCompleteCreate, self).get_context_data(**kwargs)
