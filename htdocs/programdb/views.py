@@ -230,7 +230,21 @@ class ProjectAgreementCreate(CreateView):
 
     model = ProjectAgreement
 
+    #get shared data from project proposal and pre-populate form with it
+    def get_initial(self):
+        getProjectProposal = ProjectProposal.objects.get(id=self.kwargs['pk'])
+        initial = {
+            'program': getProjectProposal.program,
+            'project_proposal': getProjectProposal.id,
+            'project_title': getProjectProposal.project_title,
+            'proposal_num': getProjectProposal.proposal_num,
+            'activity_code': getProjectProposal.activity_code,
+            }
+
+        return initial
+
     def get_context_data(self, **kwargs):
+
         data = super(ProjectAgreementCreate, self).get_context_data(**kwargs)
         if self.request.POST:
             data['ProjectAgreement'] = ProjectAgreementForm(self.request.POST)
@@ -265,6 +279,19 @@ class ProjectAgreementUpdate(UpdateView):
     """
 
     model = ProjectAgreement
+
+    #get shared data from project agreement and pre-populate form with it
+    def get_initial(self):
+        getProjectAgreement = ProjectAgreement.objects.get(project_proposal__id=self.kwargs['pk'])
+        initial = {
+            'program': getProjectAgreement.program,
+            'project_proposal': getProjectAgreement.project_proposal,
+            'project_title': getProjectAgreement.project_title,
+            'proposal_num': getProjectAgreement.proposal_num,
+            'activity_code': getProjectAgreement.activity_code,
+            }
+
+        return initial
 
     def form_invalid(self, form):
 
@@ -432,11 +459,17 @@ Documentation
 class DocumentationList(ListView):
 
     model = Documentation
+    template_name = 'programdb/documentation_list.html'
 
-    def get_context_data(self, **kwargs):
-        context = super(DocumentationList, self).get_context_data(**kwargs)
-        context['now'] = timezone.now()
-        return context
+    def get(self, request, *args, **kwargs):
+
+        if int(self.kwargs['pk']) == 0:
+            getDocumentation = Documentation.objects.all()
+        else:
+            getDocumentation = Documentation.objects.all().filter(project__id=self.kwargs['pk'])
+
+        return render(request, self.template_name, {'getDocumentation':getDocumentation})
+
 
 
 class DocumentationCreate(CreateView):
@@ -516,11 +549,16 @@ Community
 class CommunityList(ListView):
 
     model = Community
+    template_name = 'programdb/community_list.html'
 
-    def get_context_data(self, **kwargs):
-        context = super(CommunityList, self).get_context_data(**kwargs)
-        context['now'] = timezone.now()
-        return context
+    def get(self, request, *args, **kwargs):
+
+        if int(self.kwargs['pk']) == 0:
+            getCommunity = Community.objects.all()
+        else:
+            getCommunity = Community.objects.all().filter(projectproposal__id=self.kwargs['pk'])
+
+        return render(request, self.template_name, {'getCommunity':getCommunity})
 
 
 class CommunityCreate(CreateView):
@@ -638,41 +676,11 @@ def doMerge(request, pk):
                 print e
                 print "No value for: " + str(column)
                 pass
-            #if we found source data process it to be saved
-            if getSourceFrom:
-                #look for the program in the form and return the related object id
-                if "program" in str(column):
-                    program_value = getSourceFrom.char_store
-                    print "column=" + str(column) + "CHAR STORE=" + program_value
-                #look for the country in the form and return the related object id
-                elif "country" in column:
-                    country_value = getSourceFrom.char_store
-                    print "column=" + str(column) + "CHAR STORE=" + country_value
-                #look for the country in the form and return the related object id
-                elif "province" in column:
-                    province_value = getSourceFrom.char_store
-                    print "column=" + str(column) + "CHAR STORE=" + province_value
-                #look for the village in the form and return the related object id
-                elif "district" in column:
-                    district_value = getSourceFrom.char_store
-                    print "column=" + str(column) + "CHAR STORE=" + district_value
-                #look for the village in the form and return the related object id
-                elif "village" in column:
-                    village_value = getSourceFrom.char_store
-                    print "column=" + str(column) + "CHAR STORE=" + village_value
-                #look for the approved by user in the form and return the related object id
-                elif "approve_by" in column:
-                    approved_by = User.objects.get(id=request.POST[column])
-                    print "column=" + str(column) + "CHAR STORE=" + request.POST[column]
-                #look for the submittede by user in the form and return the related object id
-                elif "submitted_by" in column:
-                    approval_submitted_by = User.objects.get(id=request.POST[column])
-                    print "column=" + str(column) + "CHAR STORE=" + request.POST[column]
-                else:
-                    if request.POST[column] != "Ignore" and request.POST[column] != "0" and str(column) != "csrfmiddlewaretoken" and str(column) != "from_column_id"  and str(column) != "from_silo_id":
-                        fields_to_insert[str(request.POST[column])] = str(getSourceFrom.char_store)
-                    else:
-                        fields_to_ignore[str(request.POST[column])] = str(getSourceFrom.char_store)
+
+            if request.POST[column] != "Ignore" and request.POST[column] != "0" and str(column) != "csrfmiddlewaretoken" and str(column) != "from_column_id" and str(column) != "from_silo_id":
+                fields_to_insert[str(request.POST[column])] = str(getSourceFrom.char_store)
+            else:
+                fields_to_ignore[str(request.POST[column])] = str(getSourceFrom.char_store)
 
         #set program ID and throw if not found
         try:
@@ -683,46 +691,9 @@ def doMerge(request, pk):
             program_id = None
             messages.add_message(request, messages.INFO, "Program ID not found, a program is required for each new project proposal.")
 
-        #set country ID and throw if not found
-        # try:
-        #     country, created = Country.objects.get_or_create(name__icontains=country_value)
-        #     country_id = country.pk
-        #     set_country_id=country_id
-        # except:
-        #     raise Exception("Country ID not found, a country is required for each new project proposal.")
-        #commented out for now until country is added to form and hard coded to 1
         country_id = 1
 
-        #set province ID and throw if not found
-        try:
-            province, created = Province.objects.get_or_create(name__icontains=province_value, country_id=country_id)
-            province_id = province.pk
-        except Exception as e:
-            print e
-            province_id = None
-            messages.add_message(request, messages.INFO, "Province ID not found, a province is required for each new project proposal.")
-
-        #set district ID and throw if not found
-        try:
-            district, created = District.objects.get_or_create(name__icontains=district_value, province_id=province_id)
-            district_id = district.pk
-        except Exception as e:
-            print e
-            district_id = None
-            messages.add_message(request, messages.INFO, "District ID not found, a district is required for each new project proposal.")
-
-        #set village ID and throw if not found
-        try:
-            village, created = Village.objects.get_or_create(name__icontains=village_value, district_id=district_id)
-            village_id = village.pk
-        except Exception as e:
-            print e
-            village_id = None
-            messages.add_message(request, messages.INFO, "Village ID not found, a village is required for each new project proposal.")
-
-        print fields_to_insert
-
-        new_project_proposal = ProjectProposal.objects.create(approved_by=approved_by, approval_submitted_by=approval_submitted_by, program_id=program_id, country_id=country_id, province_id=province_id, district_id=district_id, village_id=village_id, **fields_to_insert)
+        new_project_proposal = ProjectProposal.objects.create(approved_by=approved_by, approval_submitted_by=approval_submitted_by, **fields_to_insert)
         new_project_proposal.save()
 
     redirect_url = "/programdb/projectproposal_update/" + str(new_project_proposal.id)

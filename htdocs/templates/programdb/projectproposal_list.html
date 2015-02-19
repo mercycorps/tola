@@ -27,7 +27,7 @@
 {% endif %}
 <ul class="list-group">
 {% for proposal in getDashboard %}
-    <li class="list-group-item"><b>{{ proposal.create_date|date }} - <a href="/programdb/dashboard/project/{{ proposal.id }}/">{{ proposal.project_title }} {{ proposal.proposal_num }}</a></b>&nbsp;<a href="/programdb/dashboard/project/{{ proposal.id }}" class="btn btn-xs btn-success">Project Dashboard</a>&nbsp;<a href="/programdb/projectproposal_delete/{{ proposal.id }}" class="btn btn-xs btn-danger">Delete Proposal</a> </li>
+    <li class="list-group-item"><b>{{ proposal.create_date|date }} - <a href="/programdb/projectproposal_update/{{ proposal.id }}/">{{ proposal.project_title }} {{ proposal.proposal_num }}</a></b>&nbsp;<a href="/programdb/dashboard/project/{{ proposal.id }}" class="btn btn-xs btn-success">Project Dashboard</a>&nbsp;<a href="/programdb/projectproposal_delete/{{ proposal.id }}" class="btn btn-xs btn-danger">Delete Proposal</a> </li>
 {% empty %}
     <li class="list-group-item">No proposals yet.</li>
 {% endfor %}
