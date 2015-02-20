@@ -1,0 +1,11 @@
+{% extends "base.html" %}
+{% block page_title %}Get Data From an External Data Collection Tool{% endblock %}
+
+{% block content %}
+	<p>Enter a URL and related information for your data service</p>
+	{% csrf_token %}
+    {% load crispy_forms_tags %}
+    {% crispy form %}
+    <input type="hidden" name="read_id" value="{{ read_id }}">
+
+{% endblock content %}

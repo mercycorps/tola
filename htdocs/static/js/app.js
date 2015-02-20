@@ -36,3 +36,4 @@ $('input[type="file"]').each(function() {
         }
     });
 });
+

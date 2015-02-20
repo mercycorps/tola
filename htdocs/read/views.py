@@ -7,7 +7,7 @@ import csv
 from django.http import HttpResponseRedirect
 from silo.models import Silo, DataField, ValueStore
 from read.models import Read
-from read.forms import ReadForm, UploadForm
+from read.forms import ReadForm, UploadForm, ODKForm
 from django.shortcuts import render_to_response
 from django.shortcuts import render
 from django.contrib import messages
@@ -53,6 +53,47 @@ def initRead(request):
     return render(request, 'read/read.html', {
         'form': form,
     })
+
+def odk(request):
+    """
+    Create a form to get add an ODK service like formhub or Ona
+    and re-direct to login
+    """
+    if request.method == 'POST':  # If the form has been submitted...
+        form = ODKForm(request.POST, request.FILES)  # A form bound to the POST data
+        if form.is_valid():  # All validation rules pass
+            # save data to read
+            if request.POST['url_source']:
+                url_read = request.POST['url_source']
+            else:
+                url_read = request.POST['source']
+            redirect_var = "read/odk_login"
+            return HttpResponseRedirect('/' + redirect_var + '/?read_url=' + url_read)  # Redirect after POST to getLogin
+        else:
+            messages.error(request, 'Invalid Form', fail_silently=False)
+    else:
+        form = ODKForm()  # An unbound form
+
+    return render(request, 'read/odkform.html', {
+        'form': form,
+    })
+
+def odkLogin(request):
+    """
+    Some services require a login provide user with a
+    login to service if needed and select a silo
+    """
+    # get all of the silo info to pass to the form
+    get_silo = Silo.objects.all()
+
+    #url from service
+    url = request.GET.get('read_url', 'TEST')
+
+    #redirect to JSON list of forms
+    redirect_var = "read/odk_login"
+
+    # display login form
+    return render(request, 'read/login.html', {'get_silo': get_silo, 'url': url, 'redirect_var': redirect_var})
 
 
 def showRead(request, id):
@@ -159,6 +200,20 @@ def getJSON(request):
     today = datetime.date.today()
     today.strftime('%Y-%m-%d')
     today = str(today)
+    try:
+        #get auth info from form post then encode and add to the request header
+        username = request.POST['user_name']
+        password = request.POST['password']
+        base64string = base64.encodestring('%s:%s' % (username, password))[:-1]
+        request2 = urllib2.Request(read_obj.read_url)
+        request2.add_header("Authorization", "Basic %s" % base64string)
+        #retrieve JSON data from formhub via auth info
+        json_file = urllib2.urlopen(request2)
+    except Exception as e:
+        print e
+        messages.success(self.request, 'Authentication Failed, Please double check your login credentials and URL!')
+        return redirect('/read/home')
+
     #New silo or existing
     if request.POST['new_silo']:
         print "NEW"
@@ -168,15 +223,6 @@ def getJSON(request):
     else:
         print "EXISTING"
         silo_id = request.POST['silo_id']
-
-    #get auth info from form post then encode and add to the request header
-    username = request.POST['user_name']
-    password = request.POST['password']
-    base64string = base64.encodestring('%s:%s' % (username, password))[:-1]
-    request2 = urllib2.Request(read_obj.read_url)
-    request2.add_header("Authorization", "Basic %s" % base64string)
-    #retrieve JSON data from formhub via auth info
-    json_file = urllib2.urlopen(request2)
 
     #create object from JSON String
     data = json.load(json_file)

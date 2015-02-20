@@ -61,6 +61,9 @@ urlpatterns = patterns('',
                         #read init form
                         url(r'^new_read', 'read.views.initRead', name='initRead'),
 
+                        #read ODK form
+                        url(r'^new_odk', 'read.views.odk', name='odk'),
+
                         #show read or source
                         url(r'^show_read/(?P<id>\w+)/$', 'read.views.showRead', name='showRead'),
 
@@ -74,7 +77,10 @@ urlpatterns = patterns('',
                         url(r'^update', 'read.views.updateUID', name='updateUID'),
 
                         #login data
-                        url(r'^read/login', 'read.views.getLogin', name='getLogin'),
+                        url(r'^read/login/$', 'read.views.getLogin', name='getLogin'),
+
+                        url(r'^read/odk_login/$', 'read.views.odkLogin', name='odkLogin'),
+
 
                         ###DISPLAY
                         #list all silos
