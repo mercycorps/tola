@@ -167,7 +167,7 @@ class ProjectProposalDelete(DeleteView):
     """
 
     model = ProjectProposal
-    success_url = reverse_lazy('projectproposal_list')
+    success_url = '/programdb/projectproposal_list/0/'
 
     def form_invalid(self, form):
 
@@ -302,7 +302,7 @@ class ProjectAgreementDelete(DeleteView):
     """
 
     model = ProjectAgreement
-    success_url = reverse_lazy('projectagreement_list')
+    success_url = '/programdb/projectagreement_list/0/'
 
     def form_invalid(self, form):
 
@@ -423,7 +423,7 @@ class ProjectCompleteDelete(DeleteView):
     """
 
     model = ProjectComplete
-    success_url = reverse_lazy('projectcomplete_list')
+    success_url = '/programdb/projectcomplete_list/0/'
 
     def form_invalid(self, form):
 
@@ -593,13 +593,10 @@ class CommunityUpdate(UpdateView):
     model = Community
 
     def form_invalid(self, form):
-
         messages.error(self.request, 'Invalid Form', fail_silently=False)
-
         return self.render_to_response(self.get_context_data(form=form))
 
     def form_valid(self, form):
-
         form.save()
         messages.success(self.request, 'Success, Community Updated!')
 
