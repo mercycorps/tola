@@ -37,9 +37,12 @@ class ProjectDash(ListView):
         else:
             getDashboard = ProgramDashboard.objects.all().filter(project_proposal__id=self.kwargs['pk'])
 
+            getDocumentCount = Documentation.objects.all().filter(project__id=self.kwargs['pk']).count()
+            getCommunityCount = Community.objects.all().filter(projectproposal__id=self.kwargs['pk']).count()
+
         getProgram =Program.objects.get(proposal__id=self.kwargs['pk'])
 
-        return render(request, self.template_name, {'form': form, 'getProgram': getProgram, 'getDashboard': getDashboard,'getPrograms':getPrograms})
+        return render(request, self.template_name, {'form': form, 'getProgram': getProgram, 'getDashboard': getDashboard,'getPrograms':getPrograms, 'getDocumentCount':getDocumentCount ,'getCommunityCount':getCommunityCount})
 
 
 class ProgramDash(ListView):

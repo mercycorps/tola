@@ -112,10 +112,10 @@
         </ul>
     {% endif %}
     <button class="btn btn-primary" type="button" onclick="location.href='/programdb/documentation_list/{{ proposal.project_proposal.id }}'">
-        Documentation <span class="badge">4</span>
+        Documentation <span class="badge">{{ getDocumentCount }}</span>
     </button>
     <button class="btn btn-primary" type="button" onclick="location.href='/programdb/community_list/{{ proposal.project_proposal.id }}'">
-        Communities <span class="badge">7</span>
+        Communities <span class="badge">{{ getCommunityCount }}</span>
     </button>
     </div>
 {% empty %}
