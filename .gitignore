@@ -37,3 +37,5 @@ media/
 local.py
 htdocs/tola/settings/local.py
 client_secrets.json
+djangocosign
+htdocs/djangocosign

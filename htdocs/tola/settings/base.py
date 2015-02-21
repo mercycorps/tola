@@ -263,6 +263,7 @@ CRISPY_TEMPLATE_PACK = 'bootstrap3'
 
 ########## AUTH
 AUTHENTICATION_BACKENDS = (
+    'djangocosign.cosign.CosignBackend',
     'django.contrib.auth.backends.ModelBackend',
 )
 ########### END AUTH
