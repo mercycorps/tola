@@ -214,6 +214,7 @@ LOCAL_APPS = (
     'silo',
     'readtoken',
     'programdb',
+    'djangocosign',
 )
 
 # See: https://docs.djangoproject.com/en/dev/ref/settings/#installed-apps
