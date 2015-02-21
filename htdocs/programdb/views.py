@@ -15,6 +15,10 @@ from django.contrib.auth.models import User
 from django.db.models import Count
 from django.db.models import Q
 
+from django.core import serializers
+from django.core.serializers.json import DjangoJSONEncoder
+from django.http import HttpResponse
+
 # Get an instance of a logger
 logger = logging.getLogger(__name__)
 
@@ -647,6 +651,33 @@ def doImport(request, pk):
 
 
     return render(request, "programdb/merge-column-form.html", {'getSourceFrom':getSourceFrom, 'getSourceTo':getSourceTo, 'from_silo_id':from_silo_id, 'users':users})
+
+def country_json(request, country):
+    """
+    For populating the province dropdown based  country dropdown value
+    """
+    selected_country = Country.objects.get(id=country)
+    province = Province.objects.all().filter(country=selected_country)
+    provinces_json = serializers.serialize("json", province)
+    return HttpResponse(provinces_json, content_type="application/json")
+
+def province_json(request, province):
+    """
+    For populating the office district based  country province value
+    """
+    selected_province = Province.objects.get(id=province)
+    district = District.objects.all().filter(province=selected_province)
+    districts_json = serializers.serialize("json", district)
+    return HttpResponse(districts_json, content_type="application/json")
+
+def district_json(request, district):
+    """
+    For populating the office dropdown based  country dropdown value
+    """
+    selected_district = District.objects.get(id=district)
+    village = Village.objects.all().filter(district=selected_district)
+    villages_json = serializers.serialize("json", village)
+    return HttpResponse(villages_json, content_type="application/json")
 
 def doMerge(request, pk):
     """

@@ -50,4 +50,7 @@ urlpatterns = patterns('',
                        url(r'^doimport/(?P<pk>\w+)/$', 'programdb.views.doImport' , name='doImport'),
                        url(r'^doMerge/(?P<pk>\w+)/$', 'programdb.views.doMerge', name='doMerge'),
 
+                       url(r'^doMerge/(?P<pk>\w+)/$', 'programdb.views.doMerge', name='doMerge'),
+                       url(r'^province/(?P<province>[-\w]+)/province_json/', 'programdb.views.province_json', name='province_json'),
+
                        )
