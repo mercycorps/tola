@@ -25,7 +25,7 @@ logger = logging.getLogger(__name__)
 
 class ProjectDash(ListView):
 
-    template_name = 'programdb/projectdashboard_list.html'
+    template_name = 'activitydb/projectdashboard_list.html'
 
     def get(self, request, *args, **kwargs):
 
@@ -51,7 +51,7 @@ class ProjectDash(ListView):
 
 class ProgramDash(ListView):
 
-    template_name = 'programdb/programdashboard_list.html'
+    template_name = 'activitydb/programdashboard_list.html'
 
     def get(self, request, *args, **kwargs):
 
@@ -78,7 +78,7 @@ Project Proposal
 class ProjectProposalList(ListView):
 
     model = ProjectProposal
-    template_name = 'programdb/projectproposal_list.html'
+    template_name = 'activitydb/projectproposal_list.html'
 
     def get(self, request, *args, **kwargs):
         #set country to afghanistan for now until we have user data on country
@@ -106,7 +106,7 @@ class ProjectProposalImport(ListView):
         context['now'] = timezone.now()
         return context
 
-    template_name = 'programdb/projectproposal_import.html'
+    template_name = 'activitydb/projectproposal_import.html'
 
 
 class ProjectProposalCreate(CreateView):
@@ -174,7 +174,7 @@ class ProjectProposalDelete(DeleteView):
     """
 
     model = ProjectProposal
-    success_url = '/programdb/projectproposal_list/0/'
+    success_url = '/activitydb/projectproposal_list/0/'
 
     def form_invalid(self, form):
 
@@ -198,7 +198,7 @@ Project Agreement
 class ProjectAgreementList(ListView):
 
     model = ProjectAgreement
-    template_name = 'programdb/projectagreement_list.html'
+    template_name = 'activitydb/projectagreement_list.html'
 
     def get(self, request, *args, **kwargs):
         #set country to afghanistan for now until we have user data on country
@@ -227,7 +227,7 @@ class ProjectAgreementImport(ListView):
         context['now'] = timezone.now()
         return context
 
-    template_name = 'programdb/projectagreement_import.html'
+    template_name = 'activitydb/projectagreement_import.html'
 
 
 class ProjectAgreementCreate(CreateView):
@@ -309,7 +309,7 @@ class ProjectAgreementDelete(DeleteView):
     """
 
     model = ProjectAgreement
-    success_url = '/programdb/projectagreement_list/0/'
+    success_url = '/activitydb/projectagreement_list/0/'
 
     def form_invalid(self, form):
 
@@ -321,7 +321,7 @@ class ProjectAgreementDelete(DeleteView):
 
         form.save()
 
-        return HttpResponseRedirect('/programdb/success')
+        return HttpResponseRedirect('/activitydb/success')
 
     form_class = ProjectAgreementForm
 
@@ -331,7 +331,7 @@ Project Complete
 class ProjectCompleteList(ListView):
 
     model = ProjectComplete
-    template_name = 'programdb/projectcomplete_list.html'
+    template_name = 'activitydb/projectcomplete_list.html'
 
     def get(self, request, *args, **kwargs):
         #set country to afghanistan for now until we have user data on country
@@ -430,7 +430,7 @@ class ProjectCompleteDelete(DeleteView):
     """
 
     model = ProjectComplete
-    success_url = '/programdb/projectcomplete_list/0/'
+    success_url = '/activitydb/projectcomplete_list/0/'
 
     def form_invalid(self, form):
 
@@ -442,7 +442,7 @@ class ProjectCompleteDelete(DeleteView):
 
         form.save()
 
-        return HttpResponseRedirect('/programdb/success')
+        return HttpResponseRedirect('/activitydb/success')
 
     form_class = ProjectCompleteForm
 
@@ -456,7 +456,7 @@ class ProjectCompleteImport(ListView):
         context['now'] = timezone.now()
         return context
 
-    template_name = 'programdb/projectcomplete_import.html'
+    template_name = 'activitydb/projectcomplete_import.html'
 
 
 """
@@ -467,7 +467,7 @@ Documentation
 class DocumentationList(ListView):
 
     model = Documentation
-    template_name = 'programdb/documentation_list.html'
+    template_name = 'activitydb/documentation_list.html'
 
     def get(self, request, *args, **kwargs):
 
@@ -557,7 +557,7 @@ Community
 class CommunityList(ListView):
 
     model = Community
-    template_name = 'programdb/community_list.html'
+    template_name = 'activitydb/community_list.html'
 
     def get(self, request, *args, **kwargs):
 
@@ -650,7 +650,7 @@ def doImport(request, pk):
     users = User.objects.all()
 
 
-    return render(request, "programdb/merge-column-form.html", {'getSourceFrom':getSourceFrom, 'getSourceTo':getSourceTo, 'from_silo_id':from_silo_id, 'users':users})
+    return render(request, "activitydb/merge-column-form.html", {'getSourceFrom':getSourceFrom, 'getSourceTo':getSourceTo, 'from_silo_id':from_silo_id, 'users':users})
 
 def country_json(request, country):
     """
@@ -728,7 +728,7 @@ def doMerge(request, pk):
         new_project_proposal = ProjectProposal.objects.create(approved_by=approved_by, approval_submitted_by=approval_submitted_by, **fields_to_insert)
         new_project_proposal.save()
 
-    redirect_url = "/programdb/projectproposal_update/" + str(new_project_proposal.id)
+    redirect_url = "/activitydb/projectproposal_update/" + str(new_project_proposal.id)
 
     return HttpResponseRedirect(redirect_url)
 

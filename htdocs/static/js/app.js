@@ -47,7 +47,7 @@ $(document).ready(function() {
         if (selected_province == undefined || selected_province == -1 || selected_province == '') {
             $("select#id_district").html("<option>--Province--</option>");
         } else {
-            var url = "/programdb/province/" + selected_province + "/province_json/";
+            var url = "/activitydb/province/" + selected_province + "/province_json/";
             $.getJSON(url, function(district) {
                 var options = '<option value="0">--District--</option>';
                 for (var i = 0; i < district.length; i++) {

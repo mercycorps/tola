@@ -201,7 +201,6 @@ THIRD_PARTY_APPS = (
     'crispy_forms',
     'floppyforms',
     'django_extensions',
-    'multiupload'
 
     #'mongoengine'
 )
@@ -213,7 +212,7 @@ LOCAL_APPS = (
     'display',
     'silo',
     'readtoken',
-    'programdb',
+    'activitydb',
 )
 
 # See: https://docs.djangoproject.com/en/dev/ref/settings/#installed-apps
