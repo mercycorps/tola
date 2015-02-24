@@ -203,7 +203,7 @@ class Community(models.Model):
     province = models.ForeignKey(Province, null=True, blank=True)
     district = models.ForeignKey(District, null=True, blank=True)
     village = models.ForeignKey(Village, null=True, blank=True)
-    cluster = models.ForeignKey(Cluster, null=True, blank=True)
+    office = models.ForeignKey(Office, null=True, blank=True)
     latitude = models.CharField("Latitude (Coordinates)", max_length=255, blank=True, null=True)
     longitude = models.CharField("Longitude (Coordinates)", max_length=255, blank=True, null=True)
     community_rep = models.CharField("Community Representative", max_length=255, blank=True, null=True)
