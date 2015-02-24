@@ -14,7 +14,7 @@ import unicodedata
 import sys
 import urllib2
 from datetime import date
-from programdb.models import Country, Province, District
+from activitydb.models import Country, Province, District
 
 def run():
     print "Uploading JSON data"
@@ -60,7 +60,7 @@ def saveDistrict(keys_to_sql, vars_to_sql):
     #save the original keys list for update in case we need to run that
     save_keys = keys_to_sql
 
-    query = "INSERT INTO programdb_country (country,code) VALUES ('%s','%s')" % (vars_to_sql[0], vars_to_sql[1])
+    query = "INSERT INTO activitydb_country (country,code) VALUES ('%s','%s')" % (vars_to_sql[0], vars_to_sql[1])
     print query
 
     try:
@@ -72,7 +72,7 @@ def saveDistrict(keys_to_sql, vars_to_sql):
         value = 1
         country = vars_to_sql[0]
         if type == "country":
-            query_update = "UPDATE programdb_country set country = %s where lower(%(type)s) = '%s'" % (
+            query_update = "UPDATE activitydb_country set country = %s where lower(%(type)s) = '%s'" % (
                 column, value, country.lower())
         try:
             cursor.execute(query_update)

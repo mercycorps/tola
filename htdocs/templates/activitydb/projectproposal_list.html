@@ -1,0 +1,35 @@
+{% extends "base.html" %}
+{% block page_title %}Project Proposal List{% endblock %}
+
+{% block content %}
+<div class="dropdown">
+  <button class="btn btn-default dropdown-toggle" type="button" id="dropdownMenu1" data-toggle="dropdown" aria-expanded="true">
+    Programs
+    <span class="caret"></span>
+  </button>
+  <ul class="dropdown-menu" role="menu" aria-labelledby="dropdownMenu1">
+    {% for program in getPrograms %}
+        <li role="presentation"><a role="menuitem" tabindex="-1" href="/activitydb/projectproposal_list/{{ program.id }}">{{ program.gaitid}} - {{ program.name }}</a></li>
+    {% endfor %}
+  </ul>
+  &nbsp;
+  <a href="/activitydb/projectproposal_add" class="btn btn-large btn-success">New Project Proposal</a> &nbsp;
+  <a href="/activitydb/projectproposal_import" class="btn btn-large btn-info">Import Project Proposal</a>
+</div>
+<br/>
+<div>
+<ol class="breadcrumb">
+  <li><a href="/activitydb/dashboard/0/">Program Dashboard</a></li>
+  <li class="active">Project Proposals</li>
+</ol>
+{% if getProgram %}
+    <h3>{{getProgram.gaitid }} - {{ getProgram.name }}</h3>
+{% endif %}
+<ul class="list-group">
+{% for proposal in getDashboard %}
+    <li class="list-group-item"><b>{{ proposal.create_date|date }} - <a href="/activitydb/projectproposal_update/{{ proposal.id }}/">{{ proposal.project_title }} {{ proposal.proposal_num }}</a></b>&nbsp;<a href="/activitydb/dashboard/project/{{ proposal.id }}" class="btn btn-xs btn-success">Project Dashboard</a>&nbsp;<a href="/activitydb/projectproposal_delete/{{ proposal.id }}" class="btn btn-xs btn-danger">Delete Proposal</a> </li>
+{% empty %}
+    <li class="list-group-item">No proposals yet.</li>
+{% endfor %}
+</ul>
+{% endblock content %}

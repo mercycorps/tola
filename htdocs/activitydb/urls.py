@@ -14,7 +14,7 @@ except ImportError:  # django < 1.4
 
 urlpatterns = patterns('',
 
-                       ###PROGRAMDB
+                       ###activitydb
                        url(r'^dashboard/(?P<pk>\w+)/$', ProgramDash.as_view(), name='dashboard'),
                        url(r'^dashboard/project/(?P<pk>\w+)/$', ProjectDash.as_view(), name='project_dashboard'),
 
