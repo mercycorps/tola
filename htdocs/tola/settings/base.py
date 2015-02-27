@@ -160,6 +160,7 @@ MIDDLEWARE_CLASSES = (
     'django.contrib.sessions.middleware.SessionMiddleware',
     'django.middleware.csrf.CsrfViewMiddleware',
     'django.contrib.auth.middleware.AuthenticationMiddleware',
+    'django.contrib.auth.middleware.RemoteUserMiddleware',
     'django.contrib.messages.middleware.MessageMiddleware',
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
 )
@@ -229,29 +230,75 @@ INSTALLED_APPS = DJANGO_APPS + THIRD_PARTY_APPS + LOCAL_APPS
 # the site admins on every HTTP 500 error when DEBUG=False.
 # See http://docs.djangoproject.com/en/dev/topics/logging for
 # more details on how to customize your logging configuration.
+#LOGGING = {
+#    'version': 1,
+#    'disable_existing_loggers': False,
+#    'filters': {
+#        'require_debug_false': {
+#            '()': 'django.utils.log.RequireDebugFalse'
+#        }
+#    },
+#    'handlers': {
+#        'mail_admins': {
+#            'level': 'ERROR',
+#            'filters': ['require_debug_false'],
+#            'class': 'django.utils.log.AdminEmailHandler'
+#        }
+#    },
+#    'loggers': {
+#        'django.request': {
+#            'handlers': ['mail_admins'],
+#            'level': 'ERROR',
+#            'propagate': True,
+#        },
+#    }
+#}
+
+
+import os
+PROJECT_PATH = dirname(dirname(dirname(abspath(__file__))))
+path.append(PROJECT_PATH)
+
 LOGGING = {
     'version': 1,
     'disable_existing_loggers': False,
-    'filters': {
-        'require_debug_false': {
-            '()': 'django.utils.log.RequireDebugFalse'
-        }
+    'formatters': {
+        'verbose': {
+            'format': "[%(asctime)s] %(levelname)s [%(name)s:%(lineno)s] %(message)s",
+            'datefmt': "%d/%b/%Y %H:%M:%S"
+        },
+        'simple': {
+            'format': '%(levelname)s %(message)s'
+        },
     },
     'handlers': {
-        'mail_admins': {
-            'level': 'ERROR',
-            'filters': ['require_debug_false'],
-            'class': 'django.utils.log.AdminEmailHandler'
-        }
+        'file': {
+            'level': 'WARNING',
+            'class': 'logging.FileHandler',
+            'filename': '/var/www/tola/htdocs/error.log', #os.path.join(PROJECT_PATH, 'error.log'),
+            'formatter': 'verbose'
+        },
+        'console':{
+            'level': 'DEBUG',
+            'class': 'logging.StreamHandler',
+            'formatter': 'simple'
+        },
     },
     'loggers': {
-        'django.request': {
-            'handlers': ['mail_admins'],
-            'level': 'ERROR',
+        'django': {
+            'handlers': ['file'],
+            'level': 'DEBUG',
+            'propagate': True,
+        },
+        'epro': {
+            'handlers': ['file'],
+            'level': 'WARNING',
             'propagate': True,
         },
     }
 }
+
+
 ########## END LOGGING CONFIGURATION
 
 
@@ -261,10 +308,3 @@ WSGI_APPLICATION = '%s.wsgi.application' % SITE_NAME
 ########## END WSGI CONFIGURATION
 
 CRISPY_TEMPLATE_PACK = 'bootstrap3'
-
-########## AUTH
-AUTHENTICATION_BACKENDS = (
-    'djangocosign.cosign.CosignBackend',
-    'django.contrib.auth.backends.ModelBackend',
-)
-########### END AUTH
