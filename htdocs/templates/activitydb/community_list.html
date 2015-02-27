@@ -3,8 +3,8 @@
 
 {% block content %}
 <div>
-<a href="/programdb/community_add" class="btn btn-large btn-success">New Community</a> &nbsp;
-<a href="/programdb/community_import" class="btn btn-large btn-info">Import Community</a>
+<a href="/activitydb/community_add" class="btn btn-large btn-success">New Community</a> &nbsp;
+<a href="/activitydb/community_import" class="btn btn-large btn-info">Import Community</a>
 <hr/>
 </div>
 <style>
@@ -57,7 +57,7 @@
 	L.control.layers(baseLayers).addTo(map);
 
     {% for item in getCommunity %}
-        L.marker([{{ item.latitude }}, {{ item.longitude }}]).addTo(map).bindPopup("" + "<b>{{ item.country }}</b> <a href='/programdb/community_update/{{ item.id }}'>{{ item.name }}</a> <br/>Province: {{ incident.province }} <br/>District: {{ item.district }} <br/> Village: {{ item.village }} <br/> Community: {{ item.name }} <br/> ").openPopup();
+        L.marker([{{ item.latitude }}, {{ item.longitude }}]).addTo(map).bindPopup("" + "<b>{{ item.country }}</b> <a href='/activitydb/community_update/{{ item.id }}'>{{ item.name }}</a> <br/>Province: {{ incident.province }} <br/>District: {{ item.district }} <br/> Village: {{ item.village }} <br/> Community: {{ item.name }} <br/> ").openPopup();
     {%   endfor %}
 
     function ZoomToCountry(region){
@@ -84,7 +84,7 @@
 <ul class="list-group">
 {% for item in getCommunity %}
     <li class="list-group-item"><b>{{ item.create_date|date }} - {{ item.name }}</b></li>
-    <li class="list-group-item"><a href="/programdb/community_update/{{ item.id }}" class="btn btn-sm btn-warning">Update Community</a> <a href="/programdb/community_delete/{{ item.id }}" class="btn btn-sm btn-danger">Delete Community</a></li>
+    <li class="list-group-item"><a href="/activitydb/community_update/{{ item.id }}" class="btn btn-sm btn-warning">Update Community</a> <a href="/activitydb/community_delete/{{ item.id }}" class="btn btn-sm btn-danger">Delete Community</a></li>
 {% empty %}
     <li class="list-group-item">No communities yet.</li>
 {% endfor %}

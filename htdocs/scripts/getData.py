@@ -14,7 +14,7 @@ import unicodedata
 import sys
 import urllib2
 from datetime import date
-from programdb.models import Country, Program
+from activitydb.models import Country, Program
 
 def run():
     print "Uploading JSON data"
@@ -40,7 +40,7 @@ def getAllData(url, type, program_country):
         save_keys = keys_to_sql
         keys_to_sql = ", ".join(map(str, keys_to_sql))
 
-        query = "INSERT INTO programdb_country (country,code) VALUES ('%s','%s')" % (vars_to_sql[0], vars_to_sql[1])
+        query = "INSERT INTO activitydb_country (country,code) VALUES ('%s','%s')" % (vars_to_sql[0], vars_to_sql[1])
         print query
 
         try:
@@ -52,7 +52,7 @@ def getAllData(url, type, program_country):
             value = 1
             country = vars_to_sql[0]
             if type == "country":
-                query_update = "UPDATE programdb_country set country = %s where lower(%(type)s) = '%s'" % (
+                query_update = "UPDATE activitydb_country set country = %s where lower(%(type)s) = '%s'" % (
                     column, value, country.lower())
             try:
                 cursor.execute(query_update)
@@ -71,7 +71,7 @@ def getAllData(url, type, program_country):
         var_to_tuple = tuple(vars_to_sql)
         print var_to_tuple
 
-        query = "INSERT INTO programdb_program (%s) VALUES %s" % (keys_to_sql, var_to_tuple)
+        query = "INSERT INTO activitydb_program (%s) VALUES %s" % (keys_to_sql, var_to_tuple)
         print query
 
         try:
@@ -83,7 +83,7 @@ def getAllData(url, type, program_country):
 
         latest = Program.objects.latest('id')
 
-        query2 = "INSERT INTO programdb_program_country (country_id,program_id) VALUES (%s,%s)" % (program_country, latest.id)
+        query2 = "INSERT INTO activitydb_program_country (country_id,program_id) VALUES (%s,%s)" % (program_country, latest.id)
 
         print query2
         try:

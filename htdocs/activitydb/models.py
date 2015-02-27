@@ -119,9 +119,10 @@ class DistrictAdmin(admin.ModelAdmin):
     display = 'District'
 
 
-class Cluster(models.Model):
-    name = models.CharField("Cluster Name", max_length=255, blank=True)
-    district = models.ForeignKey(District)
+class Office(models.Model):
+    name = models.CharField("Office Name", max_length=255, blank=True)
+    code = models.CharField("Office Code", max_length=255, blank=True)
+    province = models.ForeignKey(Province)
     create_date = models.DateTimeField(null=True, blank=True)
     edit_date = models.DateTimeField(null=True, blank=True)
 
@@ -133,16 +134,16 @@ class Cluster(models.Model):
         if self.create_date == None:
             self.create_date = datetime.now()
         self.edit_date = datetime.now()
-        super(Cluster, self).save()
+        super(Office, self).save()
 
     #displayed in admin templates
     def __unicode__(self):
         return self.name
 
 
-class ClusterAdmin(admin.ModelAdmin):
-    list_display = ('name', 'district', 'create_date', 'edit_date')
-    display = 'Cluster'
+class OfficeAdmin(admin.ModelAdmin):
+    list_display = ('name', 'code', 'province', 'create_date', 'edit_date')
+    display = 'Office'
 
 
 class Village(models.Model):
@@ -202,7 +203,7 @@ class Community(models.Model):
     province = models.ForeignKey(Province, null=True, blank=True)
     district = models.ForeignKey(District, null=True, blank=True)
     village = models.ForeignKey(Village, null=True, blank=True)
-    cluster = models.ForeignKey(Cluster, null=True, blank=True)
+    office = models.ForeignKey(Office, null=True, blank=True)
     latitude = models.CharField("Latitude (Coordinates)", max_length=255, blank=True, null=True)
     longitude = models.CharField("Longitude (Coordinates)", max_length=255, blank=True, null=True)
     community_rep = models.CharField("Community Representative", max_length=255, blank=True, null=True)
@@ -262,7 +263,7 @@ class ContributionAdmin(admin.ModelAdmin):
 class QuantitativeOutputs(models.Model):
     number_achieved = models.CharField("Contributor", max_length=255, blank=True)
     description = models.CharField("Description of Contribution", max_length=255, blank=True)
-    in_logframe = models.BooleanField("Is this Indicator in the Logframe?", default=None)
+    logframe_indicator = models.CharField("Logframe Indicator", max_length=255, blank=True, null=True)
     create_date = models.DateTimeField(null=True, blank=True)
     edit_date = models.DateTimeField(null=True, blank=True)
 

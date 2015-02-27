@@ -10,10 +10,10 @@
   </button>
   <ul class="dropdown-menu" role="menu" aria-labelledby="dropdownMenu1">
     {% for program in getPrograms %}
-        <li role="presentation"><a role="menuitem" tabindex="-1" href="/programdb/projectproposal_list/{{ program.id }}">{{ program.gaitid}} - {{ program.name }}</a></li>
+        <li role="presentation"><a role="menuitem" tabindex="-1" href="/activitydb/projectproposal_list/{{ program.id }}">{{ program.gaitid}} - {{ program.name }}</a></li>
     {% endfor %}
   </ul>
-  <a href="/programdb/projectproposal_add" class="btn btn-large btn-success">New Project Proposal</a>&nbsp;<a href="/programdb/projectproposal_import" class="btn btn-large btn-info">Import Project Proposal</a>
+  <a href="/activitydb/projectproposal_add" class="btn btn-large btn-success">New Project Proposal</a>&nbsp;<a href="/activitydb/projectproposal_import" class="btn btn-large btn-info">Import Project Proposal</a>
 </div>
 <br/>
 <div>
@@ -25,19 +25,19 @@
         <h3>{{ item.grouper }} - {{ item.list.0.name }}</h3>
         {% if item.list.0.proposal__id %}
             {% regroup item.list by proposal__id as proposal_list %}
-            <button class="btn btn-success" type="button" onclick="location.href='/programdb/projectproposal_list/{{ item.list.0.id }}'">Project Proposal <span class="badge">{{ proposal_list | length }} </span></button>
+            <button class="btn btn-success" type="button" onclick="location.href='/activitydb/projectproposal_list/{{ item.list.0.id }}'">Project Proposal <span class="badge">{{ proposal_list | length }} </span></button>
         {% else %}
              <button class="btn btn-success disabled" type="button">Project Proposal 0 </span></button>
         {% endif %}
         {% if item.list.0.agreement__id %}
             {% regroup item.list by agreement__id as agreement_list %}
-            <button class="btn btn-info" type="button" onclick="location.href='/programdb/projectagreement_list/{{ item.list.0.id }}'">Project Agreement <span class="badge">{{ agreement_list | length }}</span></button>
+            <button class="btn btn-info" type="button" onclick="location.href='/activitydb/projectagreement_list/{{ item.list.0.id }}'">Project Agreement <span class="badge">{{ agreement_list | length }}</span></button>
         {% else %}
              <button class="btn btn-info disabled" type="button">Project Agreement 0 </span></button>
         {% endif %}
         {% if item.list.0.complete__id %}
             {% regroup item.list by complete__id as complete__id %}
-            <button class="btn btn-warning" type="button" onclick="location.href='/programdb/projectcomplete_list/{{ item.list.0.id }}'">Project Completion <span class="badge">{{ complete__id |length }}</span></button>
+            <button class="btn btn-warning" type="button" onclick="location.href='/activitydb/projectcomplete_list/{{ item.list.0.id }}'">Project Completion <span class="badge">{{ complete__id |length }}</span></button>
         {% else %}
              <button class="btn btn-warning disabled" type="button">Project Completion 0 </span></button>
         {% endif %}

@@ -14,7 +14,7 @@ except ImportError:  # django < 1.4
 
 urlpatterns = patterns('',
 
-                       ###PROGRAMDB
+                       ###activitydb
                        url(r'^dashboard/(?P<pk>\w+)/$', ProgramDash.as_view(), name='dashboard'),
                        url(r'^dashboard/project/(?P<pk>\w+)/$', ProjectDash.as_view(), name='project_dashboard'),
 
@@ -47,10 +47,10 @@ urlpatterns = patterns('',
                        url(r'^documentation_update/(?P<pk>\w+)/$', DocumentationUpdate.as_view(), name='documentation_update'),
                        url(r'^documentation_delete/(?P<pk>\w+)/$', DocumentationDelete.as_view(), name='documentation_delete'),
 
-                       url(r'^doimport/(?P<pk>\w+)/$', 'programdb.views.doImport' , name='doImport'),
-                       url(r'^doMerge/(?P<pk>\w+)/$', 'programdb.views.doMerge', name='doMerge'),
+                       url(r'^doimport/(?P<pk>\w+)/$', 'activitydb.views.doImport' , name='doImport'),
+                       url(r'^doMerge/(?P<pk>\w+)/$', 'activitydb.views.doMerge', name='doMerge'),
 
-                       url(r'^doMerge/(?P<pk>\w+)/$', 'programdb.views.doMerge', name='doMerge'),
-                       url(r'^province/(?P<province>[-\w]+)/province_json/', 'programdb.views.province_json', name='province_json'),
+                       url(r'^doMerge/(?P<pk>\w+)/$', 'activitydb.views.doMerge', name='doMerge'),
+                       url(r'^province/(?P<province>[-\w]+)/province_json/', 'activitydb.views.province_json', name='province_json'),
 
                        )

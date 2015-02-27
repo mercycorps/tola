@@ -39,7 +39,7 @@ class Migration(migrations.Migration):
                 ('community_mobilizer', models.CharField(max_length=255, null=True, verbose_name=b'Community Mobilizer', blank=True)),
                 ('create_date', models.DateTimeField(null=True, blank=True)),
                 ('edit_date', models.DateTimeField(null=True, blank=True)),
-                ('cluster', models.ForeignKey(blank=True, to='programdb.Cluster', null=True)),
+                ('cluster', models.ForeignKey(blank=True, to='activitydb.Cluster', null=True)),
             ],
             options={
                 'ordering': ('name',),
@@ -129,7 +129,7 @@ class Migration(migrations.Migration):
                 ('description', models.CharField(max_length=765, null=True, verbose_name=b'Program Description', blank=True)),
                 ('create_date', models.DateTimeField(null=True, blank=True)),
                 ('edit_date', models.DateTimeField(null=True, blank=True)),
-                ('country', models.ManyToManyField(to='programdb.Country')),
+                ('country', models.ManyToManyField(to='activitydb.Country')),
             ],
             options={
                 'ordering': ('create_date',),
@@ -145,7 +145,7 @@ class Migration(migrations.Migration):
                 ('project_completion_approved', models.IntegerField(null=True, blank=True)),
                 ('create_date', models.DateTimeField(null=True, blank=True)),
                 ('edit_date', models.DateTimeField(null=True, blank=True)),
-                ('program', models.ForeignKey(blank=True, to='programdb.Program', null=True)),
+                ('program', models.ForeignKey(blank=True, to='activitydb.Program', null=True)),
             ],
             options={
                 'ordering': ('program',),
@@ -195,9 +195,9 @@ class Migration(migrations.Migration):
                 ('edit_date', models.DateTimeField(null=True, verbose_name=b'Last Edit Date', blank=True)),
                 ('approved_by', models.ForeignKey(related_name='approving_agreement', blank=True, to=settings.AUTH_USER_MODEL, null=True)),
                 ('checked_by', models.ForeignKey(related_name='checking', blank=True, to=settings.AUTH_USER_MODEL, null=True)),
-                ('community', models.ManyToManyField(to='programdb.Community', null=True, blank=True)),
+                ('community', models.ManyToManyField(to='activitydb.Community', null=True, blank=True)),
                 ('estimated_by', models.ForeignKey(related_name='estimating', blank=True, to=settings.AUTH_USER_MODEL, null=True)),
-                ('program', models.ForeignKey(related_name='agreement', blank=True, to='programdb.Program', null=True)),
+                ('program', models.ForeignKey(related_name='agreement', blank=True, to='activitydb.Program', null=True)),
             ],
             options={
                 'ordering': ('create_date',),
@@ -232,13 +232,13 @@ class Migration(migrations.Migration):
                 ('approval', models.BooleanField(default=None, verbose_name=b'Approval')),
                 ('create_date', models.DateTimeField(null=True, verbose_name=b'Date Created', blank=True)),
                 ('edit_date', models.DateTimeField(null=True, verbose_name=b'Last Edit Date', blank=True)),
-                ('actual_contribution', models.ForeignKey(to='programdb.Contribution')),
+                ('actual_contribution', models.ForeignKey(to='activitydb.Contribution')),
                 ('approved_by', models.ForeignKey(related_name='approving_agreement_complete', blank=True, to=settings.AUTH_USER_MODEL, null=True)),
                 ('checked_by', models.ForeignKey(related_name='checking_complete', blank=True, to=settings.AUTH_USER_MODEL, null=True)),
-                ('community', models.ManyToManyField(to='programdb.Community', null=True, blank=True)),
+                ('community', models.ManyToManyField(to='activitydb.Community', null=True, blank=True)),
                 ('estimated_by', models.ForeignKey(related_name='estimating_complete', blank=True, to=settings.AUTH_USER_MODEL, null=True)),
-                ('program', models.ForeignKey(related_name='complete', blank=True, to='programdb.Program', null=True)),
-                ('project_agreement', models.ForeignKey(to='programdb.ProjectAgreement')),
+                ('program', models.ForeignKey(related_name='complete', blank=True, to='activitydb.Program', null=True)),
+                ('project_agreement', models.ForeignKey(to='activitydb.ProjectAgreement')),
             ],
             options={
                 'ordering': ('create_date',),
@@ -282,8 +282,8 @@ class Migration(migrations.Migration):
                 ('longitude', models.CharField(max_length=255, null=True, verbose_name=b'Longitude (Coordinates)', blank=True)),
                 ('approval_submitted_by', models.ForeignKey(related_name='requesting', blank=True, to=settings.AUTH_USER_MODEL, null=True)),
                 ('approved_by', models.ForeignKey(related_name='approving', blank=True, to=settings.AUTH_USER_MODEL, null=True)),
-                ('community', models.ManyToManyField(to='programdb.Community', null=True, blank=True)),
-                ('program', models.ForeignKey(related_name='proposal', blank=True, to='programdb.Program', null=True)),
+                ('community', models.ManyToManyField(to='activitydb.Community', null=True, blank=True)),
+                ('program', models.ForeignKey(related_name='proposal', blank=True, to='activitydb.Program', null=True)),
             ],
             options={
                 'ordering': ('create_date',),
@@ -297,7 +297,7 @@ class Migration(migrations.Migration):
                 ('name', models.CharField(max_length=255, verbose_name=b'Province Name', blank=True)),
                 ('create_date', models.DateTimeField(null=True, blank=True)),
                 ('edit_date', models.DateTimeField(null=True, blank=True)),
-                ('country', models.ForeignKey(to='programdb.Country')),
+                ('country', models.ForeignKey(to='activitydb.Country')),
             ],
             options={
                 'ordering': ('name',),
@@ -355,7 +355,7 @@ class Migration(migrations.Migration):
                 ('name', models.CharField(max_length=255, verbose_name=b'Village Name', blank=True)),
                 ('create_date', models.DateTimeField(null=True, blank=True)),
                 ('edit_date', models.DateTimeField(null=True, blank=True)),
-                ('district', models.ForeignKey(to='programdb.District')),
+                ('district', models.ForeignKey(to='activitydb.District')),
             ],
             options={
                 'ordering': ('name',),
@@ -365,13 +365,13 @@ class Migration(migrations.Migration):
         migrations.AddField(
             model_name='projectcomplete',
             name='project_proposal',
-            field=models.ForeignKey(to='programdb.ProjectProposal'),
+            field=models.ForeignKey(to='activitydb.ProjectProposal'),
             preserve_default=True,
         ),
         migrations.AddField(
             model_name='projectcomplete',
             name='quantitative_outputs',
-            field=models.ForeignKey(to='programdb.QuantitativeOutputs'),
+            field=models.ForeignKey(to='activitydb.QuantitativeOutputs'),
             preserve_default=True,
         ),
         migrations.AddField(
@@ -383,7 +383,7 @@ class Migration(migrations.Migration):
         migrations.AddField(
             model_name='projectagreement',
             name='project_proposal',
-            field=models.ForeignKey(to='programdb.ProjectProposal'),
+            field=models.ForeignKey(to='activitydb.ProjectProposal'),
             preserve_default=True,
         ),
         migrations.AddField(
@@ -395,43 +395,43 @@ class Migration(migrations.Migration):
         migrations.AddField(
             model_name='projectagreement',
             name='sector',
-            field=models.ForeignKey(blank=True, to='programdb.Sector', null=True),
+            field=models.ForeignKey(blank=True, to='activitydb.Sector', null=True),
             preserve_default=True,
         ),
         migrations.AddField(
             model_name='programdashboard',
             name='project_agreement',
-            field=models.ForeignKey(blank=True, to='programdb.ProjectAgreement', null=True),
+            field=models.ForeignKey(blank=True, to='activitydb.ProjectAgreement', null=True),
             preserve_default=True,
         ),
         migrations.AddField(
             model_name='programdashboard',
             name='project_completion',
-            field=models.ForeignKey(blank=True, to='programdb.ProjectComplete', null=True),
+            field=models.ForeignKey(blank=True, to='activitydb.ProjectComplete', null=True),
             preserve_default=True,
         ),
         migrations.AddField(
             model_name='programdashboard',
             name='project_proposal',
-            field=models.ForeignKey(blank=True, to='programdb.ProjectProposal', null=True),
+            field=models.ForeignKey(blank=True, to='activitydb.ProjectProposal', null=True),
             preserve_default=True,
         ),
         migrations.AddField(
             model_name='mergemap',
             name='project_agreement',
-            field=models.ForeignKey(to='programdb.ProjectAgreement', null=True),
+            field=models.ForeignKey(to='activitydb.ProjectAgreement', null=True),
             preserve_default=True,
         ),
         migrations.AddField(
             model_name='mergemap',
             name='project_completion',
-            field=models.ForeignKey(to='programdb.ProjectComplete', null=True),
+            field=models.ForeignKey(to='activitydb.ProjectComplete', null=True),
             preserve_default=True,
         ),
         migrations.AddField(
             model_name='mergemap',
             name='project_proposal',
-            field=models.ForeignKey(to='programdb.ProjectProposal', null=True),
+            field=models.ForeignKey(to='activitydb.ProjectProposal', null=True),
             preserve_default=True,
         ),
         migrations.AddField(
@@ -443,7 +443,7 @@ class Migration(migrations.Migration):
         migrations.AddField(
             model_name='documentation',
             name='project',
-            field=models.ForeignKey(blank=True, to='programdb.ProjectProposal', null=True),
+            field=models.ForeignKey(blank=True, to='activitydb.ProjectProposal', null=True),
             preserve_default=True,
         ),
         migrations.AddField(
@@ -455,43 +455,43 @@ class Migration(migrations.Migration):
         migrations.AddField(
             model_name='documentation',
             name='template',
-            field=models.ForeignKey(blank=True, to='programdb.Template', null=True),
+            field=models.ForeignKey(blank=True, to='activitydb.Template', null=True),
             preserve_default=True,
         ),
         migrations.AddField(
             model_name='district',
             name='province',
-            field=models.ForeignKey(to='programdb.Province'),
+            field=models.ForeignKey(to='activitydb.Province'),
             preserve_default=True,
         ),
         migrations.AddField(
             model_name='community',
             name='country',
-            field=models.ForeignKey(to='programdb.Country'),
+            field=models.ForeignKey(to='activitydb.Country'),
             preserve_default=True,
         ),
         migrations.AddField(
             model_name='community',
             name='district',
-            field=models.ForeignKey(blank=True, to='programdb.District', null=True),
+            field=models.ForeignKey(blank=True, to='activitydb.District', null=True),
             preserve_default=True,
         ),
         migrations.AddField(
             model_name='community',
             name='province',
-            field=models.ForeignKey(blank=True, to='programdb.Province', null=True),
+            field=models.ForeignKey(blank=True, to='activitydb.Province', null=True),
             preserve_default=True,
         ),
         migrations.AddField(
             model_name='community',
             name='village',
-            field=models.ForeignKey(blank=True, to='programdb.Village', null=True),
+            field=models.ForeignKey(blank=True, to='activitydb.Village', null=True),
             preserve_default=True,
         ),
         migrations.AddField(
             model_name='cluster',
             name='district',
-            field=models.ForeignKey(to='programdb.District'),
+            field=models.ForeignKey(to='activitydb.District'),
             preserve_default=True,
         ),
     ]
