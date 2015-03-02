@@ -2,6 +2,11 @@
 {% block page_title %}Project Proposal Form{% endblock %}
 
 {% block content %}
+<ol class="breadcrumb">
+  <li><a href="/activitydb/dashboard/0/">Program Dashboard</a></li>
+  <li><a href="/activitydb/projectproposal_list/0/">Project Proposals</a></li>
+  <li class="active">Project Proposals Form</li>
+</ol>
     {% if form.errors %}
         <div class="help-block">
         {% for field in form %}

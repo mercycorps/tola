@@ -9,7 +9,7 @@
   </button>
   <ul class="dropdown-menu" role="menu" aria-labelledby="dropdownMenu1">
     {% for program in getPrograms %}
-        <li role="presentation"><a role="menuitem" tabindex="-1" href="/activitydb/projectproposal_list/{{ program.id }}">{{ program.gaitid}} - {{ program.name }}</a></li>
+        <li role="presentation"><a role="menuitem" tabindex="-1" href="/activitydb/projectproposal_list/{{ program.id }}">{{ program.gaitid }} - {{ program.name }}</a></li>
     {% endfor %}
   </ul>
   &nbsp;

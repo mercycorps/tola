@@ -18,7 +18,7 @@ from django.contrib.auth.decorators import permission_required
 
 from django.core import serializers
 from django.core.serializers.json import DjangoJSONEncoder
-from django.http import HttpResponse
+from django.http import HttpResponse, HttpResponseRedirect
 
 # Get an instance of a logger
 logger = logging.getLogger(__name__)
@@ -164,6 +164,7 @@ class ProjectProposalCreate(CreateView):
 
         messages.success(self.request, 'Success, Proposal Created!')
         return self.render_to_response(self.get_context_data(form=form))
+        return redirect()
 
     form_class = ProjectProposalForm
 
@@ -281,8 +282,14 @@ class ProjectAgreementCreate(CreateView):
     model = ProjectAgreement
     template_name = 'activitydb/projectagreement_form.html'
 
-    def get(self, request, *args, **kwargs):
+     # add the request to the kwargs
+    def get_form_kwargs(self):
+        kwargs = super(ProjectAgreementCreate, self).get_form_kwargs()
+        kwargs['request'] = self.request
+        return kwargs
 
+    #get shared data from project agreement and pre-populate form with it
+    def get_initial(self):
         getProjectProposal = ProjectProposal.objects.get(id=self.kwargs['pk'])
         initial = {
             'approved_by': self.request.user,
@@ -294,18 +301,13 @@ class ProjectAgreementCreate(CreateView):
             'activity_code': getProjectProposal.activity_code,
             }
 
-        form = self.form_class(initial=initial, request=self.request)
-        return render(request, self.template_name, {'form': form})
-
+        return initial
 
     def get_context_data(self, **kwargs):
-
-        data = super(ProjectAgreementCreate, self).get_context_data(**kwargs)
-        if self.request.POST:
-            data['ProjectAgreement'] = ProjectAgreementForm(self.request.POST)
-        else:
-            data['ProjectAgreement'] = ProjectAgreementForm()
-        return data
+        context = super(ProjectAgreementCreate, self).get_context_data(**kwargs)
+        id = self.kwargs['pk']
+        context.update({'id': id})
+        return context
 
     def form_invalid(self, form):
 
@@ -335,11 +337,27 @@ class ProjectAgreementUpdate(UpdateView):
 
     model = ProjectAgreement
 
+    def get_context_data(self, **kwargs):
+        context = super(ProjectAgreementUpdate, self).get_context_data(**kwargs)
+        getAgreement = ProjectAgreement.objects.get(id=self.kwargs['pk'])
+        id = getAgreement.project_proposal_id
+        context.update({'id': id})
+        return context
+
     # add the request to the kwargs
     def get_form_kwargs(self):
         kwargs = super(ProjectAgreementUpdate, self).get_form_kwargs()
         kwargs['request'] = self.request
         return kwargs
+
+    #get shared data from project agreement and pre-populate form with it
+    def get_initial(self):
+        initial = {
+            'approved_by': self.request.user,
+            'approval_submitted_by': self.request.user,
+        }
+
+        return initial
 
     def form_invalid(self, form):
 
@@ -413,9 +431,15 @@ class ProjectCompleteCreate(CreateView):
     model = ProjectComplete
     template_name = 'activitydb/projectcomplete_form.html'
 
-    def get(self, request, *args, **kwargs):
+      # add the request to the kwargs
+    def get_form_kwargs(self):
+        kwargs = super(ProjectCompleteCreate, self).get_form_kwargs()
+        kwargs['request'] = self.request
+        return kwargs
 
-        getProjectAgreement = ProjectAgreement.objects.get(project_proposal__id=self.kwargs['pk'])
+    #get shared data from project agreement and pre-populate form with it
+    def get_initial(self):
+        getProjectAgreement = ProjectAgreement.objects.get(id=self.kwargs['pk'])
         initial = {
             'approved_by': self.request.user,
             'approval_submitted_by': self.request.user,
@@ -425,24 +449,19 @@ class ProjectCompleteCreate(CreateView):
             'project_title': getProjectAgreement.project_title,
             'proposal_num': getProjectAgreement.proposal_num,
             'activity_code': getProjectAgreement.activity_code,
-            }
-
-        form = self.form_class(initial=initial, request=self.request)
-        return render(request, self.template_name, {'form': form})
+        }
+        return initial
 
 
     def get_context_data(self, **kwargs):
-        data = super(ProjectCompleteCreate, self).get_context_data(**kwargs)
-        if self.request.POST:
-            data['ProjectComplete'] = ProjectCompleteForm(self.request.POST)
-        else:
-            data['ProjectComplete'] = ProjectCompleteForm()
-        return data
+        context = super(ProjectCompleteCreate, self).get_context_data(**kwargs)
+        id = self.kwargs['pk']
+        context.update({'id': id})
+        return context
 
     def form_invalid(self, form):
 
         messages.error(self.request, 'Invalid Form', fail_silently=False)
-
         return self.render_to_response(self.get_context_data(form=form))
 
     def form_valid(self, form):
@@ -455,7 +474,8 @@ class ProjectCompleteCreate(CreateView):
         ProgramDashboard.objects.filter(project_proposal__id=self.request.POST['project_proposal']).update(project_completion=getComplete)
 
         messages.success(self.request, 'Success, Completion Form Created!')
-        return self.render_to_response(self.get_context_data(form=form))
+        redirect_url = '/activitydb/projectcomplete_update/' + str(latest.id)
+        return HttpResponseRedirect(redirect_url)
 
     form_class = ProjectCompleteForm
 
@@ -466,6 +486,14 @@ class ProjectCompleteUpdate(UpdateView):
     """
 
     model = ProjectComplete
+    template_name = 'activitydb/projectcomplete_form.html'
+
+    def get_context_data(self, **kwargs):
+        context = super(ProjectCompleteUpdate, self).get_context_data(**kwargs)
+        getComplete = ProjectComplete.objects.get(id=self.kwargs['pk'])
+        id = getComplete.project_proposal_id
+        context.update({'id': id})
+        return context
 
     # add the request to the kwargs
     def get_form_kwargs(self):
@@ -473,18 +501,28 @@ class ProjectCompleteUpdate(UpdateView):
         kwargs['request'] = self.request
         return kwargs
 
+    #get shared data from project agreement and pre-populate form with it
+    def get_initial(self):
+        initial = {
+            'approved_by': self.request.user,
+            'approval_submitted_by': self.request.user,
+        }
+
+        return initial
+
     def form_invalid(self, form):
 
         messages.error(self.request, 'Invalid Form', fail_silently=False)
 
         return self.render_to_response(self.get_context_data(form=form))
 
+
     def form_valid(self, form):
 
         form.save()
         messages.success(self.request, 'Success, form updated!')
 
-        return self.render_to_response(self.get_context_data(form=form))
+        return self.render_to_response(self.get_context_data(form=form, request=request))
 
     form_class = ProjectCompleteForm
 
