@@ -164,7 +164,8 @@ class ProjectProposalCreate(CreateView):
 
         messages.success(self.request, 'Success, Proposal Created!')
         return self.render_to_response(self.get_context_data(form=form))
-        return redirect()
+        redirect_url = '/activitydb/projectproposal_update/' + str(latest.id)
+        return HttpResponseRedirect(redirect_url)
 
     form_class = ProjectProposalForm
 
@@ -325,7 +326,8 @@ class ProjectAgreementCreate(CreateView):
         update_dashboard = ProgramDashboard.objects.filter(project_proposal__id=self.request.POST['project_proposal']).update(project_agreement=getAgreement)
 
         messages.success(self.request, 'Success, Agreement Created!')
-        return self.render_to_response(self.get_context_data(form=form))
+        redirect_url = '/activitydb/projectagreement_update/' + str(latest.id)
+        return HttpResponseRedirect(redirect_url)
 
     form_class = ProjectAgreementForm
 
