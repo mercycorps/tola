@@ -163,7 +163,6 @@ class ProjectProposalCreate(CreateView):
         create_dashboard_entry.save()
 
         messages.success(self.request, 'Success, Proposal Created!')
-        return self.render_to_response(self.get_context_data(form=form))
         redirect_url = '/activitydb/projectproposal_update/' + str(latest.id)
         return HttpResponseRedirect(redirect_url)
 
@@ -306,7 +305,8 @@ class ProjectAgreementCreate(CreateView):
 
     def get_context_data(self, **kwargs):
         context = super(ProjectAgreementCreate, self).get_context_data(**kwargs)
-        id = self.kwargs['pk']
+        getAgreement = ProjectAgreement.objects.get(id=self.kwargs['pk'])
+        id = getAgreement.project_proposal_id
         context.update({'id': id})
         return context
 
@@ -457,7 +457,8 @@ class ProjectCompleteCreate(CreateView):
 
     def get_context_data(self, **kwargs):
         context = super(ProjectCompleteCreate, self).get_context_data(**kwargs)
-        id = self.kwargs['pk']
+        getAgreement = ProjectAgreement.objects.get(id=self.kwargs['pk'])
+        id = getAgreement.project_proposal_id
         context.update({'id': id})
         return context
 
