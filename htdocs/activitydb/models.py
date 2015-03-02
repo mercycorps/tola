@@ -201,6 +201,7 @@ class SectorAdmin(admin.ModelAdmin):
 
 class Community(models.Model):
     name = models.CharField("Community", max_length=255, blank=True, null=True)
+    code = models.CharField("Code Name", max_length=255, blank=True, null=True)
     country = models.ForeignKey(Country)
     province = models.ForeignKey(Province, null=True, blank=True)
     district = models.ForeignKey(District, null=True, blank=True)
@@ -223,6 +224,7 @@ class Community(models.Model):
         if self.create_date == None:
             self.create_date = datetime.now()
         self.edit_date = datetime.now()
+        self.code = str(self.country.code) + "-" + str(self.office.code) + "-" + str(self.name)
         super(Community, self).save()
 
     #displayed in admin templates
@@ -231,7 +233,7 @@ class Community(models.Model):
 
 
 class CommunityAdmin(admin.ModelAdmin):
-    list_display = ('name','country','district','province','village','cluster', 'longitude','latitude','create_date', 'edit_date')
+    list_display = ('name', 'code', 'country', 'district', 'province', 'village', 'cluster', 'longitude', 'latitude', 'create_date', 'edit_date')
     display = 'Community'
 
 

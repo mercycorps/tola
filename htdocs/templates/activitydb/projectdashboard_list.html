@@ -28,12 +28,15 @@
         <li class="list-group-item"><b>{{ proposal.project_proposal.create_date|date }} - {{ proposal.project_proposal.project_title }} {{ proposal.project_proposal.acivity_code }}</b></li>
         <li class="list-group-item">
             <div class="btn-group" role="group" aria-label="...">
-                <button type="button" class="btn btn-sm btn-warning" onclick="location.href='/activitydb/projectproposal_update/{{ proposal.project_proposal.id }}'">Update Proposal</button>
-                <button type="button" class="btn btn-sm btn-danger" onclick="location.href='/activitydb/projectproposal_delete/{{ proposal.project_proposal.id }}'">Delete Proposal</button>
+
                 {% if proposal.project_proposal.approval %}
+                    <button data-toggle="tooltip" data-placement="top" title="Proposal has been Approved, it is no longer editable" type="button" class="btn btn-sm btn-frozen">Update Proposal</button>
+                    <button data-toggle="tooltip" data-placement="top" title="Proposal has been Approved, it is no longer editable" type="button" class="btn btn-sm btn-frozen">Delete Proposal</button>
                     <button type="button" class="btn btn-sm btn-info" onclick="location.href='/activitydb/projectagreement_add/{{ proposal.project_proposal.id }}'">Create an Agreement</button>
                 {% else %}
-                    <button data-toggle="tooltip" data-placement="top" title="Once Approved you will be able to click here and create a project agreement" type="button" class="btn btn-sm btn-info">Create an Agreement</button>
+                    <button type="button" class="btn btn-sm btn-warning" onclick="location.href='/activitydb/projectproposal_update/{{ proposal.project_proposal.id }}'">Update Proposal</button>
+                    <button type="button" class="btn btn-sm btn-danger" onclick="location.href='/activitydb/projectproposal_delete/{{ proposal.project_proposal.id }}'">Delete Proposal</button>
+                    <button data-toggle="tooltip" data-placement="top" title="Once Approved you will be able to click here and create a project agreement" type="button" class="btn btn-sm btn-frozen">Create an Agreement</button>
                 {% endif %}
             </div>
         </li>
@@ -59,12 +62,15 @@
             <li class="list-group-item"><b>{{ proposal.project_agreement.create_date|date }} - {{ proposal.project_agreement.project_title }} {{ proposal.project_agreement.acivity_code }}</b></li>
             <li class="list-group-item">
                 <div class="btn-group" role="group" aria-label="...">
-                    <button type="button" class="btn btn-sm btn-warning" onclick="location.href='/activitydb/projectagreement_update/{{ proposal.project_agreement.id }}'">Update Agreement</button>
-                    <button type="button" class="btn btn-sm btn-danger" onclick="location.href='/activitydb/projectagreement_delete/{{ proposal.project_agreement.id }}'">Delete Agreement</button>
+
                     {% if proposal.project_agreement.approval %}
+                        <button data-toggle="tooltip" data-placement="top" title="Agreement has been Approved, it is no longer editable" type="button" class="btn btn-sm btn-frozen">Update Agreement</button>
+                        <button data-toggle="tooltip" data-placement="top" title="Agreement has been Approved, it is no longer editable" type="button" class="btn btn-sm btn-frozen">Delete Agreement</button>
                         <button type="button" class="btn btn-sm btn-info" onclick="location.href='/activitydb/projectcomplete_add/{{ proposal.project_agreement.id }}'">Complete Project</button>
                     {% else %}
-                        <button data-toggle="tooltip" data-placement="top" title="Once Approved you will be able to click here and complete the project" type="button" class="btn btn-sm btn-info">Complete Project</button>
+                        <button type="button" class="btn btn-sm btn-warning" onclick="location.href='/activitydb/projectagreement_update/{{ proposal.project_agreement.id }}'">Update Agreement</button>
+                        <button type="button" class="btn btn-sm btn-danger" onclick="location.href='/activitydb/projectagreement_delete/{{ proposal.project_agreement.id }}'">Delete Agreement</button>
+                        <button data-toggle="tooltip" data-placement="top" title="Once Approved you will be able to click here and complete the project" type="button" class="btn btn-sm btn-frozen">Complete Project</button>
                     {% endif %}
 
 

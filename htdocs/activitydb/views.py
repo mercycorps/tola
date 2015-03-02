@@ -305,8 +305,8 @@ class ProjectAgreementCreate(CreateView):
 
     def get_context_data(self, **kwargs):
         context = super(ProjectAgreementCreate, self).get_context_data(**kwargs)
-        getAgreement = ProjectAgreement.objects.get(id=self.kwargs['pk'])
-        id = getAgreement.project_proposal_id
+        getProposal = ProjectProposal.objects.get(id=self.kwargs['pk'])
+        id = getProposal.id
         context.update({'id': id})
         return context
 
@@ -693,8 +693,6 @@ class CommunityCreate(CreateView):
         return self.render_to_response(self.get_context_data(form=form))
 
     def form_valid(self, form):
-
-        form.save()
 
         messages.success(self.request, 'Success, Community Created!')
         return self.render_to_response(self.get_context_data(form=form))
