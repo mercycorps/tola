@@ -5,7 +5,7 @@ from crispy_forms.layout import Layout, Submit, Reset, Field
 from functools import partial
 from widgets import GoogleMapsWidget
 import floppyforms as forms
-
+from django.contrib.auth.models import Permission, User, Group
 from .models import ProjectProposal, ProgramDashboard, ProjectAgreement, ProjectComplete, Sector, Program, Community, Documentation
 
 
@@ -37,7 +37,9 @@ class ProjectProposalForm(forms.ModelForm):
 
     date_of_request = forms.DateField(widget=DatePicker.DateInput())
 
-    def __init__(self, *args, **kwargs):
+    def __init__(self,  *args, **kwargs):
+        #get the user object to check permissions with
+        self.request = kwargs.pop('request')
         self.helper = FormHelper()
         self.helper.form_method = 'post'
         self.helper.form_class = 'form-horizontal'
@@ -52,7 +54,7 @@ class ProjectProposalForm(forms.ModelForm):
             HTML("""<br/>"""),
             TabHolder(
                 Tab('Details',
-                    Fieldset('Program', 'program', 'community_code', 'proposal_num', 'date_of_request', 'activity_code','project_title', 'project_type',
+                    Fieldset('Program', 'program', 'community_code', 'proposal_num', 'date_of_request', 'activity_code', 'project_title', 'project_type',
                     ),
                     Fieldset(
                         'Community',
@@ -81,7 +83,16 @@ class ProjectProposalForm(forms.ModelForm):
                 Reset('reset', 'Reset', css_class='btn-warning')
             )
         )
+
+
         super(ProjectProposalForm, self).__init__(*args, **kwargs)
+
+        if not 'Approver' in self.request.user.groups.values_list('name', flat=True):
+            self.fields['approval'].widget.attrs['disabled'] = "disabled"
+            self.fields['approved_by'].widget.attrs['disabled'] = "disabled"
+            self.fields['approval_submitted_by'].widget.attrs['disabled'] = "disabled"
+            self.fields['approval_remarks'].widget.attrs['disabled'] = "disabled"
+            self.fields['approval'].help_text = "Approval level permissions required"
 
 
 class ProjectAgreementForm(forms.ModelForm):
@@ -103,6 +114,9 @@ class ProjectAgreementForm(forms.ModelForm):
     documentation_community_approval = forms.FileField(required=False)
 
     def __init__(self, *args, **kwargs):
+
+        #get the user object from request to check permissions
+        self.request = kwargs.pop('request')
         self.helper = FormHelper()
         self.helper.form_method = 'post'
         self.helper.form_class = 'form-horizontal'
@@ -159,6 +173,12 @@ class ProjectAgreementForm(forms.ModelForm):
         )
         super(ProjectAgreementForm, self).__init__(*args, **kwargs)
 
+        if not 'Approver' in self.request.user.groups.values_list('name', flat=True):
+            self.fields['approval'].widget.attrs['disabled'] = "disabled"
+            self.fields['approved_by'].widget.attrs['disabled'] = "disabled"
+            self.fields['approval_submitted_by'].widget.attrs['disabled'] = "disabled"
+            self.fields['approval_remarks'].widget.attrs['disabled'] = "disabled"
+            self.fields['approval'].help_text = "Approval level permissions required"
 
 class ProjectCompleteForm(forms.ModelForm):
 
@@ -176,8 +196,9 @@ class ProjectCompleteForm(forms.ModelForm):
 
     program = forms.ModelChoiceField(queryset=Program.objects.filter(country='1', funding_status="Funded"))
 
-
     def __init__(self, *args, **kwargs):
+        #get the user object from request to check permissions
+        self.request = kwargs.pop('request')
         self.helper = FormHelper()
         self.helper.form_method = 'post'
         self.helper.form_class = 'form-horizontal'
@@ -232,6 +253,13 @@ class ProjectCompleteForm(forms.ModelForm):
             )
         )
         super(ProjectCompleteForm, self).__init__(*args, **kwargs)
+
+        if not 'Approver' in self.request.user.groups.values_list('name', flat=True):
+            self.fields['approval'].widget.attrs['disabled'] = "disabled"
+            self.fields['approved_by'].widget.attrs['disabled'] = "disabled"
+            self.fields['approval_submitted_by'].widget.attrs['disabled'] = "disabled"
+            self.fields['approval_remarks'].widget.attrs['disabled'] = "disabled"
+            self.fields['approval'].help_text = "Approval level permissions required"
 
 
 class CommunityForm(forms.ModelForm):

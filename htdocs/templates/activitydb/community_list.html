@@ -1,10 +1,13 @@
 {% extends "base.html" %}
+{% load group_tag %}
 {% block page_title %}Community List{% endblock %}
 
 {% block content %}
 <div>
-<a href="/activitydb/community_add" class="btn btn-large btn-success">New Community</a> &nbsp;
-<a href="/activitydb/community_import" class="btn btn-large btn-info">Import Community</a>
+{% if request.user|has_group:"Editor" %}
+    <a href="/activitydb/community_add" class="btn btn-large btn-success">New Community</a> &nbsp;
+    <a href="/activitydb/community_import" class="btn btn-large btn-info">Import Community</a>
+{% endif %}
 <hr/>
 </div>
 <style>
@@ -84,7 +87,9 @@
 <ul class="list-group">
 {% for item in getCommunity %}
     <li class="list-group-item"><b>{{ item.create_date|date }} - {{ item.name }}</b></li>
-    <li class="list-group-item"><a href="/activitydb/community_update/{{ item.id }}" class="btn btn-sm btn-warning">Update Community</a> <a href="/activitydb/community_delete/{{ item.id }}" class="btn btn-sm btn-danger">Delete Community</a></li>
+    {% if request.user|has_group:"Editor" %}
+        <li class="list-group-item"><a href="/activitydb/community_update/{{ item.id }}" class="btn btn-sm btn-warning">Update Community</a> <a href="/activitydb/community_delete/{{ item.id }}" class="btn btn-sm btn-danger">Delete Community</a></li>
+    {% endif %}
 {% empty %}
     <li class="list-group-item">No communities yet.</li>
 {% endfor %}

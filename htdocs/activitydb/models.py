@@ -18,6 +18,7 @@ class Country(models.Model):
 
     class Meta:
         ordering = ('country',)
+        verbose_name_plural = "Countries"
 
     #onsave add create date or update edit date
     def save(self, *args, **kwargs):
@@ -40,7 +41,8 @@ class Program(models.Model):
     gaitid = models.CharField("GAITID", max_length=255, blank=True, unique=True)
     name = models.CharField("Program Name", max_length=255, blank=True)
     funding_status = models.CharField("Funding Status", max_length=255, blank=True)
-    description = models.CharField("Program Description", max_length=765,null=True, blank=True)
+    cost_center = models.CharField("Fund Code", max_length=255, blank=True, null=True)
+    description = models.CharField("Program Description", max_length=765, null=True, blank=True)
     create_date = models.DateTimeField(null=True, blank=True)
     edit_date = models.DateTimeField(null=True, blank=True)
     country = models.ManyToManyField(Country)
@@ -214,6 +216,7 @@ class Community(models.Model):
 
     class Meta:
         ordering = ('name',)
+        verbose_name_plural = "Communities"
 
     #onsave add create date or update edit date
     def save(self, *args, **kwargs):
@@ -269,6 +272,7 @@ class QuantitativeOutputs(models.Model):
 
     class Meta:
         ordering = ('description',)
+        verbose_name_plural = "Quantitative Outputs"
 
     #onsave add create date or update edit date
     def save(self, *args, **kwargs):
@@ -351,9 +355,11 @@ class ProjectProposal(models.Model):
     latitude = models.CharField("Latitude (Coordinates)", max_length=255, blank=True, null=True)
     longitude = models.CharField("Longitude (Coordinates)", max_length=255, blank=True, null=True)
 
-
     class Meta:
         ordering = ('create_date',)
+        permissions = (
+             ("can_approve", "Can approve proposal"),
+         )
 
     #onsave add create date or update edit date
     def save(self, *args, **kwargs):
@@ -410,6 +416,8 @@ class ProjectAgreement(models.Model):
     reviewed_by = models.ForeignKey(settings.AUTH_USER_MODEL, blank=True, null=True, related_name="reviewing")
     approval = models.BooleanField("Approval", default=None)
     approved_by = models.ForeignKey(settings.AUTH_USER_MODEL, blank=True, null=True, related_name="approving_agreement")
+    approval_submitted_by = models.ForeignKey(settings.AUTH_USER_MODEL, blank=True, null=True, related_name="submitted_by_agreement")
+    approval_remarks = models.CharField("Approval Remarks", max_length=255, blank=True, null=True)
     justification_background = models.TextField("General background and problem statement", blank=True, null=True)
     justification_description_community_selection = models.TextField("Description of community selection criteria", blank=True, null=True)
     description_of_project_activities = models.TextField(blank=True, null=True)
@@ -422,6 +430,9 @@ class ProjectAgreement(models.Model):
 
     class Meta:
         ordering = ('create_date',)
+        permissions = (
+             ("can_approve", "Can approve proposal"),
+         )
 
     #onsave add create date or update edit date
     def save(self, *args, **kwargs):
@@ -473,11 +484,14 @@ class ProjectComplete(models.Model):
     reviewed_by = models.ForeignKey(settings.AUTH_USER_MODEL, blank=True, null=True, related_name="reviewing_complete")
     approval = models.BooleanField("Approval", default=None)
     approved_by = models.ForeignKey(settings.AUTH_USER_MODEL, blank=True, null=True, related_name="approving_agreement_complete")
+    approval_submitted_by = models.ForeignKey(settings.AUTH_USER_MODEL, blank=True, null=True, related_name="submitted_by_complete")
+    approval_remarks = models.CharField("Approval Remarks", max_length=255, blank=True, null=True)
     create_date = models.DateTimeField("Date Created", null=True, blank=True)
     edit_date = models.DateTimeField("Last Edit Date", null=True, blank=True)
 
     class Meta:
         ordering = ('create_date',)
+        verbose_name_plural = "Project Completions"
 
     #onsave add create date or update edit date
     def save(self, *args, **kwargs):
@@ -519,6 +533,7 @@ class Documentation(models.Model):
 
     class Meta:
         ordering = ('name',)
+        verbose_name_plural = "Documentation"
 
 
 class DocumentationAdmin(admin.ModelAdmin):

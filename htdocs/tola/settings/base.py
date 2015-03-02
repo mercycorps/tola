@@ -275,7 +275,7 @@ LOGGING = {
         'file': {
             'level': 'WARNING',
             'class': 'logging.FileHandler',
-            'filename': '/var/www/tola/htdocs/error.log', #os.path.join(PROJECT_PATH, 'error.log'),
+            'filename': os.path.join(PROJECT_PATH, 'error.log'),
             'formatter': 'verbose'
         },
         'console':{
