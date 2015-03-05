@@ -4,6 +4,15 @@
 {% block content %}
 <div>
 <div class="dropdown">
+  <button class="btn btn-default dropdown-toggle" type="button" id="dropdownMenu1" data-toggle="dropdown" aria-expanded="true">
+    Programs
+    <span class="caret"></span>
+  </button>
+  <ul class="dropdown-menu" role="menu" aria-labelledby="dropdownMenu1">
+    {% for program in getPrograms %}
+        <li role="presentation"><a role="menuitem" tabindex="-1" href="/activitydb/dashboard/project/{{ proposal.id }}">{{ program.gaitid}} - {{ program.name }}</a></li>
+    {% endfor %}
+  </ul>
   <a href="/activitydb/projectproposal_add" class="btn btn-large btn-success">New Project Proposal</a>
   <a href="/activitydb/projectproposal_import" class="btn btn-large btn-info">Import Project Proposal</a>
 </div>
@@ -30,7 +39,7 @@
             <div class="btn-group" role="group" aria-label="...">
                 <button data-toggle="tooltip" data-placement="top" onclick="location.href='/activitydb/projectproposal_update/{{ proposal.project_proposal.id }}'" type="button" class="btn btn-sm btn-warning">Update Proposal</button>
                 {% if proposal.project_proposal.approval %}
-                    <button data-toggle="tooltip" data-placement="top" title="Proposal has been Approved, it is no longer editable" type="button" class="btn btn-sm btn-frozen">Delete Proposal</button>
+                    <button data-toggle="tooltip" data-placement="top" title="Proposal has been approved and can no longer be deleted." type="button" class="btn btn-sm btn-frozen">Delete Proposal</button>
                     <button type="button" class="btn btn-sm btn-info" onclick="location.href='/activitydb/projectagreement_add/{{ proposal.project_proposal.id }}'">Create an Agreement</button>
                 {% else %}
                     <button type="button" class="btn btn-sm btn-danger" onclick="location.href='/activitydb/projectproposal_delete/{{ proposal.project_proposal.id }}'">Delete Proposal</button>
@@ -62,7 +71,7 @@
                 <div class="btn-group" role="group" aria-label="...">
                     <button type="button" class="btn btn-sm btn-warning" onclick="location.href='/activitydb/projectagreement_update/{{ proposal.project_agreement.id }}'">Update Agreement</button>
                     {% if proposal.project_agreement.approval %}
-                        <button data-toggle="tooltip" data-placement="top" title="Agreement has been Approved, it is no longer editable" type="button" class="btn btn-sm btn-frozen">Delete Agreement</button>
+                        <button data-toggle="tooltip" data-placement="top" title="Agreement has been approved and can no longer be deleted." type="button" class="btn btn-sm btn-frozen">Delete Agreement</button>
                         <button type="button" class="btn btn-sm btn-info" onclick="location.href='/activitydb/projectcomplete_add/{{ proposal.project_agreement.id }}'">Complete Project</button>
                     {% else %}
                         <button type="button" class="btn btn-sm btn-danger" onclick="location.href='/activitydb/projectagreement_delete/{{ proposal.project_agreement.id }}'">Delete Agreement</button>

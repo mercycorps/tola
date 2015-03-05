@@ -8,20 +8,26 @@ import json
 import unicodedata
 from django.http import HttpResponseRedirect
 from django.db import models
-from models import Program,Indicator
-from indicators.forms import ProgramForm, IndicatorForm, ProgramIndicatorForm
+from models import Indicator
+from activitydb.models import Program
+from indicators.forms import IndicatorForm
 from django.shortcuts import render_to_response
 from django.forms.formsets import formset_factory
 from django.forms.models import modelformset_factory
 
 
-def home(request):
+def home(request, id):
     """
     Get all of the Programs
     """
-    getPrograms = Program.objects.all()
+    #set country to afghanistan for now until we have user data on country
+    #use self.request.user to get users country
+    #self.kwargs.pk = ID of program from dropdown
+    set_country = "1"
+    getPrograms = Program.objects.all().filter(funding_status="Funded", country=set_country)
+    getIndicators = Indicator.objects.all().filter(program__id=id)
 
-    return render(request, 'indicators/home.html',{'getPrograms':getPrograms})
+    return render(request, 'indicators/home.html',{'getPrograms':getPrograms, 'getIndicators': getIndicators})
 
 def dashboard(request):
 
@@ -63,20 +69,6 @@ def editIndicator(request,id):
     return render(request, 'indicators/indicator.html', {'form': form,'value':value})
 
 
-def program(request):
-    """
-    Create a program
-    """
-    if request.method == 'POST': # If the form has been submitted...
-        form = ProgramForm(request.POST) # A form bound to the POST data
-        if form.is_valid(): # All validation rules pass
-            # save data to read
-            new = form.save()
-            return HttpResponseRedirect('/indicators/indicator') # Redirect after POST to getLogin
-    else:
-        form = ProgramForm() # An unbound form
-
-    return render(request, 'indicators/program.html', {'form': form,})
 
 def programIndicator(request,id):
     """

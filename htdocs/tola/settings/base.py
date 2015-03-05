@@ -215,6 +215,7 @@ LOCAL_APPS = (
     'readtoken',
     'activitydb',
     'djangocosign',
+    'indicators',
 
 )
 

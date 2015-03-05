@@ -4,7 +4,11 @@
 {% block content %}
 <ol class="breadcrumb">
   <li><a href="/activitydb/dashboard/0/">Program Dashboard</a></li>
-  <li><a href="/activitydb/projectproposal_list/0/">Project Proposals</a></li>
+  {% if not id %}
+    <li><a href="/activitydb/projectproposal_list/0/">Project Proposals</a></li>
+  {% else %}
+    <li><a href="/activitydb/dashboard/project/{{ id }}/">Project Dashboard</a></li>
+  {% endif %}
   <li class="active">Project Proposals Form</li>
 </ol>
     {% if form.errors %}

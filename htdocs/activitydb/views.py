@@ -176,6 +176,14 @@ class ProjectProposalUpdate(UpdateView):
 
     model = ProjectProposal
 
+
+    def get_context_data(self, **kwargs):
+        context = super(ProjectProposalUpdate, self).get_context_data(**kwargs)
+        getProposal = ProjectProposal.objects.get(id=self.kwargs['pk'])
+        id = getProposal.id
+        context.update({'id': id})
+        return context
+
     # add the request to the kwargs
     def get_form_kwargs(self):
         kwargs = super(ProjectProposalUpdate, self).get_form_kwargs()
