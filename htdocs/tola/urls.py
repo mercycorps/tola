@@ -144,6 +144,9 @@ urlpatterns = patterns('',
                         #app include of activitydb urls
                         url(r'^activitydb/', include('activitydb.urls')),
 
+                        #app include of activitydb urls
+                        url(r'^indicators/', include('indicators.urls')),
+
                         #local login
                         (r'^accounts/login/',  login),
                         url(r'^accounts/logout/$', 'tola.views.logout_view', name='logout'),

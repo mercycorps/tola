@@ -1,12 +1,12 @@
 from django.views.generic.edit import CreateView, UpdateView, DeleteView
 from django.views.generic.list import ListView
-from .models import ProjectProposal, ProgramDashboard, Program, Country, Province, Village, District, ProjectAgreement, ProjectComplete, Community, Documentation
+from .models import ProjectProposal, ProgramDashboard, Program, Country, Province, Village, District, ProjectAgreement, ProjectComplete, Community, Documentation, Monitor, Benchmarks
 from silo.models import Silo, ValueStore, DataField
 from django.core.urlresolvers import reverse_lazy
 from django.contrib import messages
 from django.http import HttpResponseRedirect
 from django.utils import timezone
-from .forms import ProjectProposalForm, ProgramDashboardForm, ProjectAgreementForm, ProjectCompleteForm, DocumentationForm, CommunityForm
+from .forms import ProjectProposalForm, ProgramDashboardForm, ProjectAgreementForm, ProjectCompleteForm, DocumentationForm, CommunityForm, MonitorForm, BenchmarkForm
 import logging
 from django.shortcuts import render
 from django.contrib import messages
@@ -568,8 +568,6 @@ class ProjectCompleteImport(ListView):
 """
 Documentation
 """
-
-
 class DocumentationList(ListView):
 
     model = Documentation
@@ -743,6 +741,166 @@ class CommunityDelete(DeleteView):
 
     form_class = CommunityForm
 
+"""
+Monitoring Data
+"""
+
+
+class MonitorList(ListView):
+
+    model = Monitor
+    template_name = 'activitydb/monitor_list.html'
+
+    def get(self, request, *args, **kwargs):
+
+        if int(self.kwargs['pk']) == 0:
+            getMonitorData = Monitor.objects.all()
+        else:
+            getMonitorData = Monitor.objects.all().filter(agreement__id=self.kwargs['pk'])
+
+        return render(request, self.template_name, {'getMonitorData':getMonitorData})
+
+
+class MonitorCreate(CreateView):
+    """
+    Monitor Form
+    """
+
+    model = Community
+
+    @method_decorator(group_required('Editor',url='activitydb/permission'))
+    def dispatch(self, request, *args, **kwargs):
+        return super(MonitorCreate, self).dispatch(request, *args, **kwargs)
+
+    def form_invalid(self, form):
+
+        messages.error(self.request, 'Invalid Form', fail_silently=False)
+
+        return self.render_to_response(self.get_context_data(form=form))
+
+    def form_valid(self, form):
+
+        messages.success(self.request, 'Success, Monitor Created!')
+        return self.render_to_response(self.get_context_data(form=form))
+
+    form_class = MonitorForm
+
+
+class MonitorUpdate(UpdateView):
+    """
+    Monitor Form
+    """
+
+    model = Monitor
+
+    def form_invalid(self, form):
+        messages.error(self.request, 'Invalid Form', fail_silently=False)
+        return self.render_to_response(self.get_context_data(form=form))
+
+    def form_valid(self, form):
+        form.save()
+        messages.success(self.request, 'Success, Monitor Updated!')
+
+        return self.render_to_response(self.get_context_data(form=form))
+
+    form_class = MonitorForm
+
+
+class MonitorDelete(DeleteView):
+    """
+    Monitor Form
+    """
+
+    model = Monitor
+    success_url = reverse_lazy('monitor_list')
+
+    def form_invalid(self, form):
+
+        messages.error(self.request, 'Invalid Form', fail_silently=False)
+
+        return self.render_to_response(self.get_context_data(form=form))
+
+    def form_valid(self, form):
+
+        form.save()
+
+        messages.success(self.request, 'Success, Monitor Deleted!')
+        return self.render_to_response(self.get_context_data(form=form))
+
+    form_class = MonitorForm
+
+
+"""
+Benchmark Data
+"""
+
+class BenchmarkCreate(CreateView):
+    """
+    Community Form
+    """
+
+    model = Benchmarks
+
+    @method_decorator(group_required('Editor',url='activitydb/permission'))
+    def dispatch(self, request, *args, **kwargs):
+        return super(BenchmarkCreate, self).dispatch(request, *args, **kwargs)
+
+    def form_invalid(self, form):
+
+        messages.error(self.request, 'Invalid Form', fail_silently=False)
+
+        return self.render_to_response(self.get_context_data(form=form))
+
+    def form_valid(self, form):
+
+        messages.success(self.request, 'Success, Benchmark Created!')
+        return self.render_to_response(self.get_context_data(form=form))
+
+    form_class = BenchmarkForm
+
+
+class BenchmarkUpdate(UpdateView):
+    """
+    Benchmark Form
+    """
+
+    model = Benchmarks
+
+    def form_invalid(self, form):
+        messages.error(self.request, 'Invalid Form', fail_silently=False)
+        return self.render_to_response(self.get_context_data(form=form))
+
+    def form_valid(self, form):
+        form.save()
+        messages.success(self.request, 'Success, Benchmark Updated!')
+
+        return self.render_to_response(self.get_context_data(form=form))
+
+    form_class = BenchmarkForm
+
+
+class BenchmarkDelete(DeleteView):
+    """
+    Benchmark Form
+    """
+
+    model = Benchmarks
+    success_url = reverse_lazy('benchmark_list')
+
+    def form_invalid(self, form):
+
+        messages.error(self.request, 'Invalid Form', fail_silently=False)
+
+        return self.render_to_response(self.get_context_data(form=form))
+
+    def form_valid(self, form):
+
+        form.save()
+
+        messages.success(self.request, 'Success, Benchmark Deleted!')
+        return self.render_to_response(self.get_context_data(form=form))
+
+    form_class = BenchmarkForm
 
 def doImport(request, pk):
     """

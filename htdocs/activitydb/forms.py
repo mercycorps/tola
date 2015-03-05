@@ -6,7 +6,61 @@ from functools import partial
 from widgets import GoogleMapsWidget
 import floppyforms as forms
 from django.contrib.auth.models import Permission, User, Group
-from .models import ProjectProposal, ProgramDashboard, ProjectAgreement, ProjectComplete, Sector, Program, Community, Documentation
+from .models import ProjectProposal, ProgramDashboard, ProjectAgreement, ProjectComplete, Sector, Program, Community, Documentation, QuantitativeOutputs, Benchmarks, Monitor
+from django.forms.formsets import formset_factory
+from crispy_forms.layout import LayoutObject, TEMPLATE_PACK
+
+"""
+class Formset(LayoutObject):
+
+    Layout object. It renders an entire formset, as though it were a Field.
+
+    Example::
+
+    Formset("attached_files_formset")
+
+
+    template = "%s/formset.html" % TEMPLATE_PACK
+
+    def __init__(self, formset_name_in_context, template=None):
+        self.formset_name_in_context = formset_name_in_context
+
+        # crispy_forms/layout.py:302 requires us to have a fields property
+        self.fields = []
+
+        # Overrides class variable with an instance level variable
+        if template:
+            self.template = template
+
+    def render(self, form, form_style, context, template_pack=TEMPLATE_PACK):
+        formset = context[self.formset_name_in_context]
+        return render_to_string(self.template, Context({'wrapper': self, 'formset': formset}))
+"""
+
+class Formset(LayoutObject):
+    """
+    Layout object. It renders an entire formset, as though it were a Field.
+
+    Example::
+
+    Formset("attached_files_formset")
+    """
+
+    def __init__(self, formset_name_in_context, *fields, **kwargs):
+        self.fields = list(fields)
+        self.formset_name_in_context = formset_name_in_context
+        self.label_class = kwargs.pop('label_class', u'blockLabel')
+        self.css_class = kwargs.pop('css_class', u'ctrlHolder')
+        self.css_id = kwargs.pop('css_id', None)
+        #self.template = kwargs.pop('template', self.template)
+        self.flat_attrs = flatatt(kwargs)
+        self.template = "formset.html"
+
+    def render(self, form, form_style, context, template_pack=TEMPLATE_PACK):
+        print self.template
+        for x in self:
+            print x
+        return render_to_string(self.template, Context({'wrapper': self, 'formset': self.formset_name_in_context}))
 
 
 class ProgramDashboardForm(forms.ModelForm):
@@ -95,6 +149,36 @@ class ProjectProposalForm(forms.ModelForm):
             self.fields['approval'].help_text = "Approval level permissions required"
 
 
+class QuantitativeOutputsForm(forms.Form):
+
+    class Meta:
+        model = QuantitativeOutputs
+        fields = '__all__'
+
+    def __init__(self, *args, **kwargs):
+        self.helper = FormHelper()
+        self.helper.form_method = 'post'
+        self.helper.form_class = 'form-horizontal'
+        self.helper.label_class = 'col-sm-2'
+        self.helper.field_class = 'col-sm-6'
+        self.helper.form_error_title = 'Form Errors'
+        self.helper.error_text_inline = True
+        self.helper.help_text_inline = True
+        self.helper.html5_required = True
+        self.helper.layout = Layout(
+
+            HTML("""<br/>"""),
+            Fieldset(
+                    'Quantitative Outputs',
+                    'description', 'indicator','type',
+                ),
+            )
+        super(QuantitativeOutputsForm, self).__init__(*args, **kwargs)
+
+
+QuantitativeOutputsFormSet = formset_factory(QuantitativeOutputsForm, extra=3)
+
+
 class ProjectAgreementForm(forms.ModelForm):
 
     class Meta:
@@ -131,12 +215,12 @@ class ProjectAgreementForm(forms.ModelForm):
             HTML("""<br/>"""),
             TabHolder(
                 Tab('Executive Summary',
-                    Fieldset('Program', 'program', 'project_proposal', 'activity_code', 'project_title', 'profile_code', 'project_cod', 'sector', 'project_type',
-                             'project_activity','account_code','sub_code','community','mc_staff_responsible'
+                    Fieldset('Program', 'program', 'project_proposal','community', 'activity_code', 'project_title', 'sector', 'project_activity',
+                             'project_type', 'account_code', 'sub_code','mc_staff_responsible'
                     ),
                     Fieldset(
                         'Partners',
-                        'name_of_partners','program_objectives','mc_objectives','effect_or_impact','expected_start_date',
+                        'partners', 'name_of_partners','program_objectives','mc_objectives','effect_or_impact','expected_start_date',
                         'expected_end_date','beneficiary_type','num_beneficiaries','total_estimated_budget','mc_estimated_budget',
                         'estimation_date', 'estimated_by','checked_by','other_budget'
                     ),
@@ -334,3 +418,63 @@ class DocumentationForm(forms.ModelForm):
 
         super(DocumentationForm, self).__init__(*args, **kwargs)
 
+class BenchmarkForm(forms.ModelForm):
+
+    class Meta:
+        model = Benchmarks
+        exclude = ['create_date', 'edit_date']
+
+
+    def __init__(self, *args, **kwargs):
+        self.helper = FormHelper()
+        self.helper.form_method = 'post'
+        self.helper.form_class = 'form-horizontal'
+        self.helper.label_class = 'col-sm-2'
+        self.helper.field_class = 'col-sm-6'
+        self.helper.form_error_title = 'Form Errors'
+        self.helper.error_text_inline = True
+        self.helper.help_text_inline = True
+        self.helper.html5_required = True
+        self.helper.layout = Layout(
+
+                'percent_complete', 'percent_cumulative', Field('description', rows="3", css_class='input-xlarge'), 'agreement', 'complete',
+                'file_field','project',
+
+            FormActions(
+                Submit('submit', 'Submit', css_class='btn-default'),
+                Reset('reset', 'Reset', css_class='btn-warning')
+            )
+        )
+
+        super(BenchmarkForm, self).__init__(*args, **kwargs)
+
+class MonitorForm(forms.ModelForm):
+
+    class Meta:
+        model = Monitor
+        exclude = ['create_date', 'edit_date']
+
+
+    def __init__(self, *args, **kwargs):
+        self.helper = FormHelper()
+        self.helper.form_method = 'post'
+        self.helper.form_class = 'form-horizontal'
+        self.helper.label_class = 'col-sm-2'
+        self.helper.field_class = 'col-sm-6'
+        self.helper.form_error_title = 'Form Errors'
+        self.helper.error_text_inline = True
+        self.helper.help_text_inline = True
+        self.helper.html5_required = True
+        self.helper.layout = Layout(
+
+            HTML("""<br/>"""),
+
+                'responsible_person', 'frequency', Field('type', rows="3", css_class='input-xlarge'), 'agreement', 'complete',
+
+            FormActions(
+                Submit('submit', 'Submit', css_class='btn-default'),
+                Reset('reset', 'Reset', css_class='btn-warning')
+            )
+        )
+
+        super(MonitorForm, self).__init__(*args, **kwargs)

@@ -266,8 +266,8 @@ class ContributionAdmin(admin.ModelAdmin):
 
 
 class QuantitativeOutputs(models.Model):
-    number_achieved = models.CharField("Contributor", max_length=255, blank=True)
-    description = models.CharField("Description of Contribution", max_length=255, blank=True)
+    targeted = models.CharField("Targeted #", max_length=255, blank=True, null=True)
+    description = models.CharField("Description of Contribution", max_length=255, blank=True, null=True)
     logframe_indicator = models.CharField("Logframe Indicator", max_length=255, blank=True, null=True)
     create_date = models.DateTimeField(null=True, blank=True)
     edit_date = models.DateTimeField(null=True, blank=True)
@@ -289,8 +289,60 @@ class QuantitativeOutputs(models.Model):
 
 
 class QuantitativeOutputsAdmin(admin.ModelAdmin):
-    list_display = ('descrption', 'number_achieved', 'create_date', 'edit_date')
+    list_display = ('description', 'targeted', 'logframe_indicator', 'create_date', 'edit_date')
     display = 'Quantitative Outputs'
+
+
+class Capacity(models.Model):
+    capacity = models.CharField("Capacity", max_length=255, blank=True, null=True)
+    create_date = models.DateTimeField(null=True, blank=True)
+    edit_date = models.DateTimeField(null=True, blank=True)
+
+    class Meta:
+        ordering = ('capacity',)
+        verbose_name_plural = "Capacity"
+
+    #onsave add create date or update edit date
+    def save(self, *args, **kwargs):
+        if self.create_date == None:
+            self.create_date = datetime.now()
+        self.edit_date = datetime.now()
+        super(Capacity, self).save()
+
+    #displayed in admin templates
+    def __unicode__(self):
+        return self.capacity
+
+
+class CapacityAdmin(admin.ModelAdmin):
+    list_display = ('capacity', 'create_date', 'edit_date')
+    display = 'Capacity'
+
+
+class Evaluate(models.Model):
+    evaluate = models.CharField("How will you evaluate the outcome or impact of the project?", max_length=255, blank=True, null=True)
+    create_date = models.DateTimeField(null=True, blank=True)
+    edit_date = models.DateTimeField(null=True, blank=True)
+
+    class Meta:
+        ordering = ('evaluate',)
+        verbose_name_plural = "Evaluate"
+
+    #onsave add create date or update edit date
+    def save(self, *args, **kwargs):
+        if self.create_date == None:
+            self.create_date = datetime.now()
+        self.edit_date = datetime.now()
+        super(Evaluate, self).save()
+
+    #displayed in admin templates
+    def __unicode__(self):
+        return self.capacity
+
+
+class EvaluateAdmin(admin.ModelAdmin):
+    list_display = ('evaluate', 'create_date', 'edit_date')
+    display = 'Evaluate'
 
 
 class Template(models.Model):
@@ -325,11 +377,11 @@ class ProjectProposal(models.Model):
     profile_code = models.CharField("Profile Code", max_length=255, blank=True, null=True)
     proposal_num = models.CharField("Proposal Number", max_length=255, blank=True, null=True)
     date_of_request = models.DateTimeField("Date of Request", null=True, blank=True)
-    project_title = models.CharField("Project Title", max_length=255, blank=True, null=True)
+    project_title = models.CharField("Proposed Project Title", max_length=255, blank=True, null=True)
     project_type = models.CharField("Project Type", max_length=255, blank=True, null=True)
     community = models.ManyToManyField(Community, blank=True, null=True)
     prop_status = models.CharField("Proposal Status", max_length=255, blank=True, null=True)
-    rej_letter = models.TextField("Rejection Letter", blank=True, null=True)
+    rej_letter = models.BooleanField("Rejection Letter Sent", default=False)
     activity_code = models.CharField("Activity Code", max_length=255, blank=True, null=True)
     project_description = models.TextField("Project Description", blank=True, null=True)
     approval = models.BooleanField("Approval", default=None)
@@ -383,39 +435,45 @@ class ProjectProposalAdmin(admin.ModelAdmin):
 class ProjectAgreement(models.Model):
     project_proposal = models.ForeignKey(ProjectProposal, null=False, blank=False)
     program = models.ForeignKey(Program, null=True, blank=True, related_name="agreement")
-    profile_code = models.CharField("Profile Code", max_length=255, blank=True, null=True)
+    project_code = models.CharField("Project Code Number", max_length=255, blank=True, null=True)
     proposal_num = models.CharField("Proposal Number", max_length=255, blank=True, null=True)
     date_of_request = models.DateTimeField("Date of Request", blank=True, null=True)
-    project_title = models.CharField("Project Title", max_length=255, blank=True, null=True)
+    project_name = models.CharField("Project Name", max_length=255, blank=True, null=True)
     project_type = models.CharField("Proposal Number", max_length=255, blank=True, null=True)
+    project_activity = models.CharField("Proposal Number", max_length=255, blank=True, null=True)
     community = models.ManyToManyField(Community, blank=True, null=True)
-    prop_status = models.CharField("Proposal Status", max_length=255, blank=True, null=True)
-    rej_letter = models.TextField("Rejection Letter", blank=True, null=True)
+    project_status = models.CharField("Project Status", max_length=255, blank=True, null=True)
+    rej_letter = models.TextField("Rejection Letter", default=False)
     activity_code = models.CharField("Activity Code", max_length=255, blank=True, null=True)
     office_code = models.CharField("Office Code", max_length=255, blank=True, null=True)
     cod_num = models.CharField("Project COD #", max_length=255, blank=True, null=True)
     sector = models.ForeignKey("Sector", blank=True, null=True)
     project_activity = models.CharField("Project Activity", max_length=255, blank=True, null=True)
+    project_design = models.CharField("Project design for", max_length=255, blank=True, null=True)
     account_code = models.CharField("Account Code", max_length=255, blank=True, null=True)
-    sub_code = models.CharField("Account Sub Code", max_length=255, blank=True, null=True)
+    lin_code = models.CharField("LIN Sub Code", max_length=255, blank=True, null=True)
     community = models.ManyToManyField(Community, blank=True, null=True)
     staff_responsible = models.CharField("MC Staff Responsible", max_length=255, blank=True, null=True)
-    partners = models.CharField("Partners", max_length=255, blank=True, null=True)
+    partners = models.BooleanField("Are there partners involved?", default=0)
     name_of_partners = models.CharField("Name of Partners", max_length=255, blank=True, null=True)
     program_objectives = models.TextField("What Program Objectives does this help fulfill?", blank=True, null=True)
     mc_objectives = models.TextField("What MC strategic Objectives does this help fulfill?", blank=True, null=True)
     effect_or_impact = models.TextField("What is the anticipated effect of impact of this project?", blank=True, null=True)
-    expected_start_date = models.DateTimeField(blank=True, null=True)
-    expected_end_date = models.DateTimeField(blank=True, null=True)
+    expected_start_date = models.DateTimeField("Expected starting date", blank=True, null=True)
+    expected_end_date = models.DateTimeField("Expected ending date",blank=True, null=True)
+    expected_duration = models.CharField("Expected duration",blank=True, null=True, max_length=255)
     beneficiary_type = models.CharField("Type of direct beneficiaries", max_length=255, blank=True, null=True)
     num_direct_beneficiaries = models.CharField("Number of direct beneficiaries", max_length=255, blank=True, null=True)
     total_estimated_budget = models.CharField(max_length=255, blank=True, null=True)
     mc_estimated_budget = models.CharField(max_length=255, blank=True, null=True)
-    other_budget = models.CharField(max_length=255, blank=True, null=True)
+    contribution = models.ForeignKey(Contribution, blank=True, null=True, related_name="contribute_agree")
     estimation_date = models.DateTimeField(blank=True, null=True)
     estimated_by = models.ForeignKey(settings.AUTH_USER_MODEL, blank=True, null=True, related_name="estimating")
     checked_by = models.ForeignKey(settings.AUTH_USER_MODEL, blank=True, null=True, related_name="checking")
     reviewed_by = models.ForeignKey(settings.AUTH_USER_MODEL, blank=True, null=True, related_name="reviewing")
+    quantitative_outputs = models.ForeignKey(QuantitativeOutputs, blank=True, null=True, related_name="quant_out_agree")
+    capacity = models.ForeignKey(Capacity, blank=True, null=True, related_name="quant_out_agree")
+    evaluate = models.ForeignKey(Evaluate, blank=True, null=True, related_name="quant_out_agree")
     approval = models.BooleanField("Approval", default=None)
     approved_by = models.ForeignKey(settings.AUTH_USER_MODEL, blank=True, null=True, related_name="approving_agreement")
     approval_submitted_by = models.ForeignKey(settings.AUTH_USER_MODEL, blank=True, null=True, related_name="submitted_by_agreement")
@@ -433,8 +491,8 @@ class ProjectAgreement(models.Model):
     class Meta:
         ordering = ('create_date',)
         permissions = (
-             ("can_approve", "Can approve proposal"),
-         )
+            ("can_approve", "Can approve proposal"),
+        )
 
     #onsave add create date or update edit date
     def save(self, *args, **kwargs):
@@ -541,6 +599,66 @@ class Documentation(models.Model):
 class DocumentationAdmin(admin.ModelAdmin):
     list_display = ('name', 'description', 'documentation_type', 'file_field', 'project_proposal_id', 'program_id', 'create_date', 'edit_date')
     display = 'Documentation'
+
+
+class Benchmarks(models.Model):
+    percent_complete = models.IntegerField("% complete", max_length=25, blank=True, null=True)
+    percent_cumulative = models.IntegerField("% cumulative completion", max_length=25, blank=True, null=True)
+    description = models.CharField("Description", max_length=255, blank=True)
+    agreement = models.ForeignKey(ProjectAgreement,blank=True, null=True)
+    complete = models.ForeignKey(ProjectComplete,blank=True, null=True)
+    create_date = models.DateTimeField(null=True, blank=True)
+    edit_date = models.DateTimeField(null=True, blank=True)
+
+    class Meta:
+        ordering = ('description',)
+        verbose_name_plural = "Benchmarks"
+
+    #onsave add create date or update edit date
+    def save(self, *args, **kwargs):
+        if self.create_date == None:
+            self.create_date = datetime.now()
+        self.edit_date = datetime.now()
+        super(Benchmarks, self).save()
+
+    #displayed in admin templates
+    def __unicode__(self):
+        return self.description
+
+
+class BenchmarksAdmin(admin.ModelAdmin):
+    list_display = ('description', 'percent_complete', 'percent_cumulative', 'create_date', 'edit_date')
+    display = 'Benchmarks'
+
+
+class Monitor(models.Model):
+    responsible_person = models.CharField("Person Responsible", max_length=25, blank=True, null=True)
+    frequency = models.IntegerField("Frequency", max_length=25, blank=True, null=True)
+    type = models.TextField("Type", null=True, blank=True)
+    agreement = models.ForeignKey(ProjectAgreement,blank=True, null=True)
+    complete = models.ForeignKey(ProjectComplete,blank=True, null=True)
+    create_date = models.DateTimeField(null=True, blank=True)
+    edit_date = models.DateTimeField(null=True, blank=True)
+
+    class Meta:
+        ordering = ('type',)
+        verbose_name_plural = "Monitors"
+
+    #onsave add create date or update edit date
+    def save(self, *args, **kwargs):
+        if self.create_date == None:
+            self.create_date = datetime.now()
+        self.edit_date = datetime.now()
+        super(Monitor, self).save()
+
+    #displayed in admin templates
+    def __unicode__(self):
+        return self.description
+
+
+class MonitorAdmin(admin.ModelAdmin):
+    list_display = ('responsible_person', 'frequency', 'type', 'create_date', 'edit_date')
+    display = 'Monitor'
 
 
 class MergeMap(models.Model):
