@@ -766,7 +766,14 @@ class MonitorList(ListView):
         else:
             getMonitorData = Monitor.objects.all().filter(agreement__id=self.kwargs['pk'])
 
-        return render(request, self.template_name, {'getMonitorData':getMonitorData})
+        if int(self.kwargs['pk']) == 0:
+            getBenchmarkData = Benchmarks.objects.all()
+        else:
+            getBenchmarkData = Benchmarks.objects.all().filter(agreement__id=self.kwargs['pk'])
+
+
+
+        return render(request, self.template_name, {'getMonitorData': getMonitorData, 'getBenchmarkData': getBenchmarkData})
 
 
 class MonitorCreate(CreateView):
