@@ -776,9 +776,15 @@ class MonitorCreate(CreateView):
 
     model = Community
 
-    @method_decorator(group_required('Editor',url='activitydb/permission'))
     def dispatch(self, request, *args, **kwargs):
         return super(MonitorCreate, self).dispatch(request, *args, **kwargs)
+
+    def get_initial(self):
+        initial = {
+            'agreement': self.kwargs['id'],
+            }
+
+        return initial
 
     def form_invalid(self, form):
 
@@ -849,9 +855,15 @@ class BenchmarkCreate(CreateView):
 
     model = Benchmarks
 
-    @method_decorator(group_required('Editor',url='activitydb/permission'))
     def dispatch(self, request, *args, **kwargs):
         return super(BenchmarkCreate, self).dispatch(request, *args, **kwargs)
+
+    def get_initial(self):
+        initial = {
+            'agreement': self.kwargs['id'],
+            }
+
+        return initial
 
     def form_invalid(self, form):
 

@@ -191,7 +191,7 @@ class Sector(models.Model):
 
     #displayed in admin templates
     def __unicode__(self):
-        return self.name
+        return self.sector
 
 
 class SectorAdmin(admin.ModelAdmin):
@@ -268,7 +268,8 @@ class ContributionAdmin(admin.ModelAdmin):
 class QuantitativeOutputs(models.Model):
     targeted = models.CharField("Targeted #", max_length=255, blank=True, null=True)
     description = models.CharField("Description of Contribution", max_length=255, blank=True, null=True)
-    logframe_indicator = models.CharField("Logframe Indicator", max_length=255, blank=True, null=True)
+    logframe_indicator = models.ForeignKey('indicators.Indicator', blank=True, null=True)
+    non_logframe_indicator = models.CharField("Logframe Indicator", max_length=255, blank=True, null=True)
     create_date = models.DateTimeField(null=True, blank=True)
     edit_date = models.DateTimeField(null=True, blank=True)
 
@@ -384,7 +385,7 @@ class ProjectProposal(models.Model):
     rej_letter = models.BooleanField("Rejection Letter Sent", default=False)
     activity_code = models.CharField("Activity Code", max_length=255, blank=True, null=True)
     project_description = models.TextField("Project Description", blank=True, null=True)
-    approval = models.BooleanField("Approval", default=None)
+    approval = models.CharField("Approval", default="in progress", max_length=255, blank=True, null=True)
     approved_by = models.ForeignKey(settings.AUTH_USER_MODEL, blank=True, null=True, related_name="approving")
     approval_submitted_by = models.ForeignKey(settings.AUTH_USER_MODEL, blank=True, null=True, related_name="requesting")
     approval_remarks = models.CharField("Approval Remarks", max_length=255, blank=True, null=True)
@@ -438,12 +439,11 @@ class ProjectAgreement(models.Model):
     project_code = models.CharField("Project Code Number", max_length=255, blank=True, null=True)
     proposal_num = models.CharField("Proposal Number", max_length=255, blank=True, null=True)
     date_of_request = models.DateTimeField("Date of Request", blank=True, null=True)
-    project_name = models.CharField("Project Name", max_length=255, blank=True, null=True)
+    project_title = models.CharField("Project Title", max_length=255, blank=True, null=True)
     project_type = models.CharField("Proposal Number", max_length=255, blank=True, null=True)
     project_activity = models.CharField("Proposal Number", max_length=255, blank=True, null=True)
     community = models.ManyToManyField(Community, blank=True, null=True)
     project_status = models.CharField("Project Status", max_length=255, blank=True, null=True)
-    rej_letter = models.TextField("Rejection Letter", default=False)
     activity_code = models.CharField("Activity Code", max_length=255, blank=True, null=True)
     office_code = models.CharField("Office Code", max_length=255, blank=True, null=True)
     cod_num = models.CharField("Project COD #", max_length=255, blank=True, null=True)
@@ -474,7 +474,7 @@ class ProjectAgreement(models.Model):
     quantitative_outputs = models.ForeignKey(QuantitativeOutputs, blank=True, null=True, related_name="quant_out_agree")
     capacity = models.ForeignKey(Capacity, blank=True, null=True, related_name="quant_out_agree")
     evaluate = models.ForeignKey(Evaluate, blank=True, null=True, related_name="quant_out_agree")
-    approval = models.BooleanField("Approval", default=None)
+    approval = models.CharField("Approval", default="in progress", max_length=255, blank=True, null=True)
     approved_by = models.ForeignKey(settings.AUTH_USER_MODEL, blank=True, null=True, related_name="approving_agreement")
     approval_submitted_by = models.ForeignKey(settings.AUTH_USER_MODEL, blank=True, null=True, related_name="submitted_by_agreement")
     approval_remarks = models.CharField("Approval Remarks", max_length=255, blank=True, null=True)
@@ -542,7 +542,7 @@ class ProjectComplete(models.Model):
     estimated_by = models.ForeignKey(settings.AUTH_USER_MODEL, blank=True, null=True, related_name="estimating_complete")
     checked_by = models.ForeignKey(settings.AUTH_USER_MODEL, blank=True, null=True, related_name="checking_complete")
     reviewed_by = models.ForeignKey(settings.AUTH_USER_MODEL, blank=True, null=True, related_name="reviewing_complete")
-    approval = models.BooleanField("Approval", default=None)
+    approval = models.CharField("Approval", default="in progress", max_length=255, blank=True, null=True)
     approved_by = models.ForeignKey(settings.AUTH_USER_MODEL, blank=True, null=True, related_name="approving_agreement_complete")
     approval_submitted_by = models.ForeignKey(settings.AUTH_USER_MODEL, blank=True, null=True, related_name="submitted_by_complete")
     approval_remarks = models.CharField("Approval Remarks", max_length=255, blank=True, null=True)
@@ -566,8 +566,8 @@ class ProjectComplete(models.Model):
 
 
 class ProjectCompleteAdmin(admin.ModelAdmin):
-    list_display = ('program', 'project_name', 'activity_code')
-    display = 'project_name'
+    list_display = ('program', 'project_title', 'activity_code')
+    display = 'project_title'
 
 
 class Documentation(models.Model):

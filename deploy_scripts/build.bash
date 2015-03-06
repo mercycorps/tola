@@ -36,7 +36,7 @@ cd ../htdocs
 echo "Running Migrations..."
 sudo py manage.py migrate
 
-echo "Do you want to run fixtures? (Y/n)"
+echo "Do you want to run fixtures as sudo and using py? (Y/n)"
 read c
 
 if [[ $c == "y" || $c == "Y" ]]; then
@@ -47,6 +47,23 @@ if [[ $c == "y" || $c == "Y" ]]; then
     sudo py manage.py loaddata fixtures/program.json
     sudo py manage.py loaddata fixtures/read_type.json
     sudo py manage.py loaddata fixtures/silo.json
+    sudo py manage.py loaddata fixtures/sector.json
+else
+  echo "Ok Skipping"
+fi
+
+echo "Do you want to run fixtures as you and using python? (Y/n)"
+read c
+
+if [[ $c == "y" || $c == "Y" ]]; then
+    python manage.py loaddata fixtures/groups.json
+    python manage.py loaddata fixtures/country.json
+    python manage.py loaddata fixtures/province.json
+    python manage.py loaddata fixtures/district.json
+    python manage.py loaddata fixtures/program.json
+    python manage.py loaddata fixtures/read_type.json
+    python manage.py loaddata fixtures/silo.json
+    python manage.py loaddata fixtures/sector.json
 else
   echo "Ok Skipping"
 fi

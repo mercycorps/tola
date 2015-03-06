@@ -12,8 +12,8 @@ from models import Indicator
 from activitydb.models import Program
 from indicators.forms import IndicatorForm
 from django.shortcuts import render_to_response
-from django.forms.formsets import formset_factory
-from django.forms.models import modelformset_factory
+from django.contrib import messages
+
 
 
 def home(request, id):
@@ -42,6 +42,7 @@ def indicator(request):
         if form.is_valid(): # All validation rules pass
             # save data to read
             new = form.save()
+            messages.success(request, 'Success, Indicator Created!')
             return HttpResponseRedirect('/indicators/indicator') # Redirect after POST to getLogin
     else:
         form = IndicatorForm() # An unbound form
@@ -59,7 +60,8 @@ def editIndicator(request,id):
             update = Indicator.objects.get(pk=id)
             form = IndicatorForm(request.POST, instance=update)
             new = form.save(commit=True)
-            return HttpResponseRedirect('indicators/indicator/' + id)
+            messages.success(request, 'Success, Indicator Saved!')
+            return HttpResponseRedirect('/indicators/editIndicator/' + id)
         else:
             print "not valid"
     else:

@@ -37,6 +37,15 @@ class Formset(LayoutObject):
         return render_to_string(self.template, Context({'wrapper': self, 'formset': formset}))
 """
 
+#Global for approvals
+APPROVALS=(
+        ('approved', 'approved'),
+        ('in progress', 'in progress'),
+        ('rejected', 'rejected'),
+        ('awaiting approval', 'awaiting approval')
+    )
+
+
 class Formset(LayoutObject):
     """
     Layout object. It renders an entire formset, as though it were a Field.
@@ -47,7 +56,7 @@ class Formset(LayoutObject):
     """
 
     def __init__(self, formset_name_in_context, *fields, **kwargs):
-        self.fields = list(fields)
+        self.fields = []
         self.formset_name_in_context = formset_name_in_context
         self.label_class = kwargs.pop('label_class', u'blockLabel')
         self.css_class = kwargs.pop('css_class', u'ctrlHolder')
@@ -57,9 +66,7 @@ class Formset(LayoutObject):
         self.template = "formset.html"
 
     def render(self, form, form_style, context, template_pack=TEMPLATE_PACK):
-        print self.template
-        for x in self:
-            print x
+        print self.formset_name_in_context
         return render_to_string(self.template, Context({'wrapper': self, 'formset': self.formset_name_in_context}))
 
 
@@ -91,6 +98,12 @@ class ProjectProposalForm(forms.ModelForm):
 
     date_of_request = forms.DateField(widget=DatePicker.DateInput())
 
+    approval = forms.ChoiceField(
+        choices=APPROVALS,
+        initial='in progress',
+        required=False,
+    )
+
     def __init__(self,  *args, **kwargs):
         #get the user object to check permissions with
         self.request = kwargs.pop('request')
@@ -119,13 +132,13 @@ class ProjectProposalForm(forms.ModelForm):
                     Fieldset(
                         'Proposal',
                         Field('project_description', rows="3", css_class='input-xlarge'),
-                        Field('rej_letter', rows="3", css_class='input-xlarge'),
+                        PrependedText('rej_letter', ''),
                         'project_code', 'prop_status', 'proposal_review', 'proposal_review_2',
                     ),
                 ),
                 Tab('Approval',
                     Fieldset('Approval',
-                        PrependedText('approval', ''), 'approved_by', 'approval_submitted_by',
+                        'approval', 'approved_by', 'approval_submitted_by',
                         Field('approval_remarks', rows="3", css_class='input-xlarge')
                     ),
                 ),
@@ -170,13 +183,13 @@ class QuantitativeOutputsForm(forms.Form):
             HTML("""<br/>"""),
             Fieldset(
                     'Quantitative Outputs',
-                    'description', 'indicator','type',
+                    'description', 'logframe_indicator','non_logframe_indicator','type',
                 ),
             )
         super(QuantitativeOutputsForm, self).__init__(*args, **kwargs)
 
 
-QuantitativeOutputsFormSet = formset_factory(QuantitativeOutputsForm, extra=3)
+QuantitativeOutputsFormSet = formset_factory(QuantitativeOutputsForm)
 
 
 class ProjectAgreementForm(forms.ModelForm):
@@ -196,6 +209,12 @@ class ProjectAgreementForm(forms.ModelForm):
 
     documentation_government_approval = forms.FileField(required=False)
     documentation_community_approval = forms.FileField(required=False)
+
+    approval = forms.ChoiceField(
+        choices=APPROVALS,
+        initial='in progress',
+        required=False,
+    )
 
     def __init__(self, *args, **kwargs):
 
@@ -220,7 +239,7 @@ class ProjectAgreementForm(forms.ModelForm):
                     ),
                     Fieldset(
                         'Partners',
-                        'partners', 'name_of_partners','program_objectives','mc_objectives','effect_or_impact','expected_start_date',
+                        PrependedText('partners',''), 'name_of_partners','program_objectives','mc_objectives','effect_or_impact','expected_start_date',
                         'expected_end_date','beneficiary_type','num_beneficiaries','total_estimated_budget','mc_estimated_budget',
                         'estimation_date', 'estimated_by','checked_by','other_budget'
                     ),
@@ -241,9 +260,18 @@ class ProjectAgreementForm(forms.ModelForm):
 
                     ),
                 ),
+                Tab('Project Planning',
+                    MultiField(
+                        #"QuantitativeOutputsFormSet",
+                        #Formset(QuantitativeOutputsFormSet),
+                        HTML(""" <br/> <a href="/activitydb/monitor_add/{{ id }}" target="_new">Add Monitoring Data</a> """),
+                        HTML(""" <br/> <a href="/activitydb/benchmark_add/{{ id }}" target="_new">Add Benchmarks</a> """),
+
+                    ),
+                ),
                 Tab('Approval',
                     Fieldset('Approval',
-                             PrependedText('approval', ''), 'approved_by', 'approval_submitted_by',
+                             'approval', 'approved_by', 'approval_submitted_by',
                              Field('approval_remarks', rows="3", css_class='input-xlarge')
                     ),
                 ),
@@ -279,6 +307,12 @@ class ProjectCompleteForm(forms.ModelForm):
     actual_end_date = forms.DateField(widget=DatePicker.DateInput())
 
     program = forms.ModelChoiceField(queryset=Program.objects.filter(country='1', funding_status="Funded"))
+
+    approval = forms.ChoiceField(
+        choices=APPROVALS,
+        initial='in progress',
+        required=False,
+    )
 
     def __init__(self, *args, **kwargs):
         #get the user object from request to check permissions
@@ -324,7 +358,7 @@ class ProjectCompleteForm(forms.ModelForm):
 
                 Tab('Approval',
                     Fieldset('Approval',
-                             PrependedText('approval', ''), 'approved_by', 'approval_submitted_by',
+                             'approval', 'approved_by', 'approval_submitted_by',
                              Field('approval_remarks', rows="3", css_class='input-xlarge')
                     ),
                 ),
@@ -437,7 +471,7 @@ class BenchmarkForm(forms.ModelForm):
         self.helper.html5_required = True
         self.helper.layout = Layout(
 
-                'percent_complete', 'percent_cumulative', Field('description', rows="3", css_class='input-xlarge'), 'agreement', 'complete',
+                'percent_complete', 'percent_cumulative', Field('description', rows="3", css_class='input-xlarge'), 'agreement',
                 'file_field','project',
 
             FormActions(
@@ -469,7 +503,7 @@ class MonitorForm(forms.ModelForm):
 
             HTML("""<br/>"""),
 
-                'responsible_person', 'frequency', Field('type', rows="3", css_class='input-xlarge'), 'agreement', 'complete',
+                'responsible_person', 'frequency', Field('type', rows="3", css_class='input-xlarge'), 'agreement',
 
             FormActions(
                 Submit('submit', 'Submit', css_class='btn-default'),

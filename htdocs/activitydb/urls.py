@@ -49,10 +49,10 @@ urlpatterns = patterns('',
                        url(r'^documentation_delete/(?P<pk>\w+)/$', DocumentationDelete.as_view(), name='documentation_delete'),
 
                        url(r'^monitor_list/(?P<pk>\w+)/$', MonitorList.as_view(), name='monitor_list'),
-                       url(r'^monitor_add', MonitorCreate.as_view(), name='monitor_add'),
+                       url(r'^monitor_add/(?P<id>\w+)/$', MonitorCreate.as_view(), name='monitor_add'),
                        url(r'^monitor_update/(?P<pk>\w+)/$', MonitorUpdate.as_view(), name='dmonitor_update'),
                        url(r'^monitor_delete/(?P<pk>\w+)/$', MonitorDelete.as_view(), name='monitor_delete'),
-                       url(r'^benchmark_add', BenchmarkCreate.as_view(), name='benchmark_add'),
+                       url(r'^benchmark_add/(?P<id>\w+)/$', BenchmarkCreate.as_view(), name='benchmark_add'),
                        url(r'^benchmark_update/(?P<pk>\w+)/$', BenchmarkUpdate.as_view(), name='benchmark_update'),
                        url(r'^benchmark_delete/(?P<pk>\w+)/$', BenchmarkDelete.as_view(), name='benchmark_delete'),
 

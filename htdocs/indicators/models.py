@@ -2,6 +2,8 @@ from django.db import models
 from django.contrib import admin
 from silo.models import Silo
 from activitydb.models import Program, Sector
+from datetime import datetime
+
 
 
 class IndicatorType(models.Model):
