@@ -82,8 +82,9 @@
                             <li><a href="/activitydb/projectproposal_list/0/"><span class="glyphicon glyphicon-th-list"></span> Project Proposal</a></li>
                             <li><a href="/activitydb/projectagreement_list/0/"><span class="glyphicon glyphicon-th-list"></span> Project Agreement</a></li>
                             <li><a href="/activitydb/projectcomplete_list/0/"><span class="glyphicon glyphicon-th-list"></span> Project Complete</a></li>
-                            <li><a href="/activitydb/documentation_list"><span class="glyphicon glyphicon-th-list"></span> Documentation</a></li>
+                            <li><a href="/activitydb/documentation_list/0/"><span class="glyphicon glyphicon-th-list"></span> Documentation</a></li>
                             <li><a href="/activitydb/community_list/0/"><span class="glyphicon glyphicon-th-list"></span> Communities</a></li>
+                            <li><a href="/activitydb/training_list/0/"><span class="glyphicon glyphicon-th-list"></span> Training</a></li>
                         </ul>
                     </li>
 
@@ -135,6 +136,9 @@
 
 
         <div class="container">
+            <br/>
+            <br/>
+            <div>{% block bread_crumb %}{% endblock %}</div>
             <div id = "alerts">
                 <!-- Any messages for users -->
                 {% block messages %}
@@ -146,10 +150,10 @@
                                         <div class="alert alert-{{message.tags}}">{{ message|safe }}</div>
                                     {% endif %}
                             {% endfor %}
+                    <br/>
                     {% endif %}
                 {% endblock messages %}
             </div>
-            <br/>
             <!-- Page title  -->
             <h2>{% block page_title %}{% endblock %}</h2>
 

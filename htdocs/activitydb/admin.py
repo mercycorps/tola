@@ -1,7 +1,7 @@
 from django.contrib import admin
 from .models import Country, Province, Office, Village, Program, Documentation, Template,District, Contribution, Sector, \
     QuantitativeOutputs, ProgramDashboard, ProjectProposal, ProjectAgreement, ProjectComplete, Community, Capacity, Monitor, \
-    Benchmarks, Evaluate
+    Benchmarks, Evaluate, ProjectType, TrainingAttendance, Beneficiary
 
 
 
@@ -25,3 +25,6 @@ admin.site.register(Capacity)
 admin.site.register(Monitor)
 admin.site.register(Benchmarks)
 admin.site.register(Evaluate)
+admin.site.register(ProjectType)
+admin.site.register(TrainingAttendance)
+admin.site.register(Beneficiary)

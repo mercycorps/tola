@@ -1,4 +1,11 @@
 {% extends "base.html" %}
+{% block bread_crumb %}
+<ol class="breadcrumb">
+  <li><a href="/activitydb/dashboard/0/">Program Dashboards</a></li>
+  <li><a href="/activitydb/dashboard/project/{{ project_proposal_id }}/">Project Dashboards</a></li>
+  <li class="active">Documentation List</li>
+</ol>
+{% endblock %}
 {% block page_title %}Documentation List{% endblock %}
 
 {% block content %}

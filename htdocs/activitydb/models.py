@@ -346,6 +346,31 @@ class EvaluateAdmin(admin.ModelAdmin):
     display = 'Evaluate'
 
 
+class ProjectType(models.Model):
+    name = models.CharField("Type of Project", max_length=135)
+    description = models.CharField(max_length=255)
+    create_date = models.DateTimeField(null=True, blank=True)
+    edit_date = models.DateTimeField(null=True, blank=True)
+
+    #onsave add create date or update edit date
+    def save(self, *args, **kwargs):
+        if self.create_date == None:
+            self.create_date = datetime.now()
+        self.edit_date = datetime.now()
+        super(ProjectType, self).save()
+
+    def __unicode__(self):
+        return self.name
+
+    class Meta:
+        ordering = ('name',)
+
+
+class ProjectTypeAdmin(admin.ModelAdmin):
+    list_display = ('name', 'description', 'create_date', 'edit_date')
+    display = 'Project Type'
+
+
 class Template(models.Model):
     name = models.CharField("Name of Document", max_length=135)
     documentation_type = models.CharField("Type (File or URL)", max_length=135)
@@ -375,14 +400,17 @@ class TemplateAdmin(admin.ModelAdmin):
 
 class ProjectProposal(models.Model):
     program = models.ForeignKey(Program, null=True, blank=True, related_name="proposal")
-    profile_code = models.CharField("Profile Code", max_length=255, blank=True, null=True)
     proposal_num = models.CharField("Proposal Number", max_length=255, blank=True, null=True)
     date_of_request = models.DateTimeField("Date of Request", null=True, blank=True)
-    project_title = models.CharField("Proposed Project Title", max_length=255, blank=True, null=True)
-    project_type = models.CharField("Project Type", max_length=255, blank=True, null=True)
+    project_title = models.CharField("Proposed Project Title", max_length=255)
+    sector = models.ForeignKey(Sector, max_length=255, blank=True, null=True)
+    project_type = models.ForeignKey(ProjectType, max_length=255, blank=True, null=True)
     community = models.ManyToManyField(Community, blank=True, null=True)
+    community_rep = models.CharField("Community Representative", max_length=255, blank=True, null=True)
+    community_rep_contact = models.CharField("Community Representative Contact", max_length=255, blank=True, null=True)
+    community_mobilizer = models.CharField("Community Mobilizer", max_length=255, blank=True, null=True)
     prop_status = models.CharField("Proposal Status", max_length=255, blank=True, null=True)
-    rej_letter = models.BooleanField("Rejection Letter Sent", default=False)
+    rej_letter = models.BooleanField("If Rejected: Rejection Letter Sent?", default=False)
     activity_code = models.CharField("Activity Code", max_length=255, blank=True, null=True)
     project_description = models.TextField("Project Description", blank=True, null=True)
     approval = models.CharField("Approval", default="in progress", max_length=255, blank=True, null=True)
@@ -393,18 +421,6 @@ class ProjectProposal(models.Model):
     date_approved = models.DateTimeField(null=True, blank=True)
     proposal_review = models.FileField("Proposal Review", upload_to='uploads', blank=True, null=True)
     proposal_review_2 = models.FileField("Proposal Review Additional", upload_to='uploads', blank=True, null=True)
-    today = models.DateTimeField(null=True, blank=True)
-    start_time = models.DateTimeField(null=True, blank=True)
-    end_time = models.DateTimeField(null=True, blank=True)
-    meta_instance_id = models.CharField("Meta Instance ID", max_length=255, blank=True, null=True)
-    meta_instance_name = models.CharField("Meta Instance Name", max_length=255, blank=True, null=True)
-    odk_id = models.CharField("ODK ID", max_length=255, blank=True, null=True)
-    odk_uuid = models.CharField("ODK UUID", max_length=255, blank=True, null=True)
-    odk_submission_time = models.DateTimeField("ODK Submission Time", null=True, blank=True)
-    odk_index = models.CharField("ODK Index", max_length=255, blank=True, null=True)
-    odk_parent_table_name = models.CharField("ODK Table Name", max_length=255, blank=True, null=True)
-    odk_tags = models.CharField("ODK Tags", max_length=255, blank=True, null=True)
-    odk_notes = models.CharField("ODK Notes", max_length=255, blank=True, null=True)
     create_date = models.DateTimeField("Date Created", null=True, blank=True)
     edit_date = models.DateTimeField("Last Edit Date", null=True, blank=True)
     latitude = models.CharField("Latitude (Coordinates)", max_length=255, blank=True, null=True)
@@ -413,8 +429,8 @@ class ProjectProposal(models.Model):
     class Meta:
         ordering = ('create_date',)
         permissions = (
-             ("can_approve", "Can approve proposal"),
-         )
+            ("can_approve", "Can approve proposal"),
+          )
 
     #onsave add create date or update edit date
     def save(self, *args, **kwargs):
@@ -705,3 +721,80 @@ class ProgramDashboardAdmin(admin.ModelAdmin):
     list_display = ('program', 'project_proposal', 'project_proposal_approved', 'create_date', 'edit_date')
     display = 'Program Dashboard'
 
+class TrainingAttendance(models.Model):
+    training_name = models.CharField(max_length=255)
+    program = models.ForeignKey(Program, null=True, blank=True)
+    project_proposal = models.ForeignKey(ProjectProposal, null=True, blank=True)
+    implementer = models.CharField(max_length=255, null=True, blank=True)
+    reporting_period = models.CharField(max_length=255, null=True, blank=True)
+    total_participants = models.IntegerField(null=True, blank=True)
+    location = models.CharField(max_length=255, null=True, blank=True)
+    community = models.CharField(max_length=255, null=True, blank=True)
+    training_duration = models.CharField(max_length=255, null=True, blank=True)
+    start_date = models.CharField(max_length=255, null=True, blank=True)
+    end_date = models.CharField(max_length=255, null=True, blank=True)
+    trainer_name = models.CharField(max_length=255, null=True, blank=True)
+    trainer_contact_num = models.CharField(max_length=255, null=True, blank=True)
+    total_male = models.IntegerField(null=True, blank=True)
+    total_female = models.IntegerField(null=True, blank=True)
+    total_age_0_14_male = models.IntegerField(null=True, blank=True)
+    total_age_0_14_female = models.IntegerField(null=True, blank=True)
+    total_age_15_24_male = models.IntegerField(null=True, blank=True)
+    total_age_15_24_female = models.IntegerField(null=True, blank=True)
+    total_age_25_59_male = models.IntegerField(null=True, blank=True)
+    total_age_25_59_female = models.IntegerField(null=True, blank=True)
+    total_age_60_male = models.IntegerField(null=True, blank=True)
+    total_age_60_female = models.IntegerField(null=True, blank=True)
+    create_date = models.DateTimeField(null=True, blank=True)
+    edit_date = models.DateTimeField(null=True, blank=True)
+
+    class Meta:
+        ordering = ('training_name',)
+
+    #onsave add create date or update edit date
+    def save(self):
+        if self.create_date == None:
+            self.create_date = datetime.now()
+        self.edit_date = datetime.now()
+        super(TrainingAttendance, self).save()
+
+    #displayed in admin templates
+    def __unicode__(self):
+        return unicode(self.training_name)
+
+
+class TrainingAttendanceAdmin(admin.ModelAdmin):
+    list_display = ('program', 'project_proposal', 'project_proposal_approved', 'create_date', 'edit_date')
+    display = 'Program Dashboard'
+
+class Beneficiary(models.Model):
+    beneficiary_name = models.CharField(max_length=255, null=True, blank=True)
+    training = models.ForeignKey(TrainingAttendance, null=True, blank=True)
+    father_name = models.CharField(max_length=255, null=True, blank=True)
+    age = models.IntegerField(null=True, blank=True)
+    gender = models.CharField(max_length=255, null=True, blank=True)
+    community = models.CharField(max_length=255, null=True, blank=True)
+    signature = models.CharField(max_length=255, null=True, blank=True)
+    remarks = models.CharField(max_length=255, null=True, blank=True)
+    initials = models.CharField(max_length=255, null=True, blank=True)
+    contact_num = models.CharField(max_length=255, null=True, blank=True)
+    create_date = models.DateTimeField(null=True, blank=True)
+    edit_date = models.DateTimeField(null=True, blank=True)
+
+    class Meta:
+        ordering = ('beneficiary_name',)
+
+    #onsave add create date or update edit date
+    def save(self):
+        if self.create_date == None:
+            self.create_date = datetime.now()
+        self.edit_date = datetime.now()
+        super(Beneficiary, self).save()
+
+    #displayed in admin templates
+    def __unicode__(self):
+        return unicode(self.program)
+
+
+class BeneficiaryAdmin(admin.ModelAdmin):
+    list_display = ('beneficiary_name', 'father_name', 'age', 'gender', 'community', 'signature', 'remarks', 'initials', 'contact_num')

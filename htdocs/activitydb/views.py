@@ -1,12 +1,12 @@
 from django.views.generic.edit import CreateView, UpdateView, DeleteView
 from django.views.generic.list import ListView
-from .models import ProjectProposal, ProgramDashboard, Program, Country, Province, Village, District, ProjectAgreement, ProjectComplete, Community, Documentation, Monitor, Benchmarks
+from .models import ProjectProposal, ProgramDashboard, Program, Country, Province, Village, District, ProjectAgreement, ProjectComplete, Community, Documentation, Monitor, Benchmarks, TrainingAttendance, Beneficiary
 from silo.models import Silo, ValueStore, DataField
 from django.core.urlresolvers import reverse_lazy
 from django.contrib import messages
 from django.http import HttpResponseRedirect
 from django.utils import timezone
-from .forms import ProjectProposalForm, ProgramDashboardForm, ProjectAgreementForm, ProjectCompleteForm, DocumentationForm, CommunityForm, MonitorForm, BenchmarkForm
+from .forms import ProjectProposalForm, ProgramDashboardForm, ProjectAgreementForm, ProjectCompleteForm, DocumentationForm, CommunityForm, MonitorForm, BenchmarkForm, TrainingAttendanceForm, BeneficiaryForm
 import logging
 from django.shortcuts import render
 from django.contrib import messages
@@ -25,9 +25,20 @@ logger = logging.getLogger(__name__)
 
 from django.utils.decorators import method_decorator
 from django.contrib.auth.decorators import user_passes_test
+"""
+project_proposal_id is the key to link each related form
+ProjectProposal, ProjectAgreement, ProjectComplete, Community (Main Forms and Workflow)
+Monitor, Benchmark, TrainingAttendance and Beneficiary are related to Project Agreement via
+the project_agreement_id
+
+TO-DO: Create imports for Agreement, Community, and Training Attendance
+TO-DO: Update ProjectProposal IMport with new form fields
+TO-DO: Beneficiaries List, Form and Delete
+"""
+
 
 def group_required(*group_names, **url):
-    """Requires user membership in at least one of the groups passed in."""
+    #Requires user membership in at least one of the groups passed in.
     def in_groups(u):
         if u.is_authenticated():
             if bool(u.groups.filter(name__in=group_names)) | u.is_superuser:
@@ -56,14 +67,23 @@ class ProjectDash(ListView):
 
             getDocumentCount = Documentation.objects.all().filter(project__id=self.kwargs['pk']).count()
             getCommunityCount = Community.objects.all().filter(projectproposal__id=self.kwargs['pk']).count()
+            getTrainingCount = TrainingAttendance.objects.all().filter(project_proposal_id=self.kwargs['pk']).count()
 
         getProgram =Program.objects.get(proposal__id=self.kwargs['pk'])
 
-        return render(request, self.template_name, {'form': form, 'getProgram': getProgram, 'getDashboard': getDashboard,'getPrograms':getPrograms, 'getDocumentCount':getDocumentCount ,'getCommunityCount':getCommunityCount})
+        return render(request, self.template_name, {'form': form, 'getProgram': getProgram, 'getDashboard': getDashboard,
+                                                    'getPrograms':getPrograms, 'getDocumentCount':getDocumentCount,
+                                                    'getCommunityCount':getCommunityCount, 'getTrainingCount':getTrainingCount})
 
 
 class ProgramDash(ListView):
-
+    """
+    Dashboard links for and status for each program with number of proposals and
+    agreements and complete from the dashboard model
+    :param request:
+    :param pk: program_id
+    :return:
+    """
     template_name = 'activitydb/programdashboard_list.html'
 
     def get(self, request, *args, **kwargs):
@@ -85,11 +105,14 @@ class ProgramDash(ListView):
         return render(request, self.template_name, {'form': form, 'getDashboard': getDashboard, 'getPrograms':getPrograms})
 
 
-"""
-Project Proposal
-"""
 class ProjectProposalList(ListView):
-
+    """
+    Project Proposal
+    list of proposals submitted and associated with the dashboard model
+    :param request:
+    :param pk: program_id
+    :return:
+    """
     model = ProjectProposal
     template_name = 'activitydb/projectproposal_list.html'
 
@@ -110,8 +133,11 @@ class ProjectProposalList(ListView):
 
             return render(request, self.template_name, {'form': form, 'getProgram': getProgram, 'getDashboard':getDashboard,'getPrograms':getPrograms})
 
-class ProjectProposalImport(ListView):
 
+class ProjectProposalImport(ListView):
+    """
+    Import project proposal from a Tola data source Silo
+    """
     model = Silo
 
     def get_context_data(self, **kwargs):
@@ -125,8 +151,9 @@ class ProjectProposalImport(ListView):
 class ProjectProposalCreate(CreateView):
     """
     Project Proposal Form
+    :param request:
+    :param id: program_id
     """
-
     model = ProjectProposal
 
     # add the request to the kwargs
@@ -172,10 +199,10 @@ class ProjectProposalCreate(CreateView):
 class ProjectProposalUpdate(UpdateView):
     """
     Project Proposal Form
+    :param request:
+    :param id: project_proposal_id
     """
-
     model = ProjectProposal
-
 
     def get_context_data(self, **kwargs):
         context = super(ProjectProposalUpdate, self).get_context_data(**kwargs)
@@ -222,9 +249,8 @@ class ProjectProposalUpdate(UpdateView):
 
 class ProjectProposalDelete(DeleteView):
     """
-    Project Proposal Form
+    Project Proposal Delete
     """
-
     model = ProjectProposal
     success_url = '/activitydb/projectproposal_list/0/'
 
@@ -244,11 +270,13 @@ class ProjectProposalDelete(DeleteView):
 
     form_class = ProjectProposalForm
 
-"""
-Project Agreement
-"""
-class ProjectAgreementList(ListView):
 
+class ProjectAgreementList(ListView):
+    """
+    Project Agreement
+    :param request:
+    :param id: project_proposal_id
+    """
     model = ProjectAgreement
     template_name = 'activitydb/projectagreement_list.html'
 
@@ -271,7 +299,9 @@ class ProjectAgreementList(ListView):
 
 
 class ProjectAgreementImport(ListView):
-
+    """
+    Import a project agreement from Tola source Silo
+    """
     model = Silo
 
     def get_context_data(self, **kwargs):
@@ -285,8 +315,9 @@ class ProjectAgreementImport(ListView):
 class ProjectAgreementCreate(CreateView):
     """
     Project Agreement Form
+    :param request:
+    :param id: project_proposal_id
     """
-
     model = ProjectAgreement
     template_name = 'activitydb/projectagreement_form.html'
 
@@ -343,8 +374,9 @@ class ProjectAgreementCreate(CreateView):
 class ProjectAgreementUpdate(UpdateView):
     """
     Project Agreement Form
+    :param request:
+    :param id: project_agreement_id
     """
-
     model = ProjectAgreement
 
     def get_context_data(self, **kwargs):
@@ -389,7 +421,6 @@ class ProjectAgreementDelete(DeleteView):
     """
     Project Agreement Delete
     """
-
     model = ProjectAgreement
     success_url = '/activitydb/projectagreement_list/0/'
 
@@ -407,11 +438,13 @@ class ProjectAgreementDelete(DeleteView):
 
     form_class = ProjectAgreementForm
 
-"""
-Project Complete
-"""
-class ProjectCompleteList(ListView):
 
+class ProjectCompleteList(ListView):
+    """
+    Project Complete
+    :param request:
+    :param pk: program_id
+    """
     model = ProjectComplete
     template_name = 'activitydb/projectcomplete_list.html'
 
@@ -437,11 +470,10 @@ class ProjectCompleteCreate(CreateView):
     """
     Project Complete Form
     """
-
     model = ProjectComplete
     template_name = 'activitydb/projectcomplete_form.html'
 
-      # add the request to the kwargs
+    # add the request to the kwargs
     def get_form_kwargs(self):
         kwargs = super(ProjectCompleteCreate, self).get_form_kwargs()
         kwargs['request'] = self.request
@@ -461,7 +493,6 @@ class ProjectCompleteCreate(CreateView):
             'activity_code': getProjectAgreement.activity_code,
         }
         return initial
-
 
     def get_context_data(self, **kwargs):
         context = super(ProjectCompleteCreate, self).get_context_data(**kwargs)
@@ -495,7 +526,6 @@ class ProjectCompleteUpdate(UpdateView):
     """
     Project Complete Form
     """
-
     model = ProjectComplete
     template_name = 'activitydb/projectcomplete_form.html'
 
@@ -527,7 +557,6 @@ class ProjectCompleteUpdate(UpdateView):
 
         return self.render_to_response(self.get_context_data(form=form))
 
-
     def form_valid(self, form):
 
         form.save()
@@ -542,7 +571,6 @@ class ProjectCompleteDelete(DeleteView):
     """
     Project Complete Delete
     """
-
     model = ProjectComplete
     success_url = '/activitydb/projectcomplete_list/0/'
 
@@ -573,30 +601,29 @@ class ProjectCompleteImport(ListView):
     template_name = 'activitydb/projectcomplete_import.html'
 
 
-"""
-Documentation
-"""
 class DocumentationList(ListView):
-
+    """
+    Documentation
+    """
     model = Documentation
     template_name = 'activitydb/documentation_list.html'
 
     def get(self, request, *args, **kwargs):
+
+        project_proposal_id = self.kwargs['pk']
 
         if int(self.kwargs['pk']) == 0:
             getDocumentation = Documentation.objects.all()
         else:
             getDocumentation = Documentation.objects.all().filter(project__id=self.kwargs['pk'])
 
-        return render(request, self.template_name, {'getDocumentation':getDocumentation})
-
+        return render(request, self.template_name, {'getDocumentation':getDocumentation, 'project_proposal_id': project_proposal_id})
 
 
 class DocumentationCreate(CreateView):
     """
     Documentation Form
     """
-
     model = Documentation
 
     def form_invalid(self, form):
@@ -619,7 +646,6 @@ class DocumentationUpdate(UpdateView):
     """
     Documentation Form
     """
-
     model = Documentation
 
     def form_invalid(self, form):
@@ -642,7 +668,6 @@ class DocumentationDelete(DeleteView):
     """
     Documentation Form
     """
-
     model = Documentation
     success_url = reverse_lazy('documentation_list')
 
@@ -662,30 +687,29 @@ class DocumentationDelete(DeleteView):
     form_class = DocumentationForm
 
 
-"""
-Community
-"""
-
 class CommunityList(ListView):
-
+    """
+    Community
+    """
     model = Community
     template_name = 'activitydb/community_list.html'
 
     def get(self, request, *args, **kwargs):
+
+        project_proposal_id = self.kwargs['pk']
 
         if int(self.kwargs['pk']) == 0:
             getCommunity = Community.objects.all()
         else:
             getCommunity = Community.objects.all().filter(projectproposal__id=self.kwargs['pk'])
 
-        return render(request, self.template_name, {'getCommunity':getCommunity})
+        return render(request, self.template_name, {'getCommunity':getCommunity,'project_proposal_id': project_proposal_id})
 
 
 class CommunityCreate(CreateView):
     """
     Community Form
     """
-
     model = Community
 
     @method_decorator(group_required('Editor',url='activitydb/permission'))
@@ -710,7 +734,6 @@ class CommunityUpdate(UpdateView):
     """
     Community Form
     """
-
     model = Community
 
     def form_invalid(self, form):
@@ -730,7 +753,6 @@ class CommunityDelete(DeleteView):
     """
     Community Form
     """
-
     model = Community
     success_url = reverse_lazy('community_list')
 
@@ -749,17 +771,17 @@ class CommunityDelete(DeleteView):
 
     form_class = CommunityForm
 
-"""
-Monitoring Data
-"""
-
 
 class MonitorList(ListView):
-
+    """
+    Monitoring Data
+    """
     model = Monitor
     template_name = 'activitydb/monitor_list.html'
 
     def get(self, request, *args, **kwargs):
+
+        project_proposal_id = self.kwargs['pk']
 
         if int(self.kwargs['pk']) == 0:
             getMonitorData = Monitor.objects.all()
@@ -771,16 +793,13 @@ class MonitorList(ListView):
         else:
             getBenchmarkData = Benchmarks.objects.all().filter(agreement__id=self.kwargs['pk'])
 
-
-
-        return render(request, self.template_name, {'getMonitorData': getMonitorData, 'getBenchmarkData': getBenchmarkData})
+        return render(request, self.template_name, {'getMonitorData': getMonitorData, 'getBenchmarkData': getBenchmarkData,'project_proposal_id': project_proposal_id})
 
 
 class MonitorCreate(CreateView):
     """
     Monitor Form
     """
-
     model = Community
 
     def dispatch(self, request, *args, **kwargs):
@@ -831,7 +850,6 @@ class MonitorDelete(DeleteView):
     """
     Monitor Form
     """
-
     model = Monitor
     success_url = reverse_lazy('monitor_list')
 
@@ -851,15 +869,10 @@ class MonitorDelete(DeleteView):
     form_class = MonitorForm
 
 
-"""
-Benchmark Data
-"""
-
 class BenchmarkCreate(CreateView):
     """
-    Community Form
+    Benchmark Form
     """
-
     model = Benchmarks
 
     def dispatch(self, request, *args, **kwargs):
@@ -890,7 +903,6 @@ class BenchmarkUpdate(UpdateView):
     """
     Benchmark Form
     """
-
     model = Benchmarks
 
     def form_invalid(self, form):
@@ -910,7 +922,6 @@ class BenchmarkDelete(DeleteView):
     """
     Benchmark Form
     """
-
     model = Benchmarks
     success_url = reverse_lazy('benchmark_list')
 
@@ -929,11 +940,103 @@ class BenchmarkDelete(DeleteView):
 
     form_class = BenchmarkForm
 
+
+class TrainingList(ListView):
+    """
+    Training Attendance
+    """
+    model = TrainingAttendance
+    template_name = 'activitydb/training_list.html'
+
+    def get(self, request, *args, **kwargs):
+
+        project_proposal_id = self.kwargs['pk']
+
+        if int(self.kwargs['pk']) == 0:
+            getTraining = TrainingAttendance.objects.all()
+        else:
+            getTraining = TrainingAttendance.objects.all().filter(project_proposal_id=self.kwargs['pk'])
+
+        return render(request, self.template_name, {'getTraining': getTraining, 'project_proposal_id': project_proposal_id})
+
+
+class TrainingCreate(CreateView):
+    """
+    Training Form
+    """
+    model = TrainingAttendance
+
+    def dispatch(self, request, *args, **kwargs):
+        return super(TrainingCreate, self).dispatch(request, *args, **kwargs)
+
+    def get_initial(self):
+        initial = {
+            'agreement': self.kwargs['id'],
+            }
+
+        return initial
+
+    def form_invalid(self, form):
+
+        messages.error(self.request, 'Invalid Form', fail_silently=False)
+
+        return self.render_to_response(self.get_context_data(form=form))
+
+    def form_valid(self, form):
+        form.save()
+        messages.success(self.request, 'Success, Training Created!')
+        return self.render_to_response(self.get_context_data(form=form))
+
+    form_class = TrainingAttendanceForm
+
+
+class TrainingUpdate(UpdateView):
+    """
+    Training Form
+    """
+    model = TrainingAttendance
+
+    def form_invalid(self, form):
+        messages.error(self.request, 'Invalid Form', fail_silently=False)
+        return self.render_to_response(self.get_context_data(form=form))
+
+    def form_valid(self, form):
+        form.save()
+        messages.success(self.request, 'Success, Training Updated!')
+
+        return self.render_to_response(self.get_context_data(form=form))
+
+    form_class = TrainingAttendanceForm
+
+
+class TrainingDelete(DeleteView):
+    """
+    Training Delete
+    """
+    model = TrainingAttendance
+    success_url = reverse_lazy('training_list')
+
+    def form_invalid(self, form):
+
+        messages.error(self.request, 'Invalid Form', fail_silently=False)
+
+        return self.render_to_response(self.get_context_data(form=form))
+
+    def form_valid(self, form):
+
+        form.save()
+
+        messages.success(self.request, 'Success, Training Deleted!')
+        return self.render_to_response(self.get_context_data(form=form))
+
+    form_class = TrainingAttendanceForm
+
 def doImport(request, pk):
     """
     Copy the selected Silo data into the Project Proposal tables letting the user map
     the columns first
     :param request:
+    :param pk:
     :return:
     """
     from_silo_id = pk

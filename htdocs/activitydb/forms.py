@@ -6,7 +6,7 @@ from functools import partial
 from widgets import GoogleMapsWidget
 import floppyforms as forms
 from django.contrib.auth.models import Permission, User, Group
-from .models import ProjectProposal, ProgramDashboard, ProjectAgreement, ProjectComplete, Sector, Program, Community, Documentation, QuantitativeOutputs, Benchmarks, Monitor
+from .models import ProjectProposal, ProgramDashboard, ProjectAgreement, ProjectComplete, Sector, Program, Community, Documentation, QuantitativeOutputs, Benchmarks, Monitor, TrainingAttendance, Beneficiary
 from django.forms.formsets import formset_factory
 from crispy_forms.layout import LayoutObject, TEMPLATE_PACK
 
@@ -157,7 +157,6 @@ class ProjectProposalForm(forms.ModelForm):
         if not 'Approver' in self.request.user.groups.values_list('name', flat=True):
             self.fields['approval'].widget.attrs['disabled'] = "disabled"
             self.fields['approved_by'].widget.attrs['disabled'] = "disabled"
-            self.fields['approval_submitted_by'].widget.attrs['disabled'] = "disabled"
             self.fields['approval_remarks'].widget.attrs['disabled'] = "disabled"
             self.fields['approval'].help_text = "Approval level permissions required"
 
@@ -482,6 +481,7 @@ class BenchmarkForm(forms.ModelForm):
 
         super(BenchmarkForm, self).__init__(*args, **kwargs)
 
+
 class MonitorForm(forms.ModelForm):
 
     class Meta:
@@ -512,3 +512,45 @@ class MonitorForm(forms.ModelForm):
         )
 
         super(MonitorForm, self).__init__(*args, **kwargs)
+
+
+class TrainingAttendanceForm(forms.ModelForm):
+
+    class Meta:
+        model = TrainingAttendance
+        exclude = ['create_date', 'edit_date']
+
+    def __init__(self, *args, **kwargs):
+        self.helper = FormHelper()
+        self.helper.form_method = 'post'
+        self.helper.form_class = 'form-horizontal'
+        self.helper.label_class = 'col-sm-2'
+        self.helper.field_class = 'col-sm-6'
+        self.helper.form_error_title = 'Form Errors'
+        self.helper.error_text_inline = True
+        self.helper.help_text_inline = True
+        self.helper.html5_required = True
+        self.helper.add_input(Submit('submit', 'Submit'))
+
+        super(TrainingAttendanceForm, self).__init__(*args, **kwargs)
+
+
+class BeneficiaryForm(forms.ModelForm):
+
+    class Meta:
+        model = Beneficiary
+        exclude = ['create_date', 'edit_date']
+
+    def __init__(self, *args, **kwargs):
+        self.helper = FormHelper()
+        self.helper.form_method = 'post'
+        self.helper.form_class = 'form-horizontal'
+        self.helper.label_class = 'col-sm-2'
+        self.helper.field_class = 'col-sm-6'
+        self.helper.form_error_title = 'Form Errors'
+        self.helper.error_text_inline = True
+        self.helper.help_text_inline = True
+        self.helper.html5_required = True
+        self.helper.add_input(Submit('submit', 'Submit'))
+
+        super(BeneficiaryForm, self).__init__(*args, **kwargs)

@@ -1,12 +1,13 @@
 {% extends "base.html" %}
-<div>
+{% block bread_crumb %}
 <ol class="breadcrumb">
   <li><a href="/activitydb/dashboard/0/">Program Dashboards</a></li>
-  <li><a href="/activitydb/documentation_list/{{ getProgram.id }}">Documentations</a></li>
-  <li class="active">Document</li>
+  <li><a href="/activitydb/dashboard/project/{{ project_proposal_id }}/">Project Dashboards</a></li>
+  <li><a href="/activitydb/dashboard/training_list/{{ project_proposal_id }}/">Trainings</a></li>
+  <li class="active">Training Attendance Form</li>
 </ol>
-</div>
-{% block page_title %}Documentation Form{% endblock %}
+{% endblock %}
+{% block page_title %}Training Attendance Form{% endblock %}
 
 {% block content %}
     {% if form.errors %}

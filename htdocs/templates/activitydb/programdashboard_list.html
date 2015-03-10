@@ -10,7 +10,7 @@
   </button>
   <ul class="dropdown-menu" role="menu" aria-labelledby="dropdownMenu1">
     {% for program in getPrograms %}
-        <li role="presentation"><a role="menuitem" tabindex="-1" href="/activitydb/projectproposal_list/{{ program.id }}">{{ program.gaitid}} - {{ program.name }}</a></li>
+        <li role="presentation"><a role="menuitem" tabindex="-1" href="/activitydb/dashboard/{{ program.id }}">{{ program.gaitid}} - {{ program.name }}</a></li>
     {% endfor %}
   </ul>
   <a href="/activitydb/projectproposal_add" class="btn btn-large btn-success">New Project Proposal</a>&nbsp;<a href="/activitydb/projectproposal_import" class="btn btn-large btn-info">Import Project Proposal</a>

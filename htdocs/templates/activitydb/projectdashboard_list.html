@@ -1,4 +1,13 @@
 {% extends "base.html" %}
+{% block bread_crumb %}
+<div>
+<ol class="breadcrumb">
+  <li><a href="/activitydb/dashboard/0/">Program Dashboards</a></li>
+  <li><a href="/activitydb/projectproposal_list/{{ getProgram.id }}">Proposal</a></li>
+  <li class="active">Project Dashboard</li>
+</ol>
+</div>
+{% endblock %}
 {% block page_title %}Project Dashboard{% endblock %}
 
 {% block content %}
@@ -10,7 +19,7 @@
   </button>
   <ul class="dropdown-menu" role="menu" aria-labelledby="dropdownMenu1">
     {% for program in getPrograms %}
-        <li role="presentation"><a role="menuitem" tabindex="-1" href="/activitydb/dashboard/project/{{ proposal.id }}">{{ program.gaitid}} - {{ program.name }}</a></li>
+        <li role="presentation"><a role="menuitem" tabindex="-1" href="/activitydb/dashboard/{{ proposal.id }}">{{ program.gaitid}} - {{ program.name }}</a></li>
     {% endfor %}
   </ul>
   <a href="/activitydb/projectproposal_add" class="btn btn-large btn-success">New Project Proposal</a>
@@ -18,13 +27,6 @@
 </div>
 </div>
 <br/>
-<div>
-<ol class="breadcrumb">
-  <li><a href="/activitydb/dashboard/0/">Program Dashboards</a></li>
-  <li><a href="/activitydb/projectproposal_list/{{ getProgram.id }}">Proposal</a></li>
-  <li class="active">Project Dashboard</li>
-</ol>
-</div>
 <ul class="list-group">
 <h3>{{getProgram.gaitid }} - {{ getProgram.name }}</h3>
 {% for proposal in getDashboard %}
@@ -34,7 +36,8 @@
             <h4>Project Proposal</h4>
         </li>
 
-        <li class="list-group-item"><b>{{ proposal.project_proposal.create_date|date }} - {{ proposal.project_proposal.project_title }} {{ proposal.project_proposal.acivity_code }}</b></li>
+        <li class="list-group-item"><b>{{ proposal.project_proposal.project_title }} {{ proposal.project_proposal.acivity_code }}</b>
+            <div class="panel-body">created: <span class="date-badge">{{ proposal.project_proposal.create_date|date }}</span> edited: <span class="date-badge">{{ proposal.project_proposal.edit_date|date }}</span></div></li>
         <li class="list-group-item">
             <div class="btn-group" role="group" aria-label="...">
                 <button data-toggle="tooltip" data-placement="top" onclick="location.href='/activitydb/projectproposal_update/{{ proposal.project_proposal.id }}'" type="button" class="btn btn-sm btn-warning">Update Proposal</button>
@@ -66,7 +69,8 @@
                 <h4>Project Agreement</h4>
             </li>
 
-            <li class="list-group-item"><b>{{ proposal.project_agreement.create_date|date }} - {{ proposal.project_agreement.project_title }} {{ proposal.project_agreement.acivity_code }}</b></li>
+            <li class="list-group-item"><b>{{ proposal.project_agreement.project_title }} {{ proposal.project_agreement.acivity_code }}</b>
+                <div class="panel-body">created: <span class="date-badge">{{ proposal.project_agreement.create_date|date }}</span> edited: <span class="date-badge">{{ proposal.project_agreement.edit_date|date }}</span></div></li>
             <li class="list-group-item">
                 <div class="btn-group" role="group" aria-label="...">
                     <button type="button" class="btn btn-sm btn-warning" onclick="location.href='/activitydb/projectagreement_update/{{ proposal.project_agreement.id }}'">Update Agreement</button>
@@ -100,7 +104,8 @@
                 <h4>Project Completion</h4>
             </li>
 
-            <li class="list-group-item"><b>{{ proposal.project_completion.create_date|date }} - {{ proposal.project_completion.project_title }} {{ proposal.project_completion.acivity_code }}</b></li>
+            <li class="list-group-item"><b>{{ proposal.project_completion.project_title }} {{ proposal.project_completion.acivity_code }}</b>
+                <div class="panel-body">created: <span class="date-badge">{{ proposal.project_completion.create_date|date }}</span> edited: <span class="date-badge">{{ proposal.project_completion.edit_date|date }}</span></div></li>
             <li class="list-group-item">
                 <div class="btn-group" role="group" aria-label="...">
                     <button type="button" class="btn btn-sm btn-warning" onclick="location.href='/activitydb/projectcomplete_update/{{ proposal.project_completion.id }}'">Update Completion</button>
@@ -125,6 +130,9 @@
     </button>
     <button class="btn btn-primary" type="button" onclick="location.href='/activitydb/community_list/{{ proposal.project_proposal.id }}'">
         Communities <span class="badge">{{ getCommunityCount }}</span>
+    </button>
+    <button class="btn btn-primary" type="button" onclick="location.href='/activitydb/training_list/{{ proposal.project_proposal.id }}'">
+        Training <span class="badge">{{ getTrainingCount }}</span>
     </button>
     <button class="btn btn-primary" type="button" onclick="location.href='/activitydb/monitor_list/{{ proposal.project_proposal.id }}'">
         Project Planning <span class="badge">{{ getMonitoringCount }}</span>
