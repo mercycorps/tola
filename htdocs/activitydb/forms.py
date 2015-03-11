@@ -146,7 +146,7 @@ class ProjectProposalForm(forms.ModelForm):
 
             HTML("""<br/>"""),
             FormActions(
-                Submit('submit', 'Submit', css_class='btn-default'),
+                Submit('submit', 'Save', css_class='btn-default'),
                 Reset('reset', 'Reset', css_class='btn-warning')
             )
         )
@@ -161,11 +161,11 @@ class ProjectProposalForm(forms.ModelForm):
             self.fields['approval'].help_text = "Approval level permissions required"
 
 
-class QuantitativeOutputsForm(forms.Form):
+class QuantitativeOutputsForm(forms.ModelForm):
 
     class Meta:
         model = QuantitativeOutputs
-        fields = '__all__'
+        exclude = ['create_date', 'edit_date']
 
     def __init__(self, *args, **kwargs):
         self.helper = FormHelper()
@@ -177,14 +177,9 @@ class QuantitativeOutputsForm(forms.Form):
         self.helper.error_text_inline = True
         self.helper.help_text_inline = True
         self.helper.html5_required = True
-        self.helper.layout = Layout(
+        self.helper.add_input(Submit('submit', 'Save'))
+        self.helper.add_input(Submit('submit', 'Save & Add Another >>'))
 
-            HTML("""<br/>"""),
-            Fieldset(
-                    'Quantitative Outputs',
-                    'description', 'logframe_indicator','non_logframe_indicator','type',
-                ),
-            )
         super(QuantitativeOutputsForm, self).__init__(*args, **kwargs)
 
 
@@ -263,6 +258,8 @@ class ProjectAgreementForm(forms.ModelForm):
                     MultiField(
                         #"QuantitativeOutputsFormSet",
                         #Formset(QuantitativeOutputsFormSet),
+                        'Additional Planning Data Added via links below',
+                        HTML(""" <br/> <a href="/activitydb/quantitative_add/{{ id }}" target="_new">Add Quantitative Outputs</a> """),
                         HTML(""" <br/> <a href="/activitydb/monitor_add/{{ id }}" target="_new">Add Monitoring Data</a> """),
                         HTML(""" <br/> <a href="/activitydb/benchmark_add/{{ id }}" target="_new">Add Benchmarks</a> """),
 
@@ -278,7 +275,7 @@ class ProjectAgreementForm(forms.ModelForm):
 
             HTML("""<br/>"""),
             FormActions(
-                Submit('submit', 'Submit', css_class='btn-default'),
+                Submit('submit', 'Save', css_class='btn-default'),
                 Reset('reset', 'Reset', css_class='btn-warning')
             )
         )
@@ -365,7 +362,7 @@ class ProjectCompleteForm(forms.ModelForm):
 
             HTML("""<br/>"""),
             FormActions(
-                Submit('submit', 'Submit', css_class='btn-default'),
+                Submit('submit', 'Save', css_class='btn-default'),
                 Reset('reset', 'Reset', css_class='btn-warning')
             )
         )
@@ -411,7 +408,7 @@ class CommunityForm(forms.ModelForm):
 
             ),
             FormActions(
-                Submit('submit', 'Submit', css_class='btn-default'),
+                Submit('submit', 'Save', css_class='btn-default'),
                 Reset('reset', 'Reset', css_class='btn-warning')
             )
         )
@@ -444,7 +441,7 @@ class DocumentationForm(forms.ModelForm):
                 'file_field','project',
 
             FormActions(
-                Submit('submit', 'Submit', css_class='btn-default'),
+                Submit('submit', 'Save', css_class='btn-default'),
                 Reset('reset', 'Reset', css_class='btn-warning')
             )
         )
@@ -474,7 +471,7 @@ class BenchmarkForm(forms.ModelForm):
                 'file_field','project',
 
             FormActions(
-                Submit('submit', 'Submit', css_class='btn-default'),
+                Submit('submit', 'Save', css_class='btn-default'),
                 Reset('reset', 'Reset', css_class='btn-warning')
             )
         )
@@ -506,7 +503,7 @@ class MonitorForm(forms.ModelForm):
                 'responsible_person', 'frequency', Field('type', rows="3", css_class='input-xlarge'), 'agreement',
 
             FormActions(
-                Submit('submit', 'Submit', css_class='btn-default'),
+                Submit('submit', 'Save', css_class='btn-default'),
                 Reset('reset', 'Reset', css_class='btn-warning')
             )
         )
@@ -530,7 +527,7 @@ class TrainingAttendanceForm(forms.ModelForm):
         self.helper.error_text_inline = True
         self.helper.help_text_inline = True
         self.helper.html5_required = True
-        self.helper.add_input(Submit('submit', 'Submit'))
+        self.helper.add_input(Submit('submit', 'Save'))
 
         super(TrainingAttendanceForm, self).__init__(*args, **kwargs)
 
@@ -551,6 +548,6 @@ class BeneficiaryForm(forms.ModelForm):
         self.helper.error_text_inline = True
         self.helper.help_text_inline = True
         self.helper.html5_required = True
-        self.helper.add_input(Submit('submit', 'Submit'))
+        self.helper.add_input(Submit('submit', 'Save'))
 
         super(BeneficiaryForm, self).__init__(*args, **kwargs)

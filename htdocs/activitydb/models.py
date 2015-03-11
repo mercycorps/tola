@@ -237,63 +237,6 @@ class CommunityAdmin(admin.ModelAdmin):
     display = 'Community'
 
 
-class Contribution(models.Model):
-    contributor = models.CharField("Contributor", max_length=255, blank=True)
-    description = models.CharField("Description of Contribution", max_length=255, blank=True)
-    value = models.CharField("Value of Contribution", max_length=255, blank=True)
-    actual = models.BooleanField("Is an Actual Contribution", default=None)
-    create_date = models.DateTimeField(null=True, blank=True)
-    edit_date = models.DateTimeField(null=True, blank=True)
-
-    class Meta:
-        ordering = ('contributor',)
-
-    #onsave add create date or update edit date
-    def save(self, *args, **kwargs):
-        if self.create_date == None:
-            self.create_date = datetime.now()
-        self.edit_date = datetime.now()
-        super(Contribution, self).save()
-
-    #displayed in admin templates
-    def __unicode__(self):
-        return self.contributor
-
-
-class ContributionAdmin(admin.ModelAdmin):
-    list_display = ('contributor', 'create_date', 'edit_date')
-    display = 'Contribution'
-
-
-class QuantitativeOutputs(models.Model):
-    targeted = models.CharField("Targeted #", max_length=255, blank=True, null=True)
-    description = models.CharField("Description of Contribution", max_length=255, blank=True, null=True)
-    logframe_indicator = models.ForeignKey('indicators.Indicator', blank=True, null=True)
-    non_logframe_indicator = models.CharField("Logframe Indicator", max_length=255, blank=True, null=True)
-    create_date = models.DateTimeField(null=True, blank=True)
-    edit_date = models.DateTimeField(null=True, blank=True)
-
-    class Meta:
-        ordering = ('description',)
-        verbose_name_plural = "Quantitative Outputs"
-
-    #onsave add create date or update edit date
-    def save(self, *args, **kwargs):
-        if self.create_date == None:
-            self.create_date = datetime.now()
-        self.edit_date = datetime.now()
-        super(QuantitativeOutputs, self).save()
-
-    #displayed in admin templates
-    def __unicode__(self):
-        return self.description
-
-
-class QuantitativeOutputsAdmin(admin.ModelAdmin):
-    list_display = ('description', 'targeted', 'logframe_indicator', 'create_date', 'edit_date')
-    display = 'Quantitative Outputs'
-
-
 class Capacity(models.Model):
     capacity = models.CharField("Capacity", max_length=255, blank=True, null=True)
     create_date = models.DateTimeField(null=True, blank=True)
@@ -482,12 +425,10 @@ class ProjectAgreement(models.Model):
     num_direct_beneficiaries = models.CharField("Number of direct beneficiaries", max_length=255, blank=True, null=True)
     total_estimated_budget = models.CharField(max_length=255, blank=True, null=True)
     mc_estimated_budget = models.CharField(max_length=255, blank=True, null=True)
-    contribution = models.ForeignKey(Contribution, blank=True, null=True, related_name="contribute_agree")
     estimation_date = models.DateTimeField(blank=True, null=True)
     estimated_by = models.ForeignKey(settings.AUTH_USER_MODEL, blank=True, null=True, related_name="estimating")
     checked_by = models.ForeignKey(settings.AUTH_USER_MODEL, blank=True, null=True, related_name="checking")
     reviewed_by = models.ForeignKey(settings.AUTH_USER_MODEL, blank=True, null=True, related_name="reviewing")
-    quantitative_outputs = models.ForeignKey(QuantitativeOutputs, blank=True, null=True, related_name="quant_out_agree")
     capacity = models.ForeignKey(Capacity, blank=True, null=True, related_name="quant_out_agree")
     evaluate = models.ForeignKey(Evaluate, blank=True, null=True, related_name="quant_out_agree")
     approval = models.CharField("Approval", default="in progress", max_length=255, blank=True, null=True)
@@ -544,7 +485,6 @@ class ProjectComplete(models.Model):
     actual_budget = models.CharField("Actual Budget", max_length=255, null=True, blank=True)
     budget_variance = models.CharField("Budget Variance", blank=True, null=True, max_length=255)
     explanation_of_variance = models.CharField("Explanation of variance", blank=True, null=True, max_length=255)
-    actual_contribution = models.ForeignKey(Contribution)
     direct_beneficiaries = models.CharField("Actual Direct Beneficiaries", max_length=255, blank=True, null=True)
     jobs_created = models.CharField("Number of Jobs Created", max_length=255, blank=True, null=True)
     jobs_part_time = models.CharField("Part Time Jobs", max_length=255, blank=True, null=True)
@@ -553,7 +493,6 @@ class ProjectComplete(models.Model):
     capacity_built = models.CharField("What capacity was built to ensure sustainability?", max_length=255, blank=True, null=True)
     issues_and_challenges = models.TextField("List any issues or challenges faced (include reasons for delays)", blank=True, null=True)
     lessons_learned= models.TextField("Lessons learned", blank=True, null=True)
-    quantitative_outputs = models.ForeignKey(QuantitativeOutputs)
     community = models.ManyToManyField(Community, blank=True, null=True)
     estimated_by = models.ForeignKey(settings.AUTH_USER_MODEL, blank=True, null=True, related_name="estimating_complete")
     checked_by = models.ForeignKey(settings.AUTH_USER_MODEL, blank=True, null=True, related_name="checking_complete")
@@ -798,3 +737,64 @@ class Beneficiary(models.Model):
 
 class BeneficiaryAdmin(admin.ModelAdmin):
     list_display = ('beneficiary_name', 'father_name', 'age', 'gender', 'community', 'signature', 'remarks', 'initials', 'contact_num')
+
+class Contribution(models.Model):
+    contributor = models.CharField("Contributor", max_length=255, blank=True)
+    description = models.CharField("Description of Contribution", max_length=255, blank=True)
+    value = models.CharField("Value of Contribution", max_length=255, blank=True)
+    actual = models.BooleanField("Is an Actual Contribution", default=None)
+    project_agreement = models.ForeignKey(ProjectAgreement, blank=True, null=True, related_name="c_agreement")
+    project_complete = models.ForeignKey(ProjectComplete, blank=True, null=True, related_name="c_complete")
+    create_date = models.DateTimeField(null=True, blank=True)
+    edit_date = models.DateTimeField(null=True, blank=True)
+
+    class Meta:
+        ordering = ('contributor',)
+
+    #onsave add create date or update edit date
+    def save(self, *args, **kwargs):
+        if self.create_date == None:
+            self.create_date = datetime.now()
+        self.edit_date = datetime.now()
+        super(Contribution, self).save()
+
+    #displayed in admin templates
+    def __unicode__(self):
+        return self.contributor
+
+
+class ContributionAdmin(admin.ModelAdmin):
+    list_display = ('contributor', 'create_date', 'edit_date')
+    display = 'Contribution'
+
+
+class QuantitativeOutputs(models.Model):
+    targeted = models.CharField("Targeted #", max_length=255, blank=True, null=True)
+    description = models.CharField("Description of Contribution", max_length=255, blank=True, null=True)
+    logframe_indicator = models.ForeignKey('indicators.Indicator', blank=True, null=True)
+    non_logframe_indicator = models.CharField("Logframe Indicator", max_length=255, blank=True, null=True)
+    project_agreement = models.ForeignKey(ProjectAgreement, blank=True, null=True, related_name="q_agreement")
+    project_complete = models.ForeignKey(ProjectAgreement, blank=True, null=True, related_name="q_complete")
+    create_date = models.DateTimeField(null=True, blank=True)
+    edit_date = models.DateTimeField(null=True, blank=True)
+
+    class Meta:
+        ordering = ('description',)
+        verbose_name_plural = "Quantitative Outputs"
+
+    #onsave add create date or update edit date
+    def save(self, *args, **kwargs):
+        if self.create_date == None:
+            self.create_date = datetime.now()
+        self.edit_date = datetime.now()
+        super(QuantitativeOutputs, self).save()
+
+    #displayed in admin templates
+    def __unicode__(self):
+        return self.description
+
+
+class QuantitativeOutputsAdmin(admin.ModelAdmin):
+    list_display = ('description', 'targeted', 'logframe_indicator', 'create_date', 'edit_date')
+    display = 'Quantitative Outputs'
+

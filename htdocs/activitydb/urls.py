@@ -3,7 +3,7 @@ from .views import ProjectProposalImport, ProjectProposalList, ProjectProposalCr
     ProgramDash, ProjectAgreementCreate, ProjectAgreementList, ProjectAgreementUpdate, ProjectAgreementDelete, ProjectAgreementImport, ProjectCompleteCreate, ProjectCompleteUpdate,\
     ProjectCompleteList, ProjectCompleteDelete, ProjectCompleteImport, CommunityList, CommunityCreate, CommunityUpdate, CommunityDelete,\
     DocumentationList, DocumentationCreate, DocumentationUpdate, DocumentationDelete,ProjectDash, MonitorList,MonitorCreate, MonitorDelete, MonitorUpdate,\
-    BenchmarkCreate, BenchmarkDelete, BenchmarkUpdate, TrainingUpdate, TrainingCreate, TrainingDelete, TrainingList
+    BenchmarkCreate, BenchmarkDelete, BenchmarkUpdate, TrainingUpdate, TrainingCreate, TrainingDelete, TrainingList, QuantitativeOutputsList, QuantitativeOutputsCreate, QuantitativeOutputsUpdate, QuantitativeOutputsDelete
 
 
 try:
@@ -61,6 +61,11 @@ urlpatterns = patterns('',
                        url(r'^training_add/(?P<id>\w+)/$', TrainingCreate.as_view(), name='training_add'),
                        url(r'^training_update/(?P<pk>\w+)/$', TrainingUpdate.as_view(), name='training_update'),
                        url(r'^training_delete/(?P<pk>\w+)/$', TrainingDelete.as_view(), name='training_delete'),
+
+                       url(r'^quantitative_list/(?P<pk>\w+)/$', QuantitativeOutputsList.as_view(), name='quantitative_list'),
+                       url(r'^quantitative_add/(?P<id>\w+)/$', QuantitativeOutputsCreate.as_view(), name='quantitative_add'),
+                       url(r'^quantitative_update/(?P<pk>\w+)/$', QuantitativeOutputsUpdate.as_view(), name='quantitative_update'),
+                       url(r'^quantitative_delete/(?P<pk>\w+)/$', QuantitativeOutputsDelete.as_view(), name='quantitative_delete'),
 
                        url(r'^doimport/(?P<pk>\w+)/$', 'activitydb.views.doImport' , name='doImport'),
                        url(r'^doMerge/(?P<pk>\w+)/$', 'activitydb.views.doMerge', name='doMerge'),

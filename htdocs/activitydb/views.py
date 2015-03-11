@@ -1,12 +1,12 @@
 from django.views.generic.edit import CreateView, UpdateView, DeleteView
 from django.views.generic.list import ListView
-from .models import ProjectProposal, ProgramDashboard, Program, Country, Province, Village, District, ProjectAgreement, ProjectComplete, Community, Documentation, Monitor, Benchmarks, TrainingAttendance, Beneficiary
+from .models import ProjectProposal, ProgramDashboard, Program, Country, Province, Village, District, ProjectAgreement, ProjectComplete, Community, Documentation, Monitor, Benchmarks, TrainingAttendance, Beneficiary, QuantitativeOutputs
 from silo.models import Silo, ValueStore, DataField
 from django.core.urlresolvers import reverse_lazy
 from django.contrib import messages
 from django.http import HttpResponseRedirect
 from django.utils import timezone
-from .forms import ProjectProposalForm, ProgramDashboardForm, ProjectAgreementForm, ProjectCompleteForm, DocumentationForm, CommunityForm, MonitorForm, BenchmarkForm, TrainingAttendanceForm, BeneficiaryForm
+from .forms import ProjectProposalForm, ProgramDashboardForm, ProjectAgreementForm, ProjectCompleteForm, DocumentationForm, CommunityForm, MonitorForm, BenchmarkForm, TrainingAttendanceForm, BeneficiaryForm, QuantitativeOutputsForm
 import logging
 from django.shortcuts import render
 from django.contrib import messages
@@ -1030,6 +1030,102 @@ class TrainingDelete(DeleteView):
         return self.render_to_response(self.get_context_data(form=form))
 
     form_class = TrainingAttendanceForm
+
+
+class QuantitativeOutputsList(ListView):
+    """
+    QuantitativeOutput Attendance
+    """
+    model = QuantitativeOutputs
+    template_name = 'activitydb/quantitative_list.html'
+
+    def get(self, request, *args, **kwargs):
+
+        project_proposal_id = self.kwargs['pk']
+
+        if int(self.kwargs['pk']) == 0:
+            getQuantitativeOutputs = QuantitativeOutputs.objects.all()
+        else:
+            getQuantitativeOutputs = QuantitativeOutputs.objects.all().filter(project_proposal_id=self.kwargs['pk'])
+
+        return render(request, self.template_name, {'getQuantitativeOutputs': getQuantitativeOutputs, 'project_proposal_id': project_proposal_id})
+
+
+class QuantitativeOutputsCreate(CreateView):
+    """
+    QuantitativeOutput Form
+    """
+    model = QuantitativeOutputs
+
+    def dispatch(self, request, *args, **kwargs):
+        return super(QuantitativeOutputsCreate, self).dispatch(request, *args, **kwargs)
+
+    def get_initial(self):
+        initial = {
+            'agreement': self.kwargs['id'],
+            }
+
+        return initial
+
+    def form_invalid(self, form):
+
+        messages.error(self.request, 'Invalid Form', fail_silently=False)
+
+        return self.render_to_response(self.get_context_data(form=form))
+
+    def form_valid(self, form):
+        form.save()
+        messages.success(self.request, 'Success, Quantitative Output Created!')
+        if 'Save & Add Another >>' in self.request.POST:
+            form = ""
+            return self.render_to_response(self.get_context_data(form=form))
+        else:
+            return self.render_to_response(self.get_context_data(form=form))
+
+    form_class = QuantitativeOutputsForm
+
+
+class QuantitativeOutputsUpdate(UpdateView):
+    """
+    QuantitativeOutput Form
+    """
+    model = QuantitativeOutputs
+
+    def form_invalid(self, form):
+        messages.error(self.request, 'Invalid Form', fail_silently=False)
+        return self.render_to_response(self.get_context_data(form=form))
+
+    def form_valid(self, form):
+        form.save()
+        messages.success(self.request, 'Success, Quantitative Output Updated!')
+
+        return self.render_to_response(self.get_context_data(form=form))
+
+    form_class = TrainingAttendanceForm
+
+
+class QuantitativeOutputsDelete(DeleteView):
+    """
+    QuantitativeOutput Delete
+    """
+    model = QuantitativeOutputs
+    success_url = reverse_lazy('quantitative_list')
+
+    def form_invalid(self, form):
+
+        messages.error(self.request, 'Invalid Form', fail_silently=False)
+
+        return self.render_to_response(self.get_context_data(form=form))
+
+    def form_valid(self, form):
+
+        form.save()
+
+        messages.success(self.request, 'Success, Quantitative Output Deleted!')
+        return self.render_to_response(self.get_context_data(form=form))
+
+    form_class = QuantitativeOutputsForm
+
 
 def doImport(request, pk):
     """
