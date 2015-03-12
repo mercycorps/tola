@@ -97,6 +97,7 @@ class ProjectProposalForm(forms.ModelForm):
     program = forms.ModelChoiceField(queryset=Program.objects.filter(country='1', funding_status="Funded"))
 
     date_of_request = forms.DateField(widget=DatePicker.DateInput())
+    rejection_letter = forms.FileField(required=False)
 
     approval = forms.ChoiceField(
         choices=APPROVALS,
@@ -120,25 +121,24 @@ class ProjectProposalForm(forms.ModelForm):
 
             HTML("""<br/>"""),
             TabHolder(
-                Tab('Details',
-                    Fieldset('Program', 'program', 'community_code', 'proposal_num', 'date_of_request', 'activity_code', 'project_title', 'project_type',
+                Tab('General Information',
+                    Fieldset('Program', 'program', 'activity_code', 'date_of_request', 'office', 'sector', 'project_name', 'project_activity', 'project_type'
                     ),
                     Fieldset(
                         'Community',
-                        'community', 'community_rep', 'community_rep_contact', 'community_mobilizer'
+                        'community',PrependedText('has_rej_letter', ''), 'rejection_letter', 'community_rep',
+                        'community_rep_contact', 'community_mobilizer','community_mobilizer_contact'
                     ),
                 ),
                 Tab('Description',
                     Fieldset(
                         'Proposal',
                         Field('project_description', rows="3", css_class='input-xlarge'),
-                        PrependedText('rej_letter', ''),
-                        'project_code', 'prop_status', 'proposal_review', 'proposal_review_2',
                     ),
                 ),
                 Tab('Approval',
                     Fieldset('Approval',
-                        'approval', 'approved_by', 'approval_submitted_by',
+                        'approval', 'estimated_by', 'approved_by', 'approval_submitted_by',
                         Field('approval_remarks', rows="3", css_class='input-xlarge')
                     ),
                 ),
@@ -228,12 +228,12 @@ class ProjectAgreementForm(forms.ModelForm):
             HTML("""<br/>"""),
             TabHolder(
                 Tab('Executive Summary',
-                    Fieldset('Program', 'program', 'project_proposal','community', 'activity_code', 'project_title', 'sector', 'project_activity',
+                    Fieldset('Program', 'program', 'project_proposal','community', 'activity_code', 'project_name', 'sector', 'project_activity',
                              'project_type', 'account_code', 'sub_code','mc_staff_responsible'
                     ),
                     Fieldset(
                         'Partners',
-                        PrependedText('partners',''), 'name_of_partners','program_objectives','mc_objectives','effect_or_impact','expected_start_date',
+                        PrependedText('partners',''), 'name_of_partners','expected_start_date',
                         'expected_end_date','beneficiary_type','num_beneficiaries','total_estimated_budget','mc_estimated_budget',
                         'estimation_date', 'estimated_by','checked_by','other_budget'
                     ),
@@ -241,6 +241,7 @@ class ProjectAgreementForm(forms.ModelForm):
                 Tab('Justification and Description',
                     Fieldset(
                         'Justification',
+                        'program_objectives','mc_objectives','effect_or_impact',
                         Field('justification_background', rows="3", css_class='input-xlarge'),
                         Field('justification_description_community_selection', rows="3", css_class='input-xlarge'),
                     ),
@@ -327,7 +328,7 @@ class ProjectCompleteForm(forms.ModelForm):
             HTML("""<br/>"""),
             TabHolder(
                 Tab('Executive Summary',
-                    Fieldset('Program', 'program', 'project_proposal', 'project_agreement', 'activity_code', 'project_title'
+                    Fieldset('Program', 'program', 'project_proposal', 'project_agreement', 'activity_code', 'project_name'
                     ),
                     Fieldset(
                         'Dates',

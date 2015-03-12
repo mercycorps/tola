@@ -206,7 +206,6 @@ class Community(models.Model):
     province = models.ForeignKey(Province, null=True, blank=True)
     district = models.ForeignKey(District, null=True, blank=True)
     village = models.ForeignKey(Village, null=True, blank=True)
-    office = models.ForeignKey(Office, null=True, blank=True)
     latitude = models.CharField("Latitude (Coordinates)", max_length=255, blank=True, null=True)
     longitude = models.CharField("Longitude (Coordinates)", max_length=255, blank=True, null=True)
     community_rep = models.CharField("Community Representative", max_length=255, blank=True, null=True)
@@ -340,30 +339,57 @@ class TemplateAdmin(admin.ModelAdmin):
     list_display = ('name', 'description', 'documentation_type', 'file_field', 'create_date', 'edit_date')
     display = 'Template'
 
+class Budget(models.Model):
+    contributor = models.CharField(max_length=135)
+    description_of_contribution = models.CharField(max_length=255)
+    proposed_value = models.CharField(max_length="255", blank=True, null=True)
+    create_date = models.DateTimeField(null=True, blank=True)
+    edit_date = models.DateTimeField(null=True, blank=True)
+
+    #onsave add create date or update edit date
+    def save(self, *args, **kwargs):
+        if self.create_date == None:
+            self.create_date = datetime.now()
+        self.edit_date = datetime.now()
+        super(Template, self).save()
+
+    def __unicode__(self):
+        return self.contributor
+
+    class Meta:
+        ordering = ('contributor',)
+
+
+class BudgetAdmin(admin.ModelAdmin):
+    list_display = ('contributor', 'description_of_contribution', 'proposed_value', 'create_date', 'edit_date')
+    display = 'Budget'
+
 
 class ProjectProposal(models.Model):
     program = models.ForeignKey(Program, null=True, blank=True, related_name="proposal")
     proposal_num = models.CharField("Proposal Number", max_length=255, blank=True, null=True)
     date_of_request = models.DateTimeField("Date of Request", null=True, blank=True)
-    project_title = models.CharField("Proposed Project Title", max_length=255)
+    project_name = models.CharField("Project Name", help_text='Please be specific in your name.  Consider that your Project Name includes WHO, WHAT, WHERE, HOW', max_length=255)
     sector = models.ForeignKey(Sector, max_length=255, blank=True, null=True)
-    project_type = models.ForeignKey(ProjectType, max_length=255, blank=True, null=True)
+    project_type = models.ForeignKey(ProjectType, help_text='Please refer to Form 05 - Project Progress Summary', max_length=255, blank=True, null=True)
+    project_activity = models.CharField("Project Activity", help_text='This should come directly from the activities listed in the Logframe', max_length=255, blank=True, null=True)
+    office = models.ForeignKey(Office, null=True, blank=True)
     community = models.ManyToManyField(Community, blank=True, null=True)
     community_rep = models.CharField("Community Representative", max_length=255, blank=True, null=True)
-    community_rep_contact = models.CharField("Community Representative Contact", max_length=255, blank=True, null=True)
-    community_mobilizer = models.CharField("Community Mobilizer", max_length=255, blank=True, null=True)
-    prop_status = models.CharField("Proposal Status", max_length=255, blank=True, null=True)
-    rej_letter = models.BooleanField("If Rejected: Rejection Letter Sent?", default=False)
-    activity_code = models.CharField("Activity Code", max_length=255, blank=True, null=True)
-    project_description = models.TextField("Project Description", blank=True, null=True)
+    community_rep_contact = models.CharField("Community Representative Contact", help_text='Can have mulitple contact numbers', max_length=255, blank=True, null=True)
+    community_mobilizer = models.CharField("MC Community Mobilizer", max_length=255, blank=True, null=True)
+    community_mobilizer_contact = models.CharField("MC Community Mobilizer Contact Number", max_length=255, blank=True, null=True)
+    has_rej_letter = models.BooleanField("If Rejected: Rejection Letter Sent?", help_text='If yes attach copy', default=False)
+    rejection_letter = models.FileField("Rejection Letter", upload_to='uploads', blank=True, null=True)
+    activity_code = models.CharField("Activity Code", help_text='If applicable at this stage, please request Activity Code from Kabul MEL', max_length=255, blank=True, null=True)
+    project_description = models.TextField("Project Description", help_text='Description must meet the Criteria.  Will translate description into three languages: English, Dari and Pashto)', blank=True, null=True)
     approval = models.CharField("Approval", default="in progress", max_length=255, blank=True, null=True)
-    approved_by = models.ForeignKey(settings.AUTH_USER_MODEL, blank=True, null=True, related_name="approving")
+    approved_by = models.ForeignKey(settings.AUTH_USER_MODEL,help_text='This is the Provincial Line Manager', blank=True, null=True, related_name="approving")
+    estimated_by = models.ForeignKey(settings.AUTH_USER_MODEL, help_text='This is the originator', blank=True, null=True, related_name="estimate")
     approval_submitted_by = models.ForeignKey(settings.AUTH_USER_MODEL, blank=True, null=True, related_name="requesting")
     approval_remarks = models.CharField("Approval Remarks", max_length=255, blank=True, null=True)
     device_id = models.CharField("Device ID", max_length=255, blank=True, null=True)
     date_approved = models.DateTimeField(null=True, blank=True)
-    proposal_review = models.FileField("Proposal Review", upload_to='uploads', blank=True, null=True)
-    proposal_review_2 = models.FileField("Proposal Review Additional", upload_to='uploads', blank=True, null=True)
     create_date = models.DateTimeField("Date Created", null=True, blank=True)
     edit_date = models.DateTimeField("Last Edit Date", null=True, blank=True)
     latitude = models.CharField("Latitude (Coordinates)", max_length=255, blank=True, null=True)
@@ -384,33 +410,31 @@ class ProjectProposal(models.Model):
 
     #displayed in admin templates
     def __unicode__(self):
-        return self.project_title
+        return self.project_name
 
 
 class ProjectProposalAdmin(admin.ModelAdmin):
-    list_display = ('project_title')
-    display = 'project_title'
+    list_display = ('project_name')
+    display = 'project_name'
 
 
 class ProjectAgreement(models.Model):
     project_proposal = models.ForeignKey(ProjectProposal, null=False, blank=False)
     program = models.ForeignKey(Program, null=True, blank=True, related_name="agreement")
-    project_code = models.CharField("Project Code Number", max_length=255, blank=True, null=True)
-    proposal_num = models.CharField("Proposal Number", max_length=255, blank=True, null=True)
     date_of_request = models.DateTimeField("Date of Request", blank=True, null=True)
-    project_title = models.CharField("Project Title", max_length=255, blank=True, null=True)
-    project_type = models.CharField("Proposal Number", max_length=255, blank=True, null=True)
-    project_activity = models.CharField("Proposal Number", max_length=255, blank=True, null=True)
+    project_name = models.CharField("Project Name", help_text='Please be specific in your name.  Consider that your Project Name includes WHO, WHAT, WHERE, HOW', max_length=255, blank=True, null=True)
+    project_type = models.CharField("Project Type", help_text='Please refer to Form 05 - Project Progress Summary', max_length=255, blank=True, null=True)
+    project_activity = models.CharField("Project Activity", help_text='This should come directly from the activities listed in the Logframe', max_length=255, blank=True, null=True)
     community = models.ManyToManyField(Community, blank=True, null=True)
-    project_status = models.CharField("Project Status", max_length=255, blank=True, null=True)
-    activity_code = models.CharField("Activity Code", max_length=255, blank=True, null=True)
-    office_code = models.CharField("Office Code", max_length=255, blank=True, null=True)
+    activity_code = models.CharField("Activity Code", help_text='Please request Activity Code from Kabul MEL', max_length=255, blank=True, null=True)
+    office = models.ForeignKey(Office, null=True, blank=True)
     cod_num = models.CharField("Project COD #", max_length=255, blank=True, null=True)
     sector = models.ForeignKey("Sector", blank=True, null=True)
+    external_stakeholder_list = models.FileField("External stakeholder list", help_text="Please refer to PM@MC Section 01: Identification and Design under 1.1", upload_to='uploads', blank=True, null=True)
     project_activity = models.CharField("Project Activity", max_length=255, blank=True, null=True)
     project_design = models.CharField("Project design for", max_length=255, blank=True, null=True)
-    account_code = models.CharField("Account Code", max_length=255, blank=True, null=True)
-    lin_code = models.CharField("LIN Sub Code", max_length=255, blank=True, null=True)
+    account_code = models.CharField("Account Code", help_text='optional - request from finance', max_length=255, blank=True, null=True)
+    lin_code = models.CharField("LIN Sub Code", help_text='optional - request from finance', max_length=255, blank=True, null=True)
     community = models.ManyToManyField(Community, blank=True, null=True)
     staff_responsible = models.CharField("MC Staff Responsible", max_length=255, blank=True, null=True)
     partners = models.BooleanField("Are there partners involved?", default=0)
@@ -420,11 +444,14 @@ class ProjectAgreement(models.Model):
     effect_or_impact = models.TextField("What is the anticipated effect of impact of this project?", blank=True, null=True)
     expected_start_date = models.DateTimeField("Expected starting date", blank=True, null=True)
     expected_end_date = models.DateTimeField("Expected ending date",blank=True, null=True)
-    expected_duration = models.CharField("Expected duration",blank=True, null=True, max_length=255)
-    beneficiary_type = models.CharField("Type of direct beneficiaries", max_length=255, blank=True, null=True)
-    num_direct_beneficiaries = models.CharField("Number of direct beneficiaries", max_length=255, blank=True, null=True)
-    total_estimated_budget = models.CharField(max_length=255, blank=True, null=True)
-    mc_estimated_budget = models.CharField(max_length=255, blank=True, null=True)
+    expected_duration = models.CharField("Expected duration", help_text="[MONTHS]/[DAYS]", blank=True, null=True, max_length=255)
+    beneficiary_type = models.CharField("Type of direct beneficiaries", help_text="i.e. Farmer, Association, Student, Govt, etc.", max_length=255, blank=True, null=True)
+    estimated_num_direct_beneficiaries = models.CharField("Estimated number of direct beneficiaries", help_text="Please provide achievable estimates as we will use these as are 'Targets'",max_length=255, blank=True, null=True)
+    average_household_size = models.CharField("Average Household Size", help_text="Refer to Form 01 - Community Profile",max_length=255, blank=True, null=True)
+    estimated_num_indirect_beneficiaries = models.CharField("Estimated Number of indirect beneficiaries", help_text="This is a calculation - multiply direct beneficiaries by average household size",max_length=255, blank=True, null=True)
+    total_estimated_budget = models.CharField(help_text="In USD", max_length=255, blank=True, null=True)
+    mc_estimated_budget = models.CharField(help_text="In USD", max_length=255, blank=True, null=True)
+    other_budget = models.ForeignKey(Budget, help_text="Describe and quantify in dollars", blank=True, null=True)
     estimation_date = models.DateTimeField(blank=True, null=True)
     estimated_by = models.ForeignKey(settings.AUTH_USER_MODEL, blank=True, null=True, related_name="estimating")
     checked_by = models.ForeignKey(settings.AUTH_USER_MODEL, blank=True, null=True, related_name="checking")
@@ -460,21 +487,22 @@ class ProjectAgreement(models.Model):
 
     #displayed in admin templates
     def __unicode__(self):
-        return self.project_title
+        return self.project_name
 
 
 class ProjectAgreementAdmin(admin.ModelAdmin):
-    list_display = ('project_title')
-    display = 'project_title'
+    list_display = ('project_name')
+    display = 'project_name'
 
 
 class ProjectComplete(models.Model):
     program = models.ForeignKey(Program, null=True, blank=True, related_name="complete")
     project_proposal = models.ForeignKey(ProjectProposal)
     project_agreement = models.ForeignKey(ProjectAgreement)
-    project_title = models.CharField("Project Title", max_length=255, blank=True, null=True)
     activity_code = models.CharField("Activity Code", max_length=255, blank=True, null=True)
     project_name = models.CharField("Project Name", max_length=255, blank=True, null=True)
+    project_activity = models.CharField("Project Activity", max_length=255, blank=True, null=True)
+    office = models.ForeignKey(Office, null=True, blank=True)
     expected_start_date = models.DateTimeField(blank=True, null=True)
     expected_end_date = models.DateTimeField(blank=True, null=True)
     actual_start_date = models.DateTimeField(blank=True, null=True)
@@ -521,8 +549,8 @@ class ProjectComplete(models.Model):
 
 
 class ProjectCompleteAdmin(admin.ModelAdmin):
-    list_display = ('program', 'project_title', 'activity_code')
-    display = 'project_title'
+    list_display = ('program', 'project_name', 'activity_code')
+    display = 'project_name'
 
 
 class Documentation(models.Model):
@@ -674,6 +702,8 @@ class TrainingAttendance(models.Model):
     end_date = models.CharField(max_length=255, null=True, blank=True)
     trainer_name = models.CharField(max_length=255, null=True, blank=True)
     trainer_contact_num = models.CharField(max_length=255, null=True, blank=True)
+    form_filled_by = models.CharField(max_length=255, null=True, blank=True)
+    form_filled_by_contact_num = models.CharField(max_length=255, null=True, blank=True)
     total_male = models.IntegerField(null=True, blank=True)
     total_female = models.IntegerField(null=True, blank=True)
     total_age_0_14_male = models.IntegerField(null=True, blank=True)
@@ -682,10 +712,6 @@ class TrainingAttendance(models.Model):
     total_age_15_24_female = models.IntegerField(null=True, blank=True)
     total_age_25_59_male = models.IntegerField(null=True, blank=True)
     total_age_25_59_female = models.IntegerField(null=True, blank=True)
-    total_age_60_male = models.IntegerField(null=True, blank=True)
-    total_age_60_female = models.IntegerField(null=True, blank=True)
-    create_date = models.DateTimeField(null=True, blank=True)
-    edit_date = models.DateTimeField(null=True, blank=True)
 
     class Meta:
         ordering = ('training_name',)
@@ -703,7 +729,7 @@ class TrainingAttendance(models.Model):
 
 
 class TrainingAttendanceAdmin(admin.ModelAdmin):
-    list_display = ('program', 'project_proposal', 'project_proposal_approved', 'create_date', 'edit_date')
+    list_display = ('training_name', 'program', 'project_proposal', 'create_date', 'edit_date')
     display = 'Program Dashboard'
 
 class Beneficiary(models.Model):
@@ -712,11 +738,9 @@ class Beneficiary(models.Model):
     father_name = models.CharField(max_length=255, null=True, blank=True)
     age = models.IntegerField(null=True, blank=True)
     gender = models.CharField(max_length=255, null=True, blank=True)
-    community = models.CharField(max_length=255, null=True, blank=True)
-    signature = models.CharField(max_length=255, null=True, blank=True)
+    community = models.ForeignKey(Community, null=True, blank=True)
+    signature = models.BooleanField(default=True)
     remarks = models.CharField(max_length=255, null=True, blank=True)
-    initials = models.CharField(max_length=255, null=True, blank=True)
-    contact_num = models.CharField(max_length=255, null=True, blank=True)
     create_date = models.DateTimeField(null=True, blank=True)
     edit_date = models.DateTimeField(null=True, blank=True)
 
@@ -736,7 +760,7 @@ class Beneficiary(models.Model):
 
 
 class BeneficiaryAdmin(admin.ModelAdmin):
-    list_display = ('beneficiary_name', 'father_name', 'age', 'gender', 'community', 'signature', 'remarks', 'initials', 'contact_num')
+    list_display = ('beneficiary_name', 'father_name', 'age', 'gender', 'community', 'signature', 'remarks', 'initials')
 
 class Contribution(models.Model):
     contributor = models.CharField("Contributor", max_length=255, blank=True)

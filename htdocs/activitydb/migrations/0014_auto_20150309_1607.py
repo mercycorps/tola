@@ -27,7 +27,7 @@ class Migration(migrations.Migration):
         ),
         migrations.AlterField(
             model_name='projectproposal',
-            name='project_title',
+            name='project_name',
             field=models.CharField(max_length=255, verbose_name=b'Proposed Project Title'),
             preserve_default=True,
         ),

@@ -36,7 +36,7 @@
             <h4>Project Proposal</h4>
         </li>
 
-        <li class="list-group-item"><b>{{ proposal.project_proposal.project_title }} {{ proposal.project_proposal.acivity_code }}</b>
+        <li class="list-group-item"><b>{{ proposal.project_proposal.project_name }} {{ proposal.project_proposal.activity_code }}</b>
             <div class="panel-body">created: <span class="date-badge">{{ proposal.project_proposal.create_date|date }}</span> edited: <span class="date-badge">{{ proposal.project_proposal.edit_date|date }}</span></div></li>
         <li class="list-group-item">
             <div class="btn-group" role="group" aria-label="...">
@@ -69,7 +69,7 @@
                 <h4>Project Agreement</h4>
             </li>
 
-            <li class="list-group-item"><b>{{ proposal.project_agreement.project_title }} {{ proposal.project_agreement.acivity_code }}</b>
+            <li class="list-group-item"><b>{{ proposal.project_agreement.project_name }} {{ proposal.project_agreement.activity_code }}</b>
                 <div class="panel-body">created: <span class="date-badge">{{ proposal.project_agreement.create_date|date }}</span> edited: <span class="date-badge">{{ proposal.project_agreement.edit_date|date }}</span></div></li>
             <li class="list-group-item">
                 <div class="btn-group" role="group" aria-label="...">
@@ -104,7 +104,7 @@
                 <h4>Project Completion</h4>
             </li>
 
-            <li class="list-group-item"><b>{{ proposal.project_completion.project_title }} {{ proposal.project_completion.acivity_code }}</b>
+            <li class="list-group-item"><b>{{ proposal.project_completion.project_name }} {{ proposal.project_completion.activity_code }}</b>
                 <div class="panel-body">created: <span class="date-badge">{{ proposal.project_completion.create_date|date }}</span> edited: <span class="date-badge">{{ proposal.project_completion.edit_date|date }}</span></div></li>
             <li class="list-group-item">
                 <div class="btn-group" role="group" aria-label="...">

@@ -335,9 +335,12 @@ class ProjectAgreementCreate(CreateView):
             'approval_submitted_by': self.request.user,
             'program': getProjectProposal.program,
             'project_proposal': getProjectProposal.id,
-            'project_title': getProjectProposal.project_title,
+            'project_name': getProjectProposal.project_name,
             'proposal_num': getProjectProposal.proposal_num,
             'activity_code': getProjectProposal.activity_code,
+            'office': getProjectProposal.office,
+            'estimated_by': getProjectProposal.estimated_by,
+            'sector': getProjectProposal.sector,
             }
 
         return initial
@@ -488,7 +491,7 @@ class ProjectCompleteCreate(CreateView):
             'program': getProjectAgreement.program,
             'project_proposal': getProjectAgreement.project_proposal,
             'project_agreement': getProjectAgreement.id,
-            'project_title': getProjectAgreement.project_title,
+            'project_name': getProjectAgreement.project_title,
             'proposal_num': getProjectAgreement.proposal_num,
             'activity_code': getProjectAgreement.activity_code,
         }

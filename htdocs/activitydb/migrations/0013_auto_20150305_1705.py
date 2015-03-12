@@ -17,7 +17,7 @@ class Migration(migrations.Migration):
         ),
         migrations.AddField(
             model_name='projectagreement',
-            name='project_title',
+            name='project_name',
             field=models.CharField(max_length=255, null=True, verbose_name=b'Project Title', blank=True),
             preserve_default=True,
         ),
