@@ -1,0 +1,11 @@
+1. Log in to your Ona account at https://ona.io/
+2. Go browse Ona's API, go to: https://ona.io/api/v1/data
+3. Click on the data set that you'd like to set up as "READ" in TOLA-DATA.
+4. Copy the url from your browser's address bar, which should look like: https://ona.io/api/v1/data/1112?format=json
+5. Now, login to Tola-Data
+6. Click on Load-Data -> Data Source
+7. Click on "Create a New Source" button
+8. Fill out the form: Don't forget to paste the copied url intot he "Source URL" field.
+9. Click Save
+10. Follow through the rest of the process
+
