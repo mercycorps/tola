@@ -219,12 +219,17 @@ FLOW = flow_from_clientsecrets(
     redirect_uri='http://localhost:8000/oauth2callback/')
 
 @login_required
-def google_export(request, id):
+def export_gsheet(request, id):
+    pass
+
+@login_required
+def export_new_gsheet(request, id):
     storage = Storage(GoogleCredentialsModel, 'id', request.user, 'credential')
     credential = storage.get()
     if credential is None or credential.invalid == True:
         FLOW.params['state'] = xsrfutil.generate_token(settings.SECRET_KEY, request.user)
         authorize_url = FLOW.step1_get_authorize_url()
+        print("STEP1 authorize_url: %s", authorize_url)
         return HttpResponseRedirect(authorize_url)
     else:
         # 
