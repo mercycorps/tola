@@ -2,19 +2,104 @@
 {% block page_title %}Shareable Data{% endblock %}
 
 {% block content %}
-{% for item in getSilos %}
-    <a href="#" class="list-group-item active"><b>{{ item.name }}</b></a>
-    <ul class="list-group">
-        <li class="list-group-item">Default REST API: <a href="/api/feed/{{ item.id }}" target="_new">{{ item.name }}</a></li>
-        <li class="list-group-item">JSON URL: <a href="/api/custom/{{ item.id }}" target="_new">{{ item.name }}</a></li>
-        <li class="list-group-item"><a href="/export/{{ item.id }}" class="btn btn-sm btn-info">Export to Excel/CSV</a></li>
-        <li class="list-group-item"><a href="/export_new_gsheet/{{ item.id }}" class="btn btn-sm btn-info">Export to New Google Sheets</a></li>
-        <li class="list-group-item"><a href="/export_gsheet/{{ item.id }}" class="btn btn-sm btn-info">Export to Existing Google Sheets</a></li>
-
-    </ul>
-
-
-{% endfor %}
-
-
+    {% for item in getSilos %}
+        <a href="#" class="list-group-item active"><b>{{ item.name }}</b></a>
+        <ul class="list-group">
+            <li class="list-group-item">Default REST API: <a href="/api/feed/{{ item.id }}" target="_new">{{ item.name }}</a></li>
+            <li class="list-group-item">JSON URL: <a href="/api/custom/{{ item.id }}" target="_new">{{ item.name }}</a></li>
+            <li class="list-group-item"><a href="/export/{{ item.id }}" class="btn btn-sm btn-info">Export to Excel/CSV</a></li>
+            <li class="list-group-item">
+                <a href="/export_new_gsheet/{{ item.id }}" class="btn btn-sm btn-info">Export to New Google Sheets</a>
+            </li>
+            <li class="list-group-item">
+                <a href="#" class="btn btn-sm btn-info" onclick="onAuthApiLoad();">Export to Existing Google Sheets</a>
+            </li>
+        </ul>
+    {% endfor %}
+    <div id="result"></div>
 {% endblock content %}
+
+{% block extra_js_in_body %}
+    <script type="text/javascript">
+
+        // The Client ID obtained from the Google Developers Console.
+        var clientId = "859950034311-r6gsqnipugbtv6a2j4h4eo2tt2a1js2t.apps.googleusercontent.com"
+
+        // The list of scopes to request access to is available at: https://developers.google.com/picker/docs/#otherviews
+        var scope = ['https://www.googleapis.com/auth/drive.readonly'];
+
+        // Replace with your own App ID. (Its the first number in your Client ID)
+        var appId = "859950034311";
+        
+        var pickerApiLoaded = false;
+        var oauthToken;
+        
+        // Use the API Loader script to load google.picker and gapi.auth.
+        function onApiLoad() {
+            console.log("onApiLoad is called");
+            //gapi.load('auth', {'callback': onAuthApiLoad});
+            //gapi.load('picker', {'callback': onPickerApiLoad});
+            gapi.load('auth');
+            gapi.load('picker', {'callback': onPickerApiLoad});
+        }
+        
+        // After Google's auth library is loaded, this function is called
+        function onAuthApiLoad() {
+            console.log("onAuthApiLoad is called");
+            window.gapi.auth.authorize( {
+                'client_id': clientId,
+                'scope': scope,
+                //'immediate': false
+            },
+            handleAuthResult);
+        }
+        
+        function onPickerApiLoad() {
+            pickerApiLoaded = true;
+            //createPicker();
+        }
+    
+    
+        // After the authentication is complete, this method is called
+        function handleAuthResult(authResult) {
+            if (authResult && !authResult.error) {
+                oauthToken = authResult.access_token;
+                console.log("oauthToken: " + oauthToken);
+                createPicker();
+            }
+        }
+        
+        // Create and render a Picker object for picking user Photos.
+        function createPicker() {
+            
+            if (pickerApiLoaded && oauthToken) {
+                console.log("Picker is called")
+                var view = new google.picker.DocsView(google.picker.ViewId.SPREADSHEETS);
+                view.setIncludeFolders(true);
+                var picker = new google.picker.PickerBuilder().
+                    enableFeature(google.picker.Feature.NAV_HIDDEN).
+                    setAppId(appId).
+                    addView(view).
+                    setOAuthToken(oauthToken).
+                    setCallback(pickerCallback).
+                    build();
+                picker.setVisible(true);
+            }
+        }
+        
+        // A simple callback implementation.
+        function pickerCallback(data) {
+            console.log(JSON.stringify(data));
+            var url = 'nothing';
+            if (data[google.picker.Response.ACTION] == google.picker.Action.PICKED) {
+                var doc = data[google.picker.Response.DOCUMENTS][0];
+                url = doc[google.picker.Document.URL];
+            }
+            var message = 'You picked: ' + url;
+            console.log(message);
+            //document.getElementById('result').innerHTML = message;
+        }
+      
+    </script>
+    <script type="text/javascript" src="https://apis.google.com/js/api.js?onload=onApiLoad"></script>
+{% endblock extra_js_in_body %}

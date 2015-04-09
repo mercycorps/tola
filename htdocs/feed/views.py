@@ -220,6 +220,14 @@ FLOW = flow_from_clientsecrets(
 
 @login_required
 def export_gsheet(request, id):
+    remote_endpoints = RemoteEndPoint.objects.filter(silo__id=id)
+    if not rs.exists():
+        # Show the select spreadsheet dialog
+        # seek authorization for the file and store the token
+        # store the file handler
+        passs
+    storage = Storage(GoogleCredentialsModel, 'id', request.user, 'credential')
+    credential = storage.get()
     pass
 
 @login_required
