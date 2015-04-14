@@ -213,7 +213,6 @@ LOCAL_APPS = (
     'display',
     'silo',
     'readtoken',
-    'activitydb',
     'djangocosign',
     'indicators',
 
