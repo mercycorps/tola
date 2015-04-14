@@ -111,7 +111,7 @@ def showRead(request, id):
                 redirect_var = "file"
             else:
                 redirect_var = "read/login"
-            return HttpResponseRedirect('/' + redirect_var + '/' + id)  # Redirect after POST to getLogin
+            return HttpResponseRedirect('/' + redirect_var + '/')  # Redirect after POST to getLogin
         else:
             messages.error(request, 'Invalid Form', fail_silently=False)
     else:
