@@ -201,17 +201,18 @@ def getJSON(request):
     today.strftime('%Y-%m-%d')
     today = str(today)
     try:
-        #get auth info from form post then encode and add to the request header
-        username = request.POST['user_name']
-        password = request.POST['password']
-        base64string = base64.encodestring('%s:%s' % (username, password))[:-1]
         request2 = urllib2.Request(read_obj.read_url)
-        request2.add_header("Authorization", "Basic %s" % base64string)
+        #if they passed in a usernmae get auth info from form post then encode and add to the request header
+        if request.POST['user_name']:
+            username = request.POST['user_name']
+            password = request.POST['password']
+            base64string = base64.encodestring('%s:%s' % (username, password))[:-1]
+            request2.add_header("Authorization", "Basic %s" % base64string)
         #retrieve JSON data from formhub via auth info
         json_file = urllib2.urlopen(request2)
     except Exception as e:
         print e
-        messages.success(self.request, 'Authentication Failed, Please double check your login credentials and URL!')
+        messages.success(request, 'Authentication Failed, Please double check your login credentials and URL!')
         return redirect('/read/home')
 
     #New silo or existing
