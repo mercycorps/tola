@@ -1,4 +1,4 @@
-from silo.models import Silo, DataField, ValueStore
+from silo.models import Silo, DataField, ValueStore, RemoteEndPoint
 from read.models import Read, ReadType
 from .serializers import SiloSerializer, DataFieldSerializer, ValueStoreSerializer, UserSerializer, ReadSerializer, ReadTypeSerializer
 
@@ -218,17 +218,87 @@ FLOW = flow_from_clientsecrets(
     scope='https://www.googleapis.com/auth/drive https://spreadsheets.google.com/feeds',
     redirect_uri='http://localhost:8000/oauth2callback/')
 
+
+def export_to_google_spreadsheet(spreadsheet_key):
+    # Create OAuth2Token for authorizing the SpreadsheetClient
+    token = gdata.gauth.OAuth2Token(
+        client_id = credential_json['client_id'], 
+        client_secret = credential_json['client_secret'], 
+        scope = 'https://spreadsheets.google.com/feeds',
+        user_agent = "TOLA",
+        access_token = credential_json['access_token'],
+        refresh_token = credential_json['refresh_token'])
+
+    # Instantiate the SpreadsheetClient object
+    sp_client = gdata.spreadsheets.client.SpreadsheetsClient(source="TOLA")
+    
+    # authorize the SpreadsheetClient object
+    sp_client = token.authorize(sp_client)
+    
+    # Create a WorksheetQuery object to allow for filtering for worksheets by the title
+    worksheet_query = gdata.spreadsheets.client.WorksheetQuery(title="Sheet1", title_exact=True)
+    
+    # Get a feed of all worksheets in the specified spreadsheet that matches the worksheet_query
+    worksheets_feed = sp_client.get_worksheets(spreadsheet_key, query=worksheet_query)
+    
+    # Retrieve the worksheet_key from the first match in the worksheets_feed object
+    worksheet_key = worksheets_feed.entry[0].id.text.rsplit("/", 1)[1]
+    
+    silo_data = ValueStore.objects.filter(field__silo__id=silo_id).order_by("row_number")
+    num_cols = len(silo_data)
+    
+    # By default a blank Google Spreadsheet has 26 columns but if our data has more column
+    # then add more columns to Google Spreadsheet otherwise there would be a 500 Error!
+    if num_cols and num_cols > 26:
+        worksheet = worksheets_feed.entry[0]
+        worksheet.col_count.text = str(num_cols)
+        
+        # Send the worksheet update call to Google Server
+        sp_client.update(worksheet, force=True)
+    
+    # Create a CellBatchUpdate object so that all cells update is sent as one http request
+    batch = gdata.spreadsheets.data.BuildBatchCellsUpdate(spreadsheet_key, worksheet_key)
+    
+    # Get all of the column names for the current silo_id
+    column_names = DataField.objects.filter(silo_id=1).values_list('name', flat=True)
+    
+    # Add column names to the batch object
+    for i, col_name in enumerate(column_names):
+        row_index = 1
+        col_index = i + 1
+        batch.add_set_cell(row_index, col_index, col_name)
+    
+    # Populate the CellBatchUpdate object with data
+    for row in silo_data:
+        row_index = row.row_number + 1
+        col_index = row.field.id
+        value = row.char_store
+        batch.add_set_cell(row_index, col_index, value)
+    
+    # Finally send the CellBatchUpdate object to Google
+    sp_client.batch(batch, force=True)
+
 @login_required
 def export_gsheet(request, id):
-    remote_endpoints = RemoteEndPoint.objects.filter(silo__id=id)
-    if not rs.exists():
-        # Show the select spreadsheet dialog
-        # seek authorization for the file and store the token
-        # store the file handler
-        passs
+    if request.method == 'POST':
+        print("post method received")
+    try:
+        gsheet_endpoint = RemoteEndPoint.objects.get(silo__id=id, silo__name='Google')
+        export_to_google_spreadsheet(gsheet_endpoint)
+    except RemoteEndPoint.DoesNotExist:
+        print("Remote End point does not exist")
+        pass
+    except Exception as e:
+        print(e)
+        pass
+    print(id)
+    print(request.GET.get('link',''))
     storage = Storage(GoogleCredentialsModel, 'id', request.user, 'credential')
     credential = storage.get()
-    pass
+    #link = "Your exported data is available at <a href=" + google_spreadsheet['alternateLink'] + " target='_blank'>Google Spreadsheet</a>"
+    link = " Your exported blabal"
+    messages.success(request, link)
+    return HttpResponseRedirect("/")
 
 @login_required
 def export_new_gsheet(request, id):
@@ -262,69 +332,12 @@ def export_new_gsheet(request, id):
         }
         
         # Create a new blank Google Spreadsheet file in user's Google Drive
-        # Uncomment the line below if you want to create a new Google Spreadsheet
         google_spreadsheet = service.files().insert(body=body).execute()
         
         # Get the spreadsheet_key of the newly created Spreadsheet
         spreadsheet_key = google_spreadsheet['id']
         
-        # Create OAuth2Token for authorizing the SpreadsheetClient
-        token = gdata.gauth.OAuth2Token(
-            client_id = credential_json['client_id'], 
-            client_secret = credential_json['client_secret'], 
-            scope = 'https://spreadsheets.google.com/feeds',
-            user_agent = "TOLA",
-            access_token = credential_json['access_token'],
-            refresh_token = credential_json['refresh_token'])
-
-        # Instantiate the SpreadsheetClient object
-        sp_client = gdata.spreadsheets.client.SpreadsheetsClient(source="TOLA")
-        
-        # authorize the SpreadsheetClient object
-        sp_client = token.authorize(sp_client)
-        
-        # Create a WorksheetQuery object to allow for filtering for worksheets by the title
-        worksheet_query = gdata.spreadsheets.client.WorksheetQuery(title="Sheet1", title_exact=True)
-        
-        # Get a feed of all worksheets in the specified spreadsheet that matches the worksheet_query
-        worksheets_feed = sp_client.get_worksheets(spreadsheet_key, query=worksheet_query)
-        
-        # Retrieve the worksheet_key from the first match in the worksheets_feed object
-        worksheet_key = worksheets_feed.entry[0].id.text.rsplit("/", 1)[1]
-        
-        silo_data = ValueStore.objects.filter(field__silo__id=silo_id).order_by("row_number")
-        num_cols = len(silo_data)
-        
-        # By default a blank Google Spreadsheet has 26 columns but if our data has more column
-        # then add more columns to Google Spreadsheet otherwise there would be a 500 Error!
-        if num_cols and num_cols > 26:
-            worksheet = worksheets_feed.entry[0]
-            worksheet.col_count.text = str(num_cols)
-            
-            # Send the worksheet update call to Google Server
-            sp_client.update(worksheet, force=True)
-        
-        # Create a CellBatchUpdate object so that all cells update is sent as one http request
-        batch = gdata.spreadsheets.data.BuildBatchCellsUpdate(spreadsheet_key, worksheet_key)
-        
-        # Get all of the column names for the current silo_id
-        column_names = DataField.objects.filter(silo_id=1).values_list('name', flat=True)
-        
-        # Add column names to the batch object
-        for i, col_name in enumerate(column_names):
-            row_index = 1
-            col_index = i + 1
-            batch.add_set_cell(row_index, col_index, col_name)
-        
-        # Populate the CellBatchUpdate object with data
-        for row in silo_data:
-            row_index = row.row_number + 1
-            col_index = row.field.id
-            value = row.char_store
-            batch.add_set_cell(row_index, col_index, value)
-        
-        # Finally send the CellBatchUpdate object to Google
-        sp_client.batch(batch, force=True)
+        export_to_google_spreadsheet(spreadsheet_key)
 
         link = "Your exported data is available at <a href=" + google_spreadsheet['alternateLink'] + " target='_blank'>Google Spreadsheet</a>"
         messages.success(request, link)
