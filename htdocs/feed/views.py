@@ -290,6 +290,15 @@ def export_to_google_spreadsheet(credential_json, silo_id, spreadsheet_key):
 @login_required
 def export_gsheet(request, id):
     gsheet_endpoint = None
+    storage = Storage(GoogleCredentialsModel, 'id', request.user, 'credential')
+    credential = storage.get()
+    if credential is None or credential.invalid == True:
+        FLOW.params['state'] = xsrfutil.generate_token(settings.SECRET_KEY, request.user)
+        authorize_url = FLOW.step1_get_authorize_url()
+        return HttpResponseRedirect(authorize_url)
+    
+    credential_json = json.loads(credential.to_json())
+    silo_id = id
     
     try:
         gsheet_endpoint = RemoteEndPoint.objects.get(silo__id=id, silo__owner = request.user, name='Google')
@@ -305,11 +314,16 @@ def export_gsheet(request, id):
     except Exception as e:
         print(e)
     #export_to_google_spreadsheet(gsheet_endpoint)
-    storage = Storage(GoogleCredentialsModel, 'id', request.user, 'credential')
-    credential = storage.get()
+
+    if export_to_google_spreadsheet(credential_json, silo_id, gsheet_endpoint.link) == True:
+        #link = "Your exported data is available at <a href=" + google_spreadsheet['alternateLink'] + " target='_blank'>Google Spreadsheet</a>"
+        messages.success(request, "Uploaded successfully")
+    else:
+        messages.error(request, 'Something went wrong; try again.')
+    
     #link = "Your exported data is available at <a href=" + google_spreadsheet['alternateLink'] + " target='_blank'>Google Spreadsheet</a>"
-    link = " Your exported blabal"
-    messages.success(request, "Your exported data is available at: %s" % gsheet_endpoint.link)
+    #link = " Your exported blabal"
+    #messages.success(request, "Your exported data is available at: %s" % gsheet_endpoint.link)
 
     data = {}
     data["link"] = gsheet_endpoint.link
@@ -325,39 +339,37 @@ def export_new_gsheet(request, id):
         authorize_url = FLOW.step1_get_authorize_url()
         #print("STEP1 authorize_url: %s", authorize_url)
         return HttpResponseRedirect(authorize_url)
+        
+    credential_json = json.loads(credential.to_json())
+    silo_id = id
+    silo_name = Silo.objects.get(pk=silo_id).name
+    
+    http = httplib2.Http()
+    
+    # Authorize the http object to be used with "Drive API" service object
+    http = credential.authorize(http)
+    
+    # Build the Google Drive API service object
+    service = build("drive", "v2", http=http)
+    
+    # The body of "insert" API call for creating a blank Google Spreadsheet
+    body = {
+        'title': silo_name,
+        'description': "Exported Data from Mercy Corps TolaData",
+        'mimeType': "application/vnd.google-apps.spreadsheet"
+    }
+    
+    # Create a new blank Google Spreadsheet file in user's Google Drive
+    google_spreadsheet = service.files().insert(body=body).execute()
+    
+    # Get the spreadsheet_key of the newly created Spreadsheet
+    spreadsheet_key = google_spreadsheet['id']
+    print(spreadsheet_key)
+    if export_to_google_spreadsheet(credential_json, silo_id, spreadsheet_key) == True:
+        link = "Your exported data is available at <a href=" + google_spreadsheet['alternateLink'] + " target='_blank'>Google Spreadsheet</a>"
+        messages.success(request, link)
     else:
-        # 
-        credential_json = json.loads(credential.to_json())
-        
-        silo_id = id
-        silo_name = Silo.objects.get(pk=silo_id).name
-        
-        http = httplib2.Http()
-        
-        # Authorize the http object to be used with "Drive API" service object
-        http = credential.authorize(http)
-        
-        # Build the Google Drive API service object
-        service = build("drive", "v2", http=http)
-        
-        # The body of "insert" API call for creating a blank Google Spreadsheet
-        body = {
-            'title': silo_name,
-            'description': "Exported Data from Mercy Corps TolaData",
-            'mimeType': "application/vnd.google-apps.spreadsheet"
-        }
-        
-        # Create a new blank Google Spreadsheet file in user's Google Drive
-        google_spreadsheet = service.files().insert(body=body).execute()
-        
-        # Get the spreadsheet_key of the newly created Spreadsheet
-        spreadsheet_key = google_spreadsheet['id']
-        
-        if export_to_google_spreadsheet(credential_json, silo_id, spreadsheet_key) == True:
-            link = "Your exported data is available at <a href=" + google_spreadsheet['alternateLink'] + " target='_blank'>Google Spreadsheet</a>"
-            messages.success(request, link)
-        else:
-            messages.error(request, 'Something went wrong; try again.')
+        messages.error(request, 'Something went wrong; try again.')
     return HttpResponseRedirect("/")
 
 @login_required
