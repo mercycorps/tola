@@ -106,8 +106,7 @@ STATICFILES_FINDERS = (
 
 ########## SECRET CONFIGURATION
 # See: https://docs.djangoproject.com/en/dev/ref/settings/#secret-key
-# Note: This key should only be used for development and testing.
-SECRET_KEY = r"!0^+)=t*ly6ycprf9@kfw$6fsjd0xoh#pa*2erx1m*lp5k9ko7"
+
 ########## END SECRET CONFIGURATION
 
 
@@ -163,6 +162,7 @@ MIDDLEWARE_CLASSES = (
     'django.contrib.auth.middleware.RemoteUserMiddleware',
     'django.contrib.messages.middleware.MessageMiddleware',
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
+    'tola.middleware.AjaxMessaging.AjaxMessaging',
 )
 ########## END MIDDLEWARE CONFIGURATION
 
@@ -220,6 +220,14 @@ LOCAL_APPS = (
 INSTALLED_APPS = DJANGO_APPS + THIRD_PARTY_APPS + LOCAL_APPS
 ########## END APP CONFIGURATION
 
+####### AUTHENTICATION BAKEND CONFIG ##################
+# https://github.com/django/django/blob/master/django/contrib/auth/backends.py
+AUTHENTICATION_BACKENDS = (
+    'djangocosign.cosign.CosignBackend',
+    'djangocosign.ldapauth.RemoteUserBackend',
+    'django.contrib.auth.backends.ModelBackend',
+)
+############ END OF AUTHENTICATION BACKEND ##############
 
 ########## LOGGING CONFIGURATION
 # See: https://docs.djangoproject.com/en/dev/ref/settings/#logging

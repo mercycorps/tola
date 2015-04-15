@@ -94,24 +94,14 @@
                 url = doc[google.picker.Document.URL];
             }
             if (url == 'nothing') {
-                alert("You did not select a file.");
+                //console("You did not select a file.");
                 return
             }
-            /*
-            var posting = $.post( '/export_gsheet/' + silo_id + "/", { link: url } );
-            posting.done(function( data ) {
-                var content = $( data ).find( "#content" );
-                console.log( "DONE: " + data );
-            });
-            */
-            $(location).attr('href', '/export_gsheet/' + silo_id + "/?link=" + url);
-            /*
-            $.get('/export_gsheet/' + silo_id + "/", { link: url } )
-                .done(function(data) {
-                    console.log(data);
-                });
-            */
+            //$(location).attr('href', '/export_gsheet/' + silo_id + "/?link=" + url);
+            $.get('/export_gsheet/' + silo_id + "/", { link: url } );
+
         }
+        
       
     </script>
     <script type="text/javascript" src="https://apis.google.com/js/api.js?onload=onApiLoad"></script>
