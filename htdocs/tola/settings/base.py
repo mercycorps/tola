@@ -220,6 +220,14 @@ LOCAL_APPS = (
 INSTALLED_APPS = DJANGO_APPS + THIRD_PARTY_APPS + LOCAL_APPS
 ########## END APP CONFIGURATION
 
+####### AUTHENTICATION BAKEND CONFIG ##################
+# https://github.com/django/django/blob/master/django/contrib/auth/backends.py
+AUTHENTICATION_BACKENDS = (
+    'djangocosign.cosign.CosignBackend',
+    'djangocosign.ldapauth.RemoteUserBackend',
+    'django.contrib.auth.backends.ModelBackend',
+)
+############ END OF AUTHENTICATION BACKEND ##############
 
 ########## LOGGING CONFIGURATION
 # See: https://docs.djangoproject.com/en/dev/ref/settings/#logging
