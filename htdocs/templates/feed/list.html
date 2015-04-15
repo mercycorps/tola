@@ -9,7 +9,7 @@
             <li class="list-group-item">JSON URL: <a href="/api/custom/{{ item.id }}" target="_new">{{ item.name }}</a></li>
             <li class="list-group-item"><a href="/export/{{ item.id }}" class="btn btn-sm btn-info">Export to Excel/CSV</a></li>
             <li class="list-group-item">
-                <a href="/export_new_gsheet/{{ item.id }}" class="btn btn-sm btn-info">Export to New Google Sheets</a>
+                <a href="/export_new_gsheet/{{ item.id }}/" class="btn btn-sm btn-info">Export to New Google Sheets</a>
             </li>
             <li class="list-group-item">
                 <a href="#" class="btn btn-sm btn-info" onclick="onAuthApiLoad({{ item.id }});">Export to Existing Google Sheets</a>

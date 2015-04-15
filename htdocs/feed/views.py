@@ -219,79 +219,82 @@ CLIENT_SECRETS = os.path.join(os.path.dirname(__file__), 'client_secrets.json')
 FLOW = flow_from_clientsecrets(
     CLIENT_SECRETS,
     scope='https://www.googleapis.com/auth/drive https://spreadsheets.google.com/feeds',
-    redirect_uri='http://localhost:8000/oauth2callback/')
+    redirect_uri=settings.GOOGLE_REDIRECT_URL)
+    #redirect_uri='http://localhost:8000/oauth2callback/')
 
 
-def export_to_google_spreadsheet(spreadsheet_key):
-    # Create OAuth2Token for authorizing the SpreadsheetClient
-    token = gdata.gauth.OAuth2Token(
-        client_id = credential_json['client_id'], 
-        client_secret = credential_json['client_secret'], 
-        scope = 'https://spreadsheets.google.com/feeds',
-        user_agent = "TOLA",
-        access_token = credential_json['access_token'],
-        refresh_token = credential_json['refresh_token'])
+def export_to_google_spreadsheet(credential_json, silo_id, spreadsheet_key):
 
-    # Instantiate the SpreadsheetClient object
-    sp_client = gdata.spreadsheets.client.SpreadsheetsClient(source="TOLA")
+    try:
+        # Create OAuth2Token for authorizing the SpreadsheetClient
+        token = gdata.gauth.OAuth2Token(
+            client_id = credential_json['client_id'], 
+            client_secret = credential_json['client_secret'], 
+            scope = 'https://spreadsheets.google.com/feeds',
+            user_agent = "TOLA",
+            access_token = credential_json['access_token'],
+            refresh_token = credential_json['refresh_token'])
+
+        # Instantiate the SpreadsheetClient object
+        sp_client = gdata.spreadsheets.client.SpreadsheetsClient(source="TOLA")
     
-    # authorize the SpreadsheetClient object
-    sp_client = token.authorize(sp_client)
+        # authorize the SpreadsheetClient object
+        sp_client = token.authorize(sp_client)
     
-    # Create a WorksheetQuery object to allow for filtering for worksheets by the title
-    worksheet_query = gdata.spreadsheets.client.WorksheetQuery(title="Sheet1", title_exact=True)
+        # Create a WorksheetQuery object to allow for filtering for worksheets by the title
+        worksheet_query = gdata.spreadsheets.client.WorksheetQuery(title="Sheet1", title_exact=True)
     
-    # Get a feed of all worksheets in the specified spreadsheet that matches the worksheet_query
-    worksheets_feed = sp_client.get_worksheets(spreadsheet_key, query=worksheet_query)
+        # Get a feed of all worksheets in the specified spreadsheet that matches the worksheet_query
+        worksheets_feed = sp_client.get_worksheets(spreadsheet_key, query=worksheet_query)
     
-    # Retrieve the worksheet_key from the first match in the worksheets_feed object
-    worksheet_key = worksheets_feed.entry[0].id.text.rsplit("/", 1)[1]
+        # Retrieve the worksheet_key from the first match in the worksheets_feed object
+        worksheet_key = worksheets_feed.entry[0].id.text.rsplit("/", 1)[1]
     
-    silo_data = ValueStore.objects.filter(field__silo__id=silo_id).order_by("row_number")
-    num_cols = len(silo_data)
+        silo_data = ValueStore.objects.filter(field__silo__id=silo_id).order_by("row_number")
+        num_cols = len(silo_data)
     
-    # By default a blank Google Spreadsheet has 26 columns but if our data has more column
-    # then add more columns to Google Spreadsheet otherwise there would be a 500 Error!
-    if num_cols and num_cols > 26:
-        worksheet = worksheets_feed.entry[0]
-        worksheet.col_count.text = str(num_cols)
+        # By default a blank Google Spreadsheet has 26 columns but if our data has more column
+        # then add more columns to Google Spreadsheet otherwise there would be a 500 Error!
+        if num_cols and num_cols > 26:
+            worksheet = worksheets_feed.entry[0]
+            worksheet.col_count.text = str(num_cols)
         
-        # Send the worksheet update call to Google Server
-        sp_client.update(worksheet, force=True)
+            # Send the worksheet update call to Google Server
+            sp_client.update(worksheet, force=True)
     
-    # Create a CellBatchUpdate object so that all cells update is sent as one http request
-    batch = gdata.spreadsheets.data.BuildBatchCellsUpdate(spreadsheet_key, worksheet_key)
+        # Create a CellBatchUpdate object so that all cells update is sent as one http request
+        batch = gdata.spreadsheets.data.BuildBatchCellsUpdate(spreadsheet_key, worksheet_key)
     
-    # Get all of the column names for the current silo_id
-    column_names = DataField.objects.filter(silo_id=1).values_list('name', flat=True)
+        # Get all of the column names for the current silo_id
+        column_names = DataField.objects.filter(silo_id=1).values_list('name', flat=True)
     
-    # Add column names to the batch object
-    for i, col_name in enumerate(column_names):
-        row_index = 1
-        col_index = i + 1
-        batch.add_set_cell(row_index, col_index, col_name)
+        # Add column names to the batch object
+        for i, col_name in enumerate(column_names):
+            row_index = 1
+            col_index = i + 1
+            batch.add_set_cell(row_index, col_index, col_name)
     
-    # Populate the CellBatchUpdate object with data
-    for row in silo_data:
-        row_index = row.row_number + 1
-        col_index = row.field.id
-        value = row.char_store
-        batch.add_set_cell(row_index, col_index, value)
+        # Populate the CellBatchUpdate object with data
+        for row in silo_data:
+            row_index = row.row_number + 1
+            col_index = row.field.id
+            value = row.char_store
+            batch.add_set_cell(row_index, col_index, value)
     
-    # Finally send the CellBatchUpdate object to Google
-    sp_client.batch(batch, force=True)
+        # Finally send the CellBatchUpdate object to Google
+        sp_client.batch(batch, force=True)
+    except Exception as e:
+        return False
+    return True
 
 @login_required
 def export_gsheet(request, id):
     gsheet_endpoint = None
     
-    if request.method == 'POST':
-        print("post method received")
     try:
         gsheet_endpoint = RemoteEndPoint.objects.get(silo__id=id, silo__owner = request.user, name='Google')
     except RemoteEndPoint.MultipleObjectsReturned:
         print("multiple records exist and that should NOT be the case")
-        pass
     except RemoteEndPoint.DoesNotExist:
         print("Remote End point does not exist; creating one...")
         url = request.GET.get('link', None)
@@ -301,7 +304,6 @@ def export_gsheet(request, id):
         gsheet_endpoint.save()
     except Exception as e:
         print(e)
-        pass
     #export_to_google_spreadsheet(gsheet_endpoint)
     storage = Storage(GoogleCredentialsModel, 'id', request.user, 'credential')
     credential = storage.get()
@@ -321,7 +323,7 @@ def export_new_gsheet(request, id):
     if credential is None or credential.invalid == True:
         FLOW.params['state'] = xsrfutil.generate_token(settings.SECRET_KEY, request.user)
         authorize_url = FLOW.step1_get_authorize_url()
-        print("STEP1 authorize_url: %s", authorize_url)
+        #print("STEP1 authorize_url: %s", authorize_url)
         return HttpResponseRedirect(authorize_url)
     else:
         # 
@@ -351,10 +353,11 @@ def export_new_gsheet(request, id):
         # Get the spreadsheet_key of the newly created Spreadsheet
         spreadsheet_key = google_spreadsheet['id']
         
-        export_to_google_spreadsheet(spreadsheet_key)
-
-        link = "Your exported data is available at <a href=" + google_spreadsheet['alternateLink'] + " target='_blank'>Google Spreadsheet</a>"
-        messages.success(request, link)
+        if export_to_google_spreadsheet(credential_json, silo_id, spreadsheet_key) == True:
+            link = "Your exported data is available at <a href=" + google_spreadsheet['alternateLink'] + " target='_blank'>Google Spreadsheet</a>"
+            messages.success(request, link)
+        else:
+            messages.error(request, 'Something went wrong; try again.')
     return HttpResponseRedirect("/")
 
 @login_required

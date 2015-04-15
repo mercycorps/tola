@@ -1,6 +1,7 @@
 """Common settings and globals."""
 
 from os.path import abspath, basename, dirname, join, normpath
+from django.contrib.messages import constants as message
 from sys import path
 
 ########## PATH CONFIGURATION
@@ -314,3 +315,10 @@ WSGI_APPLICATION = '%s.wsgi.application' % SITE_NAME
 ########## END WSGI CONFIGURATION
 
 CRISPY_TEMPLATE_PACK = 'bootstrap3'
+
+### This is to map Django message levels to Boostrap3 alert levels ########
+MESSAGE_TAGS = {message.DEBUG: 'debug',
+                message.INFO: 'info',
+                message.SUCCESS: 'success',
+                message.WARNING: 'warning',
+                message.ERROR: 'danger',}
