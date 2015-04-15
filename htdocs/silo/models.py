@@ -59,7 +59,7 @@ class DataFieldAdmin(admin.ModelAdmin):
 
 class ValueStore(models.Model):
     field = models.ForeignKey(DataField)
-    char_store = models.CharField(null=True, blank=True,max_length=1000)
+    char_store = models.CharField(null=True, blank=True,max_length=3000)
     row_number = models.IntegerField(max_length=10, null=True)
     create_date = models.DateTimeField(null=True, blank=True)
     edit_date = models.DateTimeField(null=True, blank=True)
