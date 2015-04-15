@@ -163,6 +163,7 @@ MIDDLEWARE_CLASSES = (
     'django.contrib.auth.middleware.RemoteUserMiddleware',
     'django.contrib.messages.middleware.MessageMiddleware',
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
+    'tola.middleware.AjaxMessaging.AjaxMessaging',
 )
 ########## END MIDDLEWARE CONFIGURATION
 
