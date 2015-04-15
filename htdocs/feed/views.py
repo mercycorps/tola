@@ -15,7 +15,7 @@ from rest_framework import renderers,viewsets
 
 import operator
 import csv
-
+import json
 
 from django.core.urlresolvers import reverse
 from django.http import HttpResponseForbidden,\
@@ -212,6 +212,9 @@ import os, logging, httplib2, json, datetime
 
 import gdata.spreadsheets.client
 
+
+from django.http import JsonResponse
+
 CLIENT_SECRETS = os.path.join(os.path.dirname(__file__), 'client_secrets.json')
 FLOW = flow_from_clientsecrets(
     CLIENT_SECRETS,
@@ -280,25 +283,33 @@ def export_to_google_spreadsheet(spreadsheet_key):
 
 @login_required
 def export_gsheet(request, id):
+    gsheet_endpoint = None
+    
     if request.method == 'POST':
         print("post method received")
     try:
         gsheet_endpoint = RemoteEndPoint.objects.get(silo__id=id, silo__name='Google')
-        export_to_google_spreadsheet(gsheet_endpoint)
     except RemoteEndPoint.DoesNotExist:
-        print("Remote End point does not exist")
-        pass
+        print("Remote End point does not exist; creating one...")
+        url = request.GET.get('link', None)
+        if url == None:
+            print ("No link provided for the remote end point")
+        gsheet_endpoint = RemoteEndPoint(name="Google", silo_id=id, link=url)
+        gsheet_endpoint.save()
     except Exception as e:
         print(e)
         pass
-    print(id)
-    print(request.GET.get('link',''))
+    #export_to_google_spreadsheet(gsheet_endpoint)
     storage = Storage(GoogleCredentialsModel, 'id', request.user, 'credential')
     credential = storage.get()
     #link = "Your exported data is available at <a href=" + google_spreadsheet['alternateLink'] + " target='_blank'>Google Spreadsheet</a>"
     link = " Your exported blabal"
-    messages.success(request, link)
-    return HttpResponseRedirect("/")
+    messages.success(request, "Your exported data is available at: %s" % gsheet_endpoint.link)
+
+    data = {}
+    data["link"] = gsheet_endpoint.link
+
+    return JsonResponse({'foo': 'bar'})
 
 @login_required
 def export_new_gsheet(request, id):
