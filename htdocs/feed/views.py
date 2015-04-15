@@ -288,7 +288,7 @@ def export_gsheet(request, id):
     if request.method == 'POST':
         print("post method received")
     try:
-        gsheet_endpoint = RemoteEndPoint.objects.get(silo__id=id, name='Google')
+        gsheet_endpoint = RemoteEndPoint.objects.get(silo__id=id, silo__owner = request.user, name='Google')
     except RemoteEndPoint.MultipleObjectsReturned:
         print("multiple records exist and that should NOT be the case")
         pass
