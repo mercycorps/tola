@@ -46,7 +46,7 @@ body > .container {
     padding: 15px;
     position:relative;
     bottom:0;
-	left:0;
+    left:0;
     height: 60px;
     margin-top: 40px;
 }
@@ -71,4 +71,23 @@ body > .container {
     text-align: center;
     background-color: lightgrey;
     border-radius: 5px
+}
+
+/* Start by setting display:none to make this hidden.
+   Then we position it in relation to the viewport window
+   with position:fixed. Width, height, top and left speak
+   speak for themselves. Background we set to 80% white with
+   the animation centered, and no-repeating */
+#loading {
+    display:    none;
+    position:   fixed;
+    z-index:    1100;
+    top:        0;
+    left:       0;
+    height:     100%;
+    width:      100%;
+    background: rgba( 255, 255, 255, .8 )
+                url('../img/ajax-loader.gif')
+                50% 50%
+                no-repeat;
 }
