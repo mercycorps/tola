@@ -26,4 +26,5 @@ class AjaxMessaging(object):
 
                 response.content = json.dumps(content)
         #print("Ajax middleware returning response")
+        #print(response)
         return response
