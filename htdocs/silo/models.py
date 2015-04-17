@@ -26,6 +26,7 @@ class RemoteEndPoint(models.Model):
     name = models.CharField(max_length=60, null=False, blank=False)
     silo = models.ForeignKey(Silo, related_name = "remote_end_points")
     link = models.URLField(null=False, blank=False)
+    resource_id = models.CharField(max_length=200, null=True, blank=True)
     token = models.CharField(max_length=254, null=True, blank=True)
     username = models.CharField(max_length=20, null=True, blank=True)
     create_date = models.DateTimeField(auto_now=True, auto_now_add=False)

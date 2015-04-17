@@ -41,15 +41,18 @@ $('input[type="file"]').each(function() {
  * Adds Django's messages to the template
  */
 function addMessage(text, extra_tags) {
-    var message = $('<div class="alert alert-' + extra_tags + '">' + text + '</div>').hide();
+    var message = $('<div class="alert alert-' + extra_tags + '">' +
+        '<a href="#" class="close" data-dismiss="alert">&times;</a>' +
+        text + '</div>').hide();
     $("#alerts").append(message);
     message.fadeIn(50);
-
+/*
     setTimeout(function() {
         message.fadeOut(500, function() {
             message.remove();
         });
     }, 10000);
+*/
 }
 
 $(document).ready(function() {
@@ -58,19 +61,30 @@ $(document).ready(function() {
      */
     
     // A global ajaxComplete method that shows you any messages that are set in Django's view
-    $( document ).ajaxComplete(function(e, xhr, settings) {
-        var contentType = xhr.getResponseHeader("Content-Type");
+    $( document )
+        .ajaxComplete(function(e, xhr, settings) {
+            var contentType = xhr.getResponseHeader("Content-Type");
 
-        if (contentType == "application/javascript" || contentType == "application/json") {
-            var json = $.parseJSON(xhr.responseText);
+            if (contentType == "application/javascript" || contentType == "application/json") {
+                var json = $.parseJSON(xhr.responseText);
 
-            $.each(json.django_messages, function (i, item) {
-                addMessage(item.message, item.extra_tags);
-            });
-        }
-    }).ajaxError(function(e, xhr, settings, exception) {
-        addMessage("There was an error processing your request, please try again.", "error");
-    });
+                $.each(json.django_messages, function (i, item) {
+                    addMessage(item.message, item.extra_tags);
+                });
+            }
+        })
+        .ajaxError(function(e, xhr, settings, thrownError) {
+            addMessage("There was an error processing your request, please try again.", "error");
+        });
+
+    var $loading = $('#loading');
+    $( document )
+        .ajaxStart( function() {
+            $loading.show();
+        })
+        .ajaxStop( function() {
+            $loading.hide();
+        });
 
     $("select#id_province").change(function() {
         var selected_province = $(this).val();

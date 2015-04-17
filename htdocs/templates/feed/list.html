@@ -102,18 +102,20 @@
         // A simple callback implementation.
         function pickerCallback(data) {
             //console.log(JSON.stringify(data));
-            var url = 'nothing';
+            var url = null;
+            var id = null;
             if (data[google.picker.Response.ACTION] == google.picker.Action.PICKED) {
                 var doc = data[google.picker.Response.DOCUMENTS][0];
-                url = doc[google.picker.Document.ID];
+                url = doc[google.picker.Document.URL];
+                id = doc[google.picker.Document.ID];
             }
-            if (url == 'nothing') {
-                //console("You did not select a file.");
+            if (url == null | id == null) {
                 return
             }
+            
             //$(location).attr('href', '/export_gsheet/' + silo_id + "/?link=" + url);
-            $.get('/export_gsheet/' + silo_id + "/", { link: url } );
-
+            var redirect_url = null;
+            $.get('/export_gsheet/' + silo_id + "/", { "link": url , "resource_id": id} );
         }
         
       
