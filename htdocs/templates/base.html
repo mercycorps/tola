@@ -60,7 +60,7 @@
                     <li class="{{ home_tab }}"><a href="{% url 'index' %}"><span class="glyphicon glyphicon-home"></span> Home</a></li>
 
                     <li class="dropdown">
-                        <a href="#" class="dropdown-toggle" data-toggle="dropdown">Load Data<b class="caret"></b></a>
+                        <a href="#" class="dropdown-toggle" data-toggle="dropdown">Import Data<b class="caret"></b></a>
                         <ul class="dropdown-menu">
                             <li><a href="/read/home"><span class="glyphicon glyphicon-th-list"></span> Data Source</a></li>
                             <li><a href="/readtoken/home"><span class="glyphicon glyphicon-th-list"></span> Token Data Source</a></li>
@@ -68,9 +68,15 @@
                     </li>
 
                      <li class="dropdown">
-                        <a href="#" class="dropdown-toggle" data-toggle="dropdown">Share Data<b class="caret"></b></a>
+                        <a href="#" class="dropdown-toggle" data-toggle="dropdown">Export Data<b class="caret"></b></a>
                         <ul class="dropdown-menu">
                             <li><a href="/feed"><span class="glyphicon glyphicon-upload"></span> Share Data</a></li>
+                        </ul>
+                    </li>
+
+                     <li class="dropdown">
+                        <a href="#" class="dropdown-toggle" data-toggle="dropdown">Edit Data<b class="caret"></b></a>
+                        <ul class="dropdown-menu">
                             <li><a href="/display"><span class="glyphicon glyphicon-edit"></span> Edit Data</a></li>
                         </ul>
                     </li>

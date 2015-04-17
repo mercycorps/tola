@@ -2,20 +2,34 @@
 {% block page_title %}Shareable Data{% endblock %}
 
 {% block content %}
-    {% for item in getSilos %}
-        <a href="#" class="list-group-item active"><b>{{ item.name }}</b></a>
-        <ul class="list-group">
-            <li class="list-group-item">Default REST API: <a href="/api/feed/{{ item.id }}" target="_new">{{ item.name }}</a></li>
-            <li class="list-group-item">JSON URL: <a href="/api/custom/{{ item.id }}" target="_new">{{ item.name }}</a></li>
-            <li class="list-group-item"><a href="/export/{{ item.id }}" class="btn btn-sm btn-info">Export to Excel/CSV</a></li>
-            <li class="list-group-item">
-                <a href="/export_new_gsheet/{{ item.id }}/" class="btn btn-sm btn-info">Export to New Google Sheets</a>
-            </li>
-            <li class="list-group-item">
-                <a href="#" class="btn btn-sm btn-info" onclick="onAuthApiLoad({{ item.id }});">Export to Existing Google Sheets</a>
-            </li>
-        </ul>
-    {% endfor %}
+
+    <p>Share or export your data.  Each data silo includes a JSON machine readable URL you can share below, or can be exported to google sheets or excel (csv).</p>
+    <div class='panel panel-default'>
+      <!-- Default panel contents -->
+      <div class='panel-heading'>Data Silos</div>
+      {% if getSilos %}
+          <!-- Table -->
+          <table class="table">
+            <tr>
+            <th>Rest API</th>
+            <th>JSON Feed</th>
+            <th>Excel</th>
+            <th align="center">New Google Sheet</th>
+            <th align="center">Existing Google Sheet</th>
+            </tr>
+            {% for item in getSilos %}
+            <tr>
+                <td><a href="/api/feed/{{ item.id }}" target="_new">{{ item.name }}</a></td>
+                <td><a href="/api/custom/{{ item.id }}" target="_new">{{ item.name }}</a></td>
+                <td><a href="/export/{{ item.id }}" class="btn btn-sm btn-info"><span class="glyphicon glyphicon-file"></span></a></td>
+                <td align="center"><a href="/export_new_gsheet/{{ item.id }}/" class="btn btn-sm btn-info"><span class="glyphicon glyphicon-cloud-upload"></span></a></td>
+                <td align="center"><a href="#" class="btn btn-sm btn-info" onclick="onAuthApiLoad({{ item.id }});"><span class="glyphicon glyphicon-cloud"></span></a></td>
+            </tr>
+            {% endfor %}
+          </table>
+      {% endif %}
+        </div>
+    </div>
 {% endblock content %}
 
 {% block extra_js_in_body %}

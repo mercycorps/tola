@@ -1,25 +1,43 @@
 {% extends "base.html" %} 
-{% block page_title %}View Siloed Data{% endblock %} 
+{% block page_title %}Your Data Silos{% endblock %}
 
 {% block content %}
-	<h3>View a Silo</h3>
-	<p>Select a Silo of Data to view the sources</p>
-	<ul class="list-group">
-			{% for item in get_silos %}
-				<li class="list-group-item active"><h4>Silo: <a href="/silo_detail/{{ item.id }}">{{ item.name }}</h4></a>
-						<ul class="list-group">
-						<li class="list-group-item">Source: <a href="/show_read/{{ item.source.id }}">{{ item.source }}</a></li>
-						<li class="list-group-item">Description: {{ item.source.description }}</li>
-						<li class="list-group-item">
-                                <div class="btn-group">
-								<a href="/silo_edit/{{ item.id }}" class="btn btn-sm btn-success">Edit Silo</a>
-								<a href="/merge/{{ item.id }}" class="btn btn-sm btn-info">Merge Silo</a>
-								<a href="/silo_delete/{{ item.id }}" class="btn btn-sm btn-warning">Delete Silo</a>
-                                </div>
-						</li class="list-group-item">
-						</ul>
-				</li>
-			{% endfor %}
-	</ul>
-
+	<p>Edit the detail information about silo (data store) or go directly to your silo to edit the data.</p>
+    <div class='panel panel-default'>
+      <!-- Default panel contents -->
+      <div class='panel-heading'>Data Silos</div>
+      {% if get_silos %}
+          <!-- Table -->
+          <table class="table">
+            <tr>
+            <th>Silo</th>
+            <th>Source</th>
+            <th>Description</th>
+            <th>Edit Silo</th>
+            <th>Edit Silo Data</th>
+            </tr>
+            {% for item in get_silos %}
+            <tr>
+                <td><h4><a href="/silo_detail/{{ item.id }}">{{ item.name }}</h4></a></td>
+                <td><h4><a href="/show_read/{{ item.source.id }}">{{ item.source }}</h4></a></td>
+                <td>{{ item.source.description }}</td>
+                <td>
+                    <div class="btn-group">
+                        <a href="/silo_edit/{{ item.id }}" class="btn btn-sm btn-success">Edit Silo</a>
+                        <a href="/merge/{{ item.id }}" class="btn btn-sm btn-info">Merge Silo</a>
+                        <a href="/silo_delete/{{ item.id }}" class="btn btn-sm btn-warning">Delete Silo</a>
+                     </div>
+                </td>
+                <td>
+                    <div class="btn-group">
+                        <a href="/silo_detail/{{ item.id }}" class="btn btn-sm btn-success">Edit Silo Data</a>
+                    </div>
+                </td>
+            </tr>
+            {% endfor %}
+          </table>
+      {% endif %}
+        </div>
+    </div>
 {% endblock content %}
+
