@@ -23,7 +23,8 @@
                 <td><a href="/api/custom/{{ item.id }}" target="_new">{{ item.name }}</a></td>
                 <td><a href="/export/{{ item.id }}" class="btn btn-sm btn-info"><span class="glyphicon glyphicon-file"></span></a></td>
                 <td align="center"><a href="/export_new_gsheet/{{ item.id }}/" class="btn btn-sm btn-info"><span class="glyphicon glyphicon-cloud-upload"></span></a></td>
-                <td align="center"><a href="#" class="btn btn-sm btn-info" onclick="onAuthApiLoad({{ item.id }});"><span class="glyphicon glyphicon-cloud"></span></a></td>
+                <td align="center"><a href="#" class="btn btn-sm btn-info" onclick="onAuthApiLoad({{ item.id }}, {{ item.remote_end_points.all.0.id }});">
+                    <div id="remote_end_point" style="display: none;"><div id="link">{{ item.remote_end_points.all.0.link }}</div><div id="rid">{{ item.remote_end_points.all.0.resource_id }}</div></div><span class="glyphicon glyphicon-cloud"></span></a></td>
             </tr>
             {% endfor %}
           </table>
@@ -57,7 +58,16 @@
         }
         
         // After Google's auth library is loaded, this function is called
-        function onAuthApiLoad(id) {
+        function onAuthApiLoad(id, gid) {
+        
+            if (gid) {
+                var divs = $("#remote_end_point").children("div");
+                var url = divs[0].innerHTML;
+                var rid = divs[1].innerHTML;
+                export_to_gsheet(id, url,  rid);
+                return;
+            }
+        
             silo_id = id
             window.gapi.auth.authorize( {
                 'client_id': clientId,
@@ -99,6 +109,10 @@
             }
         }
         
+        function export_to_gsheet(silo_id, url, resource_id) {
+            $.get('/export_gsheet/' + silo_id + "/", { "link": url , "resource_id": resource_id} );
+        }
+        
         // A simple callback implementation.
         function pickerCallback(data) {
             //console.log(JSON.stringify(data));
@@ -114,11 +128,9 @@
             }
             
             //$(location).attr('href', '/export_gsheet/' + silo_id + "/?link=" + url);
-            var redirect_url = null;
             $.get('/export_gsheet/' + silo_id + "/", { "link": url , "resource_id": id} );
         }
         
-      
     </script>
     <script type="text/javascript" src="https://apis.google.com/js/api.js?onload=onApiLoad"></script>
 {% endblock extra_js_in_body %}

@@ -162,12 +162,12 @@ def export_silo(request, id):
     #loop over each row of the silo
     for row in getSiloRows:
         getSiloColumns = ValueStore.objects.all().filter(field__silo__id=id, row_number=str(row['row_number'])).values_list('field__name', flat=True).distinct()
-        print "row"
-        print str(row['row_number'])
+        #print "row"
+        #print str(row['row_number'])
         #get a column value for each column in the row
         for x in column_list:
             if x in getSiloColumns:
-                print x
+                #print x
                 getSiloValues = ValueStore.objects.get(field__silo__id=id, row_number=str(row['row_number']), field__name=x)
                 value_list.append(str(getSiloValues.char_store.encode(errors="ignore")))
             else:
@@ -242,18 +242,19 @@ def export_to_google_spreadsheet(credential_json, silo_id, spreadsheet_key):
         # authorize the SpreadsheetClient object
         sp_client = token.authorize(sp_client)
     
+        #print(sp_client)
         # Create a WorksheetQuery object to allow for filtering for worksheets by the title
         worksheet_query = gdata.spreadsheets.client.WorksheetQuery(title="Sheet1", title_exact=True)
-    
+        #print("OK")
         # Get a feed of all worksheets in the specified spreadsheet that matches the worksheet_query
         worksheets_feed = sp_client.get_worksheets(spreadsheet_key, query=worksheet_query)
-    
+        #print("worksheets_feed: %s" % worksheets_feed)
         # Retrieve the worksheet_key from the first match in the worksheets_feed object
         worksheet_key = worksheets_feed.entry[0].id.text.rsplit("/", 1)[1]
-    
+        #print("worksheet_key: %s" % worksheet_key)
         silo_data = ValueStore.objects.filter(field__silo__id=silo_id).order_by("row_number")
         num_cols = len(silo_data)
-    
+        #print("num_cols: %s" % num_cols)
         # By default a blank Google Spreadsheet has 26 columns but if our data has more column
         # then add more columns to Google Spreadsheet otherwise there would be a 500 Error!
         if num_cols and num_cols > 26:
@@ -285,6 +286,7 @@ def export_to_google_spreadsheet(credential_json, silo_id, spreadsheet_key):
         # Finally send the CellBatchUpdate object to Google
         sp_client.batch(batch, force=True)
     except Exception as e:
+        print(e)
         return False
     return True
 
@@ -320,7 +322,7 @@ def export_gsheet(request, id):
     except Exception as e:
         print(e)
 
-    print("about to export to gsheet")
+    #print("about to export to gsheet: %s" % gsheet_endpoint.resource_id)
     if export_to_google_spreadsheet(credential_json, id, gsheet_endpoint.resource_id) == True:
         link = "Your exported data is available at <a href=" + gsheet_endpoint.link + " target='_blank'>Google Spreadsheet</a>"
         messages.success(request, link)
@@ -336,7 +338,7 @@ def export_new_gsheet(request, id):
     if credential is None or credential.invalid == True:
         FLOW.params['state'] = xsrfutil.generate_token(settings.SECRET_KEY, request.user)
         authorize_url = FLOW.step1_get_authorize_url()
-        print("STEP1 authorize_url: %s", authorize_url)
+        #print("STEP1 authorize_url: %s", authorize_url)
         return HttpResponseRedirect(authorize_url)
         
     credential_json = json.loads(credential.to_json())
@@ -363,7 +365,7 @@ def export_new_gsheet(request, id):
     
     # Get the spreadsheet_key of the newly created Spreadsheet
     spreadsheet_key = google_spreadsheet['id']
-    print(spreadsheet_key)
+    #print(spreadsheet_key)
     if export_to_google_spreadsheet(credential_json, silo_id, spreadsheet_key) == True:
         link = "Your exported data is available at <a href=" + google_spreadsheet['alternateLink'] + " target='_blank'>Google Spreadsheet</a>"
         messages.success(request, link)
