@@ -111,7 +111,8 @@ def listFeeds(request):
     Get all Silos and Link to REST API pages
     """
     #get all of the silos
-    getSilos = Silo.objects.all()
+    #getSilos = Silo.objects.all()
+    getSilos = Silo.objects.all().prefetch_related('remote_end_points')
 
     return render(request, 'feed/list.html',{'getSilos': getSilos})
 
@@ -287,9 +288,9 @@ def export_to_google_spreadsheet(credential_json, silo_id, spreadsheet_key):
         return False
     return True
 
+
 @login_required
 def export_gsheet(request, id):
-    
     gsheet_endpoint = None
     storage = Storage(GoogleCredentialsModel, 'id', request.user, 'credential')
     credential = storage.get()
@@ -301,7 +302,7 @@ def export_gsheet(request, id):
         return JsonResponse({"redirect_url": authorize_url})
     
     credential_json = json.loads(credential.to_json())
-    print("Credential_json: %s" % credential_json)
+
     try:
         gsheet_endpoint = RemoteEndPoint.objects.get(silo__id=id, silo__owner = request.user, name='Google')
     except RemoteEndPoint.MultipleObjectsReturned:
