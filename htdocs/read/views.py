@@ -108,7 +108,7 @@ def showRead(request, id):
             # save data to read
             form.save()
             if form.instance.file_data:
-                redirect_var = "file"
+                redirect_var = "file/" + id + "/"
             else:
                 redirect_var = "read/login"
             return HttpResponseRedirect('/' + redirect_var + '/')  # Redirect after POST to getLogin
