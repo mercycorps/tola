@@ -1,0 +1,60 @@
+Certificate:
+    Data:
+        Version: 3 (0x2)
+        Serial Number: 44 (0x2c)
+        Signature Algorithm: sha1WithRSAEncryption
+        Issuer: C=us, ST=Oregon, L=Portland, O=Mercy Corps, OU=SSO, CN=SSO Root CA
+        Validity
+            Not Before: Nov 22 08:12:11 2014 GMT
+            Not After : Nov 19 08:12:11 2024 GMT
+        Subject: C=us, ST=Oregon, O=Mercy Corps, OU=SSO, CN=tola
+        Subject Public Key Info:
+            Public Key Algorithm: rsaEncryption
+            RSA Public Key: (1024 bit)
+                Modulus (1024 bit):
+                    00:b6:2c:62:c3:93:35:13:49:55:05:b1:9e:33:85:
+                    e7:c4:f2:ce:39:14:5f:90:79:35:a4:75:28:02:a4:
+                    3c:4a:18:95:ae:0f:e5:3e:5a:29:b1:83:c9:e2:5b:
+                    f8:59:e5:24:01:c7:70:03:8b:c2:fe:60:59:c4:60:
+                    a7:a2:fa:be:b7:00:58:98:e3:5b:c6:63:9b:0a:9d:
+                    f0:3f:44:9e:82:f4:57:2d:63:da:46:2f:83:38:cd:
+                    b0:8a:97:c3:65:29:67:03:55:74:3e:44:4f:55:4c:
+                    d1:7d:49:bf:62:42:55:6d:25:de:b2:5f:b7:e8:60:
+                    a9:d4:48:a0:c2:cc:59:95:9d
+                Exponent: 65537 (0x10001)
+        X509v3 extensions:
+            X509v3 Basic Constraints: 
+                CA:FALSE
+            Netscape Comment: 
+                OpenSSL Generated Certificate
+            X509v3 Subject Key Identifier: 
+                2A:0B:11:76:02:2F:01:38:57:D9:B5:9D:35:75:6D:14:FF:8B:08:D2
+            X509v3 Authority Key Identifier: 
+                keyid:9F:9D:91:D5:34:57:B7:59:30:8C:4B:1C:78:41:14:90:76:8C:7D:80
+
+    Signature Algorithm: sha1WithRSAEncryption
+        01:96:be:22:97:8f:cb:95:5e:61:2c:f9:fa:be:d9:25:9a:c8:
+        bd:07:94:0b:bf:41:51:d7:2f:ff:0e:fd:ee:6b:ed:1c:eb:12:
+        b6:e3:f7:13:b7:3d:bb:d1:fe:15:38:d8:91:11:61:ac:94:94:
+        63:68:08:3b:97:e0:a2:49:0f:14:c6:73:af:76:24:3f:ce:71:
+        0c:c0:e8:26:a9:b3:b2:dd:13:aa:cf:48:3f:19:a3:56:2e:18:
+        67:30:5a:1f:2d:b7:70:22:34:25:85:fc:f6:55:9d:a6:29:fd:
+        ab:ca:29:3a:9d:96:88:c0:a5:b0:ff:0d:99:48:da:f1:8b:10:
+        6e:50
+-----BEGIN CERTIFICATE-----
+MIICrTCCAhagAwIBAgIBLDANBgkqhkiG9w0BAQUFADBrMQswCQYDVQQGEwJ1czEP
+MA0GA1UECBMGT3JlZ29uMREwDwYDVQQHEwhQb3J0bGFuZDEUMBIGA1UEChMLTWVy
+Y3kgQ29ycHMxDDAKBgNVBAsTA1NTTzEUMBIGA1UEAxMLU1NPIFJvb3QgQ0EwHhcN
+MTQxMTIyMDgxMjExWhcNMjQxMTE5MDgxMjExWjBRMQswCQYDVQQGEwJ1czEPMA0G
+A1UECBMGT3JlZ29uMRQwEgYDVQQKEwtNZXJjeSBDb3JwczEMMAoGA1UECxMDU1NP
+MQ0wCwYDVQQDEwR0b2xhMIGfMA0GCSqGSIb3DQEBAQUAA4GNADCBiQKBgQC2LGLD
+kzUTSVUFsZ4zhefE8s45FF+QeTWkdSgCpDxKGJWuD+U+Wimxg8niW/hZ5SQBx3AD
+i8L+YFnEYKei+r63AFiY41vGY5sKnfA/RJ6C9FctY9pGL4M4zbCKl8NlKWcDVXQ+
+RE9VTNF9Sb9iQlVtJd6yX7foYKnUSKDCzFmVnQIDAQABo3sweTAJBgNVHRMEAjAA
+MCwGCWCGSAGG+EIBDQQfFh1PcGVuU1NMIEdlbmVyYXRlZCBDZXJ0aWZpY2F0ZTAd
+BgNVHQ4EFgQUKgsRdgIvAThX2bWdNXVtFP+LCNIwHwYDVR0jBBgwFoAUn52R1TRX
+t1kwjEsceEEUkHaMfYAwDQYJKoZIhvcNAQEFBQADgYEAAZa+IpePy5VeYSz5+r7Z
+JZrIvQeUC79BUdcv/w797mvtHOsStuP3E7c9u9H+FTjYkRFhrJSUY2gIO5fgokkP
+FMZzr3YkP85xDMDoJqmzst0Tqs9IPxmjVi4YZzBaHy23cCI0JYX89lWdpin9q8op
+Op2WiMClsP8NmUja8YsQblA=
+-----END CERTIFICATE-----
