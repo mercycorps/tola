@@ -127,7 +127,9 @@ urlpatterns = patterns('',
                         url(r'^feed', 'feed.views.listFeeds', name='listFeeds'),
                         url(r'^export/(?P<id>\w+)/$', 'feed.views.export_silo', name='export_silo'),
                         #url(r'^export_google/(?P<id>\w+)/$', 'feed.views.export_google', name='export_google'),
-                        url(r'^export_google/(?P<id>\d+)/$', 'feed.views.google_export', name='export_google'),
+                        #url(r'^export_google/(?P<id>\d+)/$', 'feed.views.google_export', name='export_google'),
+                        url(r'^export_new_gsheet/(?P<id>\d+)/$', 'feed.views.export_new_gsheet', name='export_new_gsheet'),
+                        url(r'^export_gsheet/(?P<id>\d+)/$', 'feed.views.export_gsheet', name='export_existing_gsheet'),
                         url(r'^oauth2callback/$', 'feed.views.oauth2callback', name='oauth2callback'),
                         
                         #create a feed
@@ -140,12 +142,6 @@ urlpatterns = patterns('',
 
                         #app include of readtoken urls
                         url(r'^readtoken/', include('readtoken.urls')),
-
-                        #app include of activitydb urls
-                        url(r'^activitydb/', include('activitydb.urls')),
-
-                        #app include of activitydb urls
-                        url(r'^indicators/', include('indicators.urls')),
 
                         #local login
                         (r'^accounts/login/',  login),

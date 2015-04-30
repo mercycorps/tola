@@ -60,7 +60,7 @@
                     <li class="{{ home_tab }}"><a href="{% url 'index' %}"><span class="glyphicon glyphicon-home"></span> Home</a></li>
 
                     <li class="dropdown">
-                        <a href="#" class="dropdown-toggle" data-toggle="dropdown">Load Data<b class="caret"></b></a>
+                        <a href="#" class="dropdown-toggle" data-toggle="dropdown">Import Data<b class="caret"></b></a>
                         <ul class="dropdown-menu">
                             <li><a href="/read/home"><span class="glyphicon glyphicon-th-list"></span> Data Source</a></li>
                             <li><a href="/readtoken/home"><span class="glyphicon glyphicon-th-list"></span> Token Data Source</a></li>
@@ -68,30 +68,16 @@
                     </li>
 
                      <li class="dropdown">
-                        <a href="#" class="dropdown-toggle" data-toggle="dropdown">Share Data<b class="caret"></b></a>
+                        <a href="#" class="dropdown-toggle" data-toggle="dropdown">Export Data<b class="caret"></b></a>
                         <ul class="dropdown-menu">
                             <li><a href="/feed"><span class="glyphicon glyphicon-upload"></span> Share Data</a></li>
+                        </ul>
+                    </li>
+
+                     <li class="dropdown">
+                        <a href="#" class="dropdown-toggle" data-toggle="dropdown">Edit Data<b class="caret"></b></a>
+                        <ul class="dropdown-menu">
                             <li><a href="/display"><span class="glyphicon glyphicon-edit"></span> Edit Data</a></li>
-                        </ul>
-                    </li>
-
-                    <li class="dropdown">
-                        <a href="#" class="dropdown-toggle" data-toggle="dropdown">ActivityDB<b class="caret"></b></a>
-                        <ul class="dropdown-menu">
-                            <li><a href="/activitydb/dashboard/0/"><span class="glyphicon glyphicon-dashboard"></span> Program Dashboard</a></li>
-                            <li><a href="/activitydb/projectproposal_list/0/"><span class="glyphicon glyphicon-th-list"></span> Project Proposal</a></li>
-                            <li><a href="/activitydb/projectagreement_list/0/"><span class="glyphicon glyphicon-th-list"></span> Project Agreement</a></li>
-                            <li><a href="/activitydb/projectcomplete_list/0/"><span class="glyphicon glyphicon-th-list"></span> Project Complete</a></li>
-                            <li><a href="/activitydb/documentation_list/0/"><span class="glyphicon glyphicon-th-list"></span> Documentation</a></li>
-                            <li><a href="/activitydb/community_list/0/"><span class="glyphicon glyphicon-th-list"></span> Communities</a></li>
-                            <li><a href="/activitydb/training_list/0/"><span class="glyphicon glyphicon-th-list"></span> Training</a></li>
-                        </ul>
-                    </li>
-
-                    <li class="dropdown">
-                        <a href="#" class="dropdown-toggle" data-toggle="dropdown">Indicators<b class="caret"></b></a>
-                        <ul class="dropdown-menu">
-                            <li><a href="/indicators/home/0/"><span class="glyphicon glyphicon-dashboard"></span> Indicator Home</a></li>
                         </ul>
                     </li>
 
@@ -163,15 +149,16 @@
         </div><!-- .container collapse -->
 
         <div id = "loading" class="modal"> </div>
+        
         <div id="footer"><!-- Sticky Footer -->
             <div class="container">
                 <span style="float: left;" class="text-muted">
-                    Creative Commons License {% now "Y" %}
+                    GPL V.2 License {% now "Y" %}
                 </span>
                 <span style="float:right;" class="text-muted">
                   <a href="{% url 'documentation' %}" class="text-muted">Documentation</a> |
-			            <a href="{% url 'faq' %}" class="text-muted">FAQ</a> |
-			            <a href="{% url 'contact' %}" class="text-muted">Feedback</a>
+                        <a href="{% url 'faq' %}" class="text-muted">FAQ</a> |
+                        <a href="{% url 'contact' %}" class="text-muted">Feedback</a>
                 </span>
             </div>
 

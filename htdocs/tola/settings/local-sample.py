@@ -27,6 +27,12 @@ TEMPLATE_DEBUG = DEBUG
 ########## END DEBUG CONFIGURATION
 
 
+########## SECRET CONFIGURATION
+# See: https://docs.djangoproject.com/en/dev/ref/settings/#secret-key
+# Note: REPLACE IT WITH YOUR OWN SECRET_KEY
+SECRET_KEY = r"!0^+)=t*ly6ycprf9@kfw$6fsjd0xoh#pa*2erx1m*lp5k9ko7"
+########## END SECRET CONFIGURATION
+
 ########## EMAIL CONFIGURATION
 # See: https://docs.djangoproject.com/en/dev/ref/settings/#email-backend
 EMAIL_BACKEND = 'django.core.mail.backends.console.EmailBackend'
@@ -55,6 +61,7 @@ DATABASES = {
 ########## END DATABASE CONFIGURATION
 
 ########## GOOGLE CLIENT CONFIG ###########
+GOOGLE_REDIRECT_URL = 'https://tola-data-dev.mercycorps.org/oauth2callback/'
 GOOGLE_STEP2_URI = 'http://tola.mercycorps.org/gwelcome'
 GOOGLE_CLIENT_ID = '617113120802.apps.googleusercontent.com'
 GOOGLE_CLIENT_SECRET = '9reM29qpGFPyI8TBuB54Z4fk'

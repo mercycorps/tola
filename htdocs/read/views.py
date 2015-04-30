@@ -108,10 +108,10 @@ def showRead(request, id):
             # save data to read
             form.save()
             if form.instance.file_data:
-                redirect_var = "file"
+                redirect_var = "file/" + id + "/"
             else:
                 redirect_var = "read/login"
-            return HttpResponseRedirect('/' + redirect_var + '/' + id)  # Redirect after POST to getLogin
+            return HttpResponseRedirect('/' + redirect_var + '/')  # Redirect after POST to getLogin
         else:
             messages.error(request, 'Invalid Form', fail_silently=False)
     else:
@@ -201,27 +201,27 @@ def getJSON(request):
     today.strftime('%Y-%m-%d')
     today = str(today)
     try:
-        #get auth info from form post then encode and add to the request header
-        username = request.POST['user_name']
-        password = request.POST['password']
-        base64string = base64.encodestring('%s:%s' % (username, password))[:-1]
         request2 = urllib2.Request(read_obj.read_url)
-        request2.add_header("Authorization", "Basic %s" % base64string)
+        #if they passed in a usernmae get auth info from form post then encode and add to the request header
+        if request.POST['user_name']:
+            username = request.POST['user_name']
+            password = request.POST['password']
+            base64string = base64.encodestring('%s:%s' % (username, password))[:-1]
+            request2.add_header("Authorization", "Basic %s" % base64string)
         #retrieve JSON data from formhub via auth info
         json_file = urllib2.urlopen(request2)
     except Exception as e:
         print e
-        messages.success(self.request, 'Authentication Failed, Please double check your login credentials and URL!')
-        return redirect('/read/home')
+        messages.success(request, 'Authentication Failed, Please double check your login credentials and URL!')
 
     #New silo or existing
     if request.POST['new_silo']:
-        print "NEW"
+        #print "NEW"
         new_silo = Silo(name=request.POST['new_silo'], source=read_obj, owner=read_obj.owner, create_date=today)
         new_silo.save()
         silo_id = new_silo.id
     else:
-        print "EXISTING"
+        #print "EXISTING"
         silo_id = request.POST['silo_id']
 
     #create object from JSON String
@@ -248,13 +248,10 @@ def updateUID(request):
     Set the PK for each row by allowing the user to select a column
     """
     for row in request.POST['is_uid']:
-        print row
         update_uid = DataField.objects.filter(pk=row).update(is_uid=1)
 
-
-    get_silo = ValueStore.objects.all().filter(field__silo_id=request.POST['silo_id'])
-
-    return render(request, "read/show-data.html", {'get_silo': get_silo})
+    messages.success(request, 'Silo updated, view new silo data below')
+    return redirect('/silo_detail/' + request.POST['silo_id'] + '/')
 
 
 def saveData(new_value, new_label, silo_id, row_num):
@@ -273,18 +270,21 @@ def saveData(new_value, new_label, silo_id, row_num):
         check_for_field = DataField.objects.all().filter(silo=current_silo, name=new_label)
         if check_for_field.exists():
             field_id = check_for_field[0].id
-            print "OLD"
-            print field_id
         else:
             new_field = DataField(silo=current_silo, name=new_label, create_date=today, edit_date=today)
             new_field.save()
             #get the field id
             latest = DataField.objects.latest('id')
             field_id = latest.id
+        #convert to string
+        new_value = str(new_value)
+        print new_value
+        print len(new_value)
+        #if it's a long text field trim it first
+        if len(new_value) > 3000:
+            trimmed_value = new_value[:2990] + "!TRUNCATED!"
+            save_value = ValueStore(field_id=field_id, char_store=trimmed_value, create_date=today, edit_date=today, row_number=row_num)
+        else:
+            save_value = ValueStore(field_id=field_id, char_store=new_value, create_date=today, edit_date=today, row_number=row_num)
 
-            print "NEW"
-            print field_id
-
-        new_value = ValueStore(field_id=field_id, char_store=new_value, create_date=today, edit_date=today, row_number=row_num)
-
-        new_value.save()
+        save_value.save()

@@ -39,4 +39,7 @@ htdocs/tola/settings/local.py
 client_secrets.json
 djangocosign
 htdocs/djangocosign
-ssl.tola.conf
+ssl.tola-data.conf
+tola.crt
+tola.key
+htdocs/tola/db.sqlite3
