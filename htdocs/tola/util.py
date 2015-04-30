@@ -4,7 +4,7 @@ import urllib2
 import json
 import base64
 
-from read.models import Read
+from silo.models import Read
 
 #CREATE NEW DATA DICTIONARY OBJECT 
 def siloToDict(silo):

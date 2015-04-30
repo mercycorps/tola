@@ -10,10 +10,8 @@ import hashlib
 
 
 from django.http import HttpResponseRedirect, Http404
-from silo.models import Silo, DataField, ValueStore
-#from twisted.python import hashlib
+from silo.models import Silo, DataField, ValueStore,Read
 from .models import Token
-from read.models import Read
 from forms import ReadForm, TokenFormSet, EditTokenFormSet
 from django.shortcuts import render_to_response
 from django.shortcuts import render
