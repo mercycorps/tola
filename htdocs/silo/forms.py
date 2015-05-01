@@ -2,7 +2,7 @@ from django.forms import ModelForm
 from silo.models import Silo,ValueStore,DataField,Read
 import floppyforms as forms
 from crispy_forms.helper import FormHelper
-from crispy_forms.layout import Layout, Div, Submit, Reset, HTML, Button, Row, Field
+from crispy_forms.layout import Layout, Div, Submit, Reset, HTML, Button, Row, Field, Hidden
 from crispy_forms.bootstrap import FormActions
 from django.forms.formsets import formset_factory
 
