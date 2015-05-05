@@ -1,6 +1,6 @@
 from django.db import models
 from django.contrib import admin
-from read.models import Read
+from silo.models import Read
 
 
 

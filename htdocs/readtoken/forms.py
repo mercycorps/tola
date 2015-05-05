@@ -1,5 +1,5 @@
 from django.forms import ModelForm
-from read.models import Read
+from silo.models import Read
 from .models import Token
 from django.forms.models import inlineformset_factory
 
