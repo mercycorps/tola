@@ -126,4 +126,8 @@ class ValueStoreAdmin(admin.ModelAdmin):
     display = 'Stored Values'
 
 
-
+from mongoengine import *
+class LabelValueStore(DynamicDocument):
+    silo_id = IntField()
+    create_date = DateTimeField(help_text='date created')
+    edit_date = DateTimeField(help_text='date editted')
