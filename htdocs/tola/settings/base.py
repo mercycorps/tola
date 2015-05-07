@@ -54,6 +54,17 @@ DATABASES = {
 }
 ########## END DATABASE CONFIGURATION
 
+############ MONGO DB #####################
+import mongoengine
+from mongoengine import register_connection
+register_connection(alias='default',name='tola')
+
+MONGODB_HOST = 'mongodb://localhost/tola'
+MONGODB_NAME = 'tola'
+
+mongoengine.connect(MONGODB_NAME, host = MONGODB_HOST, alias='default')
+################ END OF MONGO DB #######################
+
 
 ########## GENERAL CONFIGURATION
 # See: https://docs.djangoproject.com/en/dev/ref/settings/#time-zone
