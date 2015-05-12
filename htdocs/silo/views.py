@@ -183,8 +183,8 @@ def showRead(request, id):
             if form.instance.file_data:
                 redirect_var = "file/" + id + "/"
             else:
-                redirect_var = "read/login"
-            return HttpResponseRedirect('/' + redirect_var + '/')  # Redirect after POST to getLogin
+                redirect_var = "read/login/"
+            return HttpResponseRedirect('/' + redirect_var)  # Redirect after POST to getLogin
         else:
             messages.error(request, 'Invalid Form', fail_silently=False)
     else:
@@ -231,11 +231,14 @@ def uploadFile(request, id):
             row_num = 1
             for row in data:
                 col_num = 0
-                if row_num > 1:
-                    for col in row:
-                        saveData(col, labels[col_num], silo_id, row_num)
-                        col_num = col_num + 1
+                lvs = LabelValueStore()
+                lvs.silo_id = silo_id
+                for val in row:
+                    #print "\n %s : %s" % (labels[col_num], val)
+                    setattr(lvs, labels[col_num], val)
+                    col_num = col_num + 1
                 row_num = row_num + 1
+                lvs.save()
 
             #get fields to display back to user for verification
             get_fields = DataField.objects.filter(silo_id=silo_id).values('name').distinct()
@@ -303,10 +306,8 @@ def getJSON(request):
     #loop over data and insert create and edit dates and append to dict
     row_num = 1
     
-    
-    #print data
     for row in data:
-        print "OK %s" % row_num
+        #print "OK %s" % row_num
         row_num = row_num + 1
         lvs = LabelValueStore()
         lvs.silo_id = silo_id
@@ -314,17 +315,6 @@ def getJSON(request):
             if new_value is not "" and new_label is not None:
                 setattr(lvs, new_label, new_value)
         lvs.save()
-    #    for new_label, new_value in row.iteritems():
-    #        if new_value is not "" and new_label is not None:
-    #            #save to DB
-    #            saveData(new_value, new_label, silo_id, row_num)
-    #    row_num = row_num + 1
-        
-    #get fields to display back to user for verification
-    #get_fields = DataField.objects.filter(silo_id=silo_id)
-
-    #send the keys and vars from the json data to the template along with submitted feed info and silos for new form
-    #return render(request, "read/show-columns.html", {'getFields': get_fields, 'silo_id': silo_id})
     messages.success(request, "Data imported correctly into MONGO")
     return render(request, "read/show-columns.html", {'getFields': None, 'silo_id': silo_id})
 
