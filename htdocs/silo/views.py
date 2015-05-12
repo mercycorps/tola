@@ -24,7 +24,7 @@ from django.views.decorators.csrf import csrf_protect
 from .tables import SiloTable
 
 
-from .models import Silo, DataField, ValueStore, RemoteEndPoint, Read, ReadType
+from .models import Silo, DataField, ValueStore, RemoteEndPoint, Read, ReadType, LabelValueStore
 from .serializers import SiloSerializer, DataFieldSerializer, ValueStoreSerializer, UserSerializer, ReadSerializer, ReadTypeSerializer
 
 from django.contrib.auth.decorators import login_required
@@ -302,18 +302,31 @@ def getJSON(request):
     json_file.close()
     #loop over data and insert create and edit dates and append to dict
     row_num = 1
+    
+    
+    #print data
     for row in data:
+        print "OK %s" % row_num
+        row_num = row_num + 1
+        lvs = LabelValueStore()
+        lvs.silo_id = silo_id
         for new_label, new_value in row.iteritems():
             if new_value is not "" and new_label is not None:
-                #save to DB
-                saveData(new_value, new_label, silo_id, row_num)
-        row_num = row_num + 1
-
+                setattr(lvs, new_label, new_value)
+        lvs.save()
+    #    for new_label, new_value in row.iteritems():
+    #        if new_value is not "" and new_label is not None:
+    #            #save to DB
+    #            saveData(new_value, new_label, silo_id, row_num)
+    #    row_num = row_num + 1
+        
     #get fields to display back to user for verification
-    get_fields = DataField.objects.filter(silo_id=silo_id)
+    #get_fields = DataField.objects.filter(silo_id=silo_id)
 
     #send the keys and vars from the json data to the template along with submitted feed info and silos for new form
-    return render(request, "read/show-columns.html", {'getFields': get_fields, 'silo_id': silo_id})
+    #return render(request, "read/show-columns.html", {'getFields': get_fields, 'silo_id': silo_id})
+    messages.success(request, "Data imported correctly into MONGO")
+    return render(request, "read/show-columns.html", {'getFields': None, 'silo_id': silo_id})
 
 
 def updateUID(request):
