@@ -366,7 +366,13 @@ def viewSilo(request,id):
     return render(request, 'display/silo-sources.html',{'get_sources':get_sources})
 
 
+
 def define_table(columns):
+    """
+    Dynamically builds a django-tables2 table without specifying the column names
+    It is important to build the django-tables2 dynamically because each time a silo 
+    is loaded from MongoDB, it is not known what columns heading it has or how mnay columns it has
+    """
     attrs = dict((c, tables.Column()) for c in columns)
     attrs['Meta'] = type('Meta', (), dict(attrs={"class":"paleblue", "orderable":"True", "width":"100%"}) )
     klass = type('DynamicTable', (tables.Table,), attrs)
