@@ -25,6 +25,17 @@
   </div>
 </div>
 
-{% render_table getSilo %}
+<div>
+
+</div>
+
+{% render_table silo %}
+
+<br />
+{% for row in getSilo %}
+    {% for k,v in row.items %}
+        {{ k }} : {{ v }} <br />
+    {% endfor %}
+{% endfor %}
 
 {% endblock content %}

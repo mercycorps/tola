@@ -303,12 +303,9 @@ def getJSON(request):
     #create object from JSON String
     data = json.load(json_file)
     json_file.close()
-    #loop over data and insert create and edit dates and append to dict
-    row_num = 1
     
+    #loop over data and insert create and edit dates and append to dict
     for row in data:
-        #print "OK %s" % row_num
-        row_num = row_num + 1
         lvs = LabelValueStore()
         lvs.silo_id = silo_id
         for new_label, new_value in row.iteritems():
@@ -328,42 +325,6 @@ def updateUID(request):
 
     messages.success(request, 'Silo updated, view new silo data below')
     return redirect('/silo_detail/' + request.POST['silo_id'] + '/')
-
-
-def saveData(new_value, new_label, silo_id, row_num):
-    """
-    Function call no template associated with this
-    Save file data into data store and silo
-    """
-    # Need a silo set object to gather silos into programs
-    current_silo = Silo.objects.get(pk=silo_id)
-    # set date time stamp
-    today = datetime.date.today()
-    today.strftime('%Y-%m-%d')
-    today = str(today)
-    if new_value is not "" and new_value is not None:
-        #check to see if the field exists if it does use that field
-        check_for_field = DataField.objects.all().filter(silo=current_silo, name=new_label)
-        if check_for_field.exists():
-            field_id = check_for_field[0].id
-        else:
-            new_field = DataField(silo=current_silo, name=new_label, create_date=today, edit_date=today)
-            new_field.save()
-            #get the field id
-            latest = DataField.objects.latest('id')
-            field_id = latest.id
-        #convert to string
-        new_value = str(new_value)
-        print new_value
-        print len(new_value)
-        #if it's a long text field trim it first
-        if len(new_value) > 3000:
-            trimmed_value = new_value[:2990] + "!TRUNCATED!"
-            save_value = ValueStore(field_id=field_id, char_store=trimmed_value, create_date=today, edit_date=today, row_number=row_num)
-        else:
-            save_value = ValueStore(field_id=field_id, char_store=new_value, create_date=today, edit_date=today, row_number=row_num)
-
-        save_value.save()
 
 
 #display
@@ -403,18 +364,29 @@ def viewSilo(request,id):
 
     return render(request, 'display/silo-sources.html',{'get_sources':get_sources})
 
+import django_tables2 as tables
+from django_tables2 import RequestConfig
+def define_table(columns):
+    attrs = dict((c, tables.Column()) for c in columns)
+    attrs['Meta'] = type('Meta', (), dict(attrs={"class":"paleblue", "orderable":"True", "width":"100%"}) )
+    klass = type('DynamicTable', (tables.Table,), attrs)
+    return klass
+
+
 #SILO-DETAIL Show data from source
 def siloDetail(request,id):
     """
     Show silo source details
     """
-    silo_id = id
-    #getSilo = ValueStore.objects.filter(field__silo_id=silo_id).order_by('row_number').select_related('field')
-
-    table = SiloTable(ValueStore.objects.all().filter(field__silo_id=silo_id).order_by('row_number', 'id').select_related('field'))
-
+    table = LabelValueStore.objects(silo_id=id).to_json()
+    decoded_json = json.loads(table)
+    silo = define_table(decoded_json[0].keys())(decoded_json)
+    
+    #This is needed in order for table sorting to work
+    RequestConfig(request).configure(silo)
+    
     #send the keys and vars from the json data to the template along with submitted feed info and silos for new form
-    return render(request, "display/stored_values.html", {'getSilo':table})
+    return render(request, "display/stored_values.html", {"silo": silo})
 
 #SHOW-MERGE FORM
 def mergeForm(request,id):
