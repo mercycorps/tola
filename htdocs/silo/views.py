@@ -22,7 +22,8 @@ from django.db.models import Max
 from django.db.models import F
 from django.views.decorators.csrf import csrf_protect
 from .tables import SiloTable
-
+import django_tables2 as tables
+from django_tables2 import RequestConfig
 
 from .models import Silo, DataField, ValueStore, RemoteEndPoint, Read, ReadType, LabelValueStore
 from .serializers import SiloSerializer, DataFieldSerializer, ValueStoreSerializer, UserSerializer, ReadSerializer, ReadTypeSerializer
@@ -364,8 +365,7 @@ def viewSilo(request,id):
 
     return render(request, 'display/silo-sources.html',{'get_sources':get_sources})
 
-import django_tables2 as tables
-from django_tables2 import RequestConfig
+
 def define_table(columns):
     attrs = dict((c, tables.Column()) for c in columns)
     attrs['Meta'] = type('Meta', (), dict(attrs={"class":"paleblue", "orderable":"True", "width":"100%"}) )
