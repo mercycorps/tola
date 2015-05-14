@@ -360,7 +360,12 @@ def define_table(columns):
     It is important to build the django-tables2 dynamically because each time a silo 
     is loaded from MongoDB, it is not known what columns heading it has or how mnay columns it has
     """
+    EDIT_DEL_TEMPLATE = '''
+        <a class="btn btn-default btn-xs" role="button" href="/value_edit/{{ record.id }}">Edit</a>
+        <a class="btn btn-danger btn-xs" role="button" href="/value_delete/{{ record.id }}">Delete</button> 
+        '''
     attrs = dict((c, tables.Column()) for c in columns)
+    attrs['Operation'] = tables.TemplateColumn(EDIT_DEL_TEMPLATE)
     attrs['Meta'] = type('Meta', (), dict(attrs={"class":"paleblue", "orderable":"True", "width":"100%"}) )
     klass = type('DynamicTable', (tables.Table,), attrs)
     return klass
