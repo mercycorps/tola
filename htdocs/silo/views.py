@@ -198,47 +198,34 @@ def showRead(request, id):
 
 def uploadFile(request, id):
     """
-    Upload CSV file and save to read
+    Upload CSV file and save its data
     """
-    # get all of the silo info to pass to the form
-    get_silo = Silo.objects.all()
-    if request.method == 'POST':  # If the form has been submitted...
+    if request.method == 'POST':
         form = UploadForm(request.POST)  # A form bound to the POST data
-        if form.is_valid():  # All validation rules pass
-
-            # save data to read
-            # retrieve submitted Feed info from database
+        if form.is_valid():
             read_obj = Read.objects.get(pk=id)
-            # set date time stamp
             today = datetime.date.today()
             today.strftime('%Y-%m-%d')
             today = str(today)
+            
             #New silo or existing
             if request.POST['new_silo']:
-                print "NEW"
                 new_silo = Silo(name=request.POST['new_silo'], source=read_obj, owner=read_obj.owner, create_date=today)
                 new_silo.save()
                 silo_id = new_silo.id
             else:
-                print "EXISTING"
                 silo_id = request.POST['silo_id']
 
             #create object from JSON String
-            print read_obj.file_data
             data = csv.reader(read_obj.file_data)
-            #First row of CSV should be Column Headers
-            labels = data.next()
-            #start a row count and iterate over each row of data
-            row_num = 1
+            
+            labels = data.next() #First row of CSV should be Column Headers
+
             for row in data:
-                col_num = 0
                 lvs = LabelValueStore()
                 lvs.silo_id = silo_id
-                for val in row:
-                    #print "\n %s : %s" % (labels[col_num], val)
-                    setattr(lvs, labels[col_num], val)
-                    col_num = col_num + 1
-                row_num = row_num + 1
+                for col_counter, val in enumerate(row):
+                    setattr(lvs, labels[col_counter], val)
                 lvs.save()
 
             #get fields to display back to user for verification
@@ -249,6 +236,9 @@ def uploadFile(request, id):
     else:
         form = UploadForm()  # An unbound form
 
+    # get all of the silo info to pass to the form
+    get_silo = Silo.objects.all()
+    
     # display login form
     return render(request, 'read/file.html', {
         'form': form, 'read_id': id, 'get_silo': get_silo,
@@ -384,7 +374,7 @@ def siloDetail(request,id):
     """
     Show silo source details
     """
-    table = LabelValueStore.objects(silo_id=id).to_json()
+    table = LabelValueStore.objects(silo_id=id).exclude("id").to_json()
     decoded_json = json.loads(table)
     silo = define_table(decoded_json[0].keys())(decoded_json)
     
