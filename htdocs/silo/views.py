@@ -300,7 +300,8 @@ def getJSON(request):
                 setattr(lvs, new_label, new_value)
         lvs.save()
     messages.success(request, "Data imported correctly into MONGO")
-    return render(request, "read/show-columns.html", {'getFields': None, 'silo_id': silo_id})
+    #return render(request, "read/show-columns.html", {'getFields': None, 'silo_id': silo_id})
+    return HttpResponseRedirect('/silo_detail/' + silo_id + '/')
 
 
 def updateUID(request):
