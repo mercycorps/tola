@@ -227,12 +227,8 @@ def uploadFile(request, id):
                 for col_counter, val in enumerate(row):
                     setattr(lvs, labels[col_counter], val)
                 lvs.save()
-
-            #get fields to display back to user for verification
-            get_fields = DataField.objects.filter(silo_id=silo_id).values('name').distinct()
-
-            #saved data now show the columns of data
-            return render(request, "read/show-columns.html", {'getFields': get_fields, 'silo_id': silo_id})
+            
+            return HttpResponseRedirect('/silo_detail/' + silo_id + '/')
     else:
         form = UploadForm()  # An unbound form
 
