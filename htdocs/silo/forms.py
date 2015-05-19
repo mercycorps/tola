@@ -116,3 +116,26 @@ class FieldEditForm(ModelForm):
     class Meta:
         model = DataField
         fields = ['original_name','name','is_uid','create_date','edit_date']
+
+class MongoEditForm(forms.Form):
+    """
+    A form that saves a document from mongodb
+    """
+    id = forms.CharField(required=False, max_length=24, widget=forms.HiddenInput())
+    silo_id = forms.IntegerField(required=False, widget=forms.HiddenInput())
+    
+    def __init__(self, *args, **kwargs):
+        extra = kwargs.pop("extra")
+        self.helper = FormHelper()
+        self.helper.form_class = 'form-horizontal'
+        self.helper.label_class = 'col-sm-2'
+        self.helper.field_class = 'col-sm-10'
+        self.helper.label_size = ' col-sm-offset-2'
+        self.helper.html5_required = True
+        self.helper.form_tag = False
+        super(MongoEditForm, self).__init__(*args, **kwargs)
+        
+        for item in extra:
+            if item != "_id" and item != "silo_id":
+                self.fields['field_%s' % item] = forms.CharField(label = item, initial=extra[item], required=False)
+    
