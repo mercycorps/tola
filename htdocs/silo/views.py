@@ -413,15 +413,27 @@ def mergeColumns(request):
 
     return render(request, "display/merge-column-form.html", {'getSourceFrom':getSourceFrom, 'getSourceTo':getSourceTo, 'source_list':source_list, 'from_silo_id':from_silo_id, 'to_silo_id':to_silo_id})
 
+from .forms import MongoEditForm
 #EDIT A SINGLE VALUE STORE
 def valueEdit(request,id):
     """
     Edit a value
     """
-    #Get the silo id for the return link back to silo detail
-    getSilo = ValueStore.objects.all().filter(id=id).prefetch_related('field')
-    silo_id = getSilo[0].field.silo_id
-
+    
+    doc = LabelValueStore.objects(id=id).to_json()
+    data = {}
+    jsondoc = json.loads(doc)
+    silo_id = None
+    for item in jsondoc:
+        for k, v in item.iteritems():
+            #print("The key and value are ({}) = ({})".format(k, v))
+            if k == "_id":
+                #data[k] = item['_id']['$oid']
+                pass
+            elif k == "silo_id":
+                silo_id = v
+            else:
+                data[k] = v
     if request.method == 'POST': # If the form has been submitted...
         form = EditForm(request.POST) # A form bound to the POST data
         if form.is_valid(): # All validation rules pass
@@ -433,10 +445,9 @@ def valueEdit(request,id):
         else:
             print "not valid"
     else:
-        value= get_object_or_404(ValueStore, pk=id)
-        form = EditForm(instance=value) # An unbound form
+        form = MongoEditForm(initial={'silo_id': silo_id, 'id': id}, extra=data)
 
-    return render(request, 'read/edit_value.html', {'form': form,'value':value,'silo_id':silo_id})
+    return render(request, 'read/edit_value.html', {'form': form, 'silo_id': silo_id})
 
 def valueDelete(request,id):
     """
