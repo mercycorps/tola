@@ -39,6 +39,9 @@ from django.utils import timezone
 # Merge 2 silos together.
 @csrf_protect
 def doMerge(request):
+    """ 
+    TODO: DELETE THIS? since there is another view called "mergeForm"
+    """
     from_silo_id = request.POST["from_silo_id"]
     to_silo_id = request.POST["to_silo_id"]
     getSourceFrom = DataField.objects.all().filter(silo__id=from_silo_id)
@@ -408,13 +411,17 @@ def mergeColumns(request):
     """
     from_silo_id = request.POST["from_silo_id"]
     to_silo_id = request.POST["to_silo_id"]
-    getSourceFrom = DataField.objects.all().filter(silo__id=from_silo_id).values('name').distinct()
-    getSourceTo = DataField.objects.all().filter(silo__id=to_silo_id).values('name').distinct()
-
-   # definitions_list = [definition.encode("utf8") for definition in definitions.objects.values_list('title', flat=True)]
-    source_list = getSourceTo.values_list("name", flat=True)
-
-    return render(request, "display/merge-column-form.html", {'getSourceFrom':getSourceFrom, 'getSourceTo':getSourceTo, 'source_list':source_list, 'from_silo_id':from_silo_id, 'to_silo_id':to_silo_id})
+    lvs1 = LabelValueStore.objects(silo_id=from_silo_id).count()
+    lvs2 = LabelValueStore.objects(silo_id=to_silo_id).count()
+    
+    if lvs1 > lvs2:
+        LabelValueStore.objects(silo_id=to_silo_id).update(silo_id=from_silo_id)
+    else:
+        LabelValueStore.objects(silo_id=from_silo_id).update(silo_id=to_silo_id)
+    
+    messages.success(request, "Merged your silos")
+    
+    return HttpResponseRedirect("/display/")
 
 
 #EDIT A SINGLE VALUE STORE
@@ -422,7 +429,6 @@ def valueEdit(request,id):
     """
     Edit a value
     """
-    
     doc = LabelValueStore.objects(id=id).to_json()
     data = {}
     jsondoc = json.loads(doc)
@@ -476,6 +482,7 @@ def valueDelete(request,id):
 def fieldEdit(request,id):
     """
     Edit a field
+    TODO: DELETE THIS?
     """
     if request.method == 'POST': # If the form has been submitted...
         form = FieldEditForm(request.POST) # A form bound to the POST data
