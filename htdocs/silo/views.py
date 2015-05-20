@@ -464,8 +464,13 @@ def valueDelete(request,id):
     """
     Delete a value
     """
-    deleteStore = ValueStore.objects.get(pk=id).delete()
-
+    #deleteStore = ValueStore.objects.get(pk=id).delete()
+    
+    lvs = LabelValueStore.objects(id=id)[0]
+    silo_id = lvs.silo_id
+    lvs.delete()
+    
+    messages.success(request, "Record deleted successfully")
     return render(request, 'read/delete_value.html')
 
 def fieldEdit(request,id):
