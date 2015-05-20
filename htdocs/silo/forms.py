@@ -137,5 +137,5 @@ class MongoEditForm(forms.Form):
         
         for item in extra:
             if item != "_id" and item != "silo_id":
-                self.fields['field_%s' % item] = forms.CharField(label = item, initial=extra[item], required=False)
+                self.fields[item] = forms.CharField(label = item, initial=extra[item], required=False)
     

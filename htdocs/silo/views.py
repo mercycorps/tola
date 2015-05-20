@@ -435,12 +435,13 @@ def valueEdit(request,id):
             else:
                 data[k] = v
     if request.method == 'POST': # If the form has been submitted...
-        form = EditForm(request.POST) # A form bound to the POST data
-        if form.is_valid(): # All validation rules pass
-            # save data to read
-            update = ValueStore.objects.get(pk=id)
-            form = EditForm(request.POST, instance=update)
-            new = form.save(commit=True)
+        form = MongoEditForm(request.POST or None, extra = data) # A form bound to the POST data
+        if form.is_valid():
+            lvs = LabelValueStore.objects(id=id)[0]
+            for lbl, val in form.cleaned_data.iteritems():
+                if lbl != "id" and lbl != "silo_id" and lbl != "csrfmiddlewaretoken":
+                    setattr(lvs, lbl, val)
+            lvs.save()
             return HttpResponseRedirect('/value_edit/' + id)
         else:
             print "not valid"
