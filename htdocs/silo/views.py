@@ -6,7 +6,7 @@ import csv
 import operator
 
 from django.http import HttpResponseRedirect
-from .forms import ReadForm, UploadForm, ODKForm, SiloForm, EditForm, FieldEditForm
+from .forms import ReadForm, UploadForm, ODKForm, SiloForm, FieldEditForm, MongoEditForm
 from django.contrib import messages
 from django.contrib.auth.models import User
 from django.core.urlresolvers import reverse
@@ -34,9 +34,7 @@ from tola.util import siloToDict
 from rest_framework import renderers, viewsets
 from django.core.urlresolvers import reverse
 
-from .forms import MongoEditForm
 from django.utils import timezone
-import datetime
 
 # Merge 2 silos together.
 @csrf_protect

@@ -106,11 +106,6 @@ class FileField(Field):
 
 
 #Display forms
-class EditForm(ModelForm):
-    class Meta:
-        model = ValueStore
-        fields = ['field','char_store','create_date','edit_date']
-
 
 class FieldEditForm(ModelForm):
     class Meta:
