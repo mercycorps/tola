@@ -34,6 +34,9 @@ from tola.util import siloToDict
 from rest_framework import renderers, viewsets
 from django.core.urlresolvers import reverse
 
+from .forms import MongoEditForm
+from django.utils import timezone
+import datetime
 
 # Merge 2 silos together.
 @csrf_protect
@@ -226,9 +229,10 @@ def uploadFile(request, id):
                 lvs.silo_id = silo_id
                 for col_counter, val in enumerate(row):
                     setattr(lvs, labels[col_counter], val)
+                lvs.create_date = timezone.now()
                 lvs.save()
             
-            return HttpResponseRedirect('/silo_detail/' + silo_id + '/')
+            return HttpResponseRedirect('/silo_detail/' + str(silo_id) + '/')
     else:
         form = UploadForm()  # An unbound form
 
@@ -298,6 +302,7 @@ def getJSON(request):
         for new_label, new_value in row.iteritems():
             if new_value is not "" and new_label is not None:
                 setattr(lvs, new_label, new_value)
+        lvs.create_date = timezone.now()
         lvs.save()
     messages.success(request, "Data imported correctly into MONGO")
     #return render(request, "read/show-columns.html", {'getFields': None, 'silo_id': silo_id})
@@ -381,7 +386,6 @@ def siloDetail(request,id):
     """
     table = LabelValueStore.objects(silo_id=id).to_json()
     decoded_json = json.loads(table)
-    print(decoded_json[0].keys())
     silo = define_table(decoded_json[0].keys())(decoded_json)
     
     #This is needed in order for table sorting to work
@@ -414,9 +418,7 @@ def mergeColumns(request):
 
     return render(request, "display/merge-column-form.html", {'getSourceFrom':getSourceFrom, 'getSourceTo':getSourceTo, 'source_list':source_list, 'from_silo_id':from_silo_id, 'to_silo_id':to_silo_id})
 
-from .forms import MongoEditForm
-from django.utils import timezone
-import datetime
+
 #EDIT A SINGLE VALUE STORE
 def valueEdit(request,id):
     """
