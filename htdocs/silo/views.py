@@ -368,7 +368,7 @@ def define_table(columns):
         '''
     attrs = dict((c, tables.Column()) for c in columns)
     attrs['Operation'] = tables.TemplateColumn(EDIT_DEL_TEMPLATE)
-    attrs['Meta'] = type('Meta', (), dict(exclude=["_id"], attrs={"class":"paleblue", "orderable":"True", "width":"100%"}) )
+    attrs['Meta'] = type('Meta', (), dict(exclude=["_id", "edit_date", "create_date"], attrs={"class":"paleblue", "orderable":"True", "width":"100%"}) )
     
     klass = type('DynamicTable', (tables.Table,), attrs)
     return klass
@@ -381,6 +381,7 @@ def siloDetail(request,id):
     """
     table = LabelValueStore.objects(silo_id=id).to_json()
     decoded_json = json.loads(table)
+    print(decoded_json[0].keys())
     silo = define_table(decoded_json[0].keys())(decoded_json)
     
     #This is needed in order for table sorting to work
@@ -414,6 +415,8 @@ def mergeColumns(request):
     return render(request, "display/merge-column-form.html", {'getSourceFrom':getSourceFrom, 'getSourceTo':getSourceTo, 'source_list':source_list, 'from_silo_id':from_silo_id, 'to_silo_id':to_silo_id})
 
 from .forms import MongoEditForm
+from django.utils import timezone
+import datetime
 #EDIT A SINGLE VALUE STORE
 def valueEdit(request,id):
     """
@@ -432,6 +435,12 @@ def valueEdit(request,id):
                 pass
             elif k == "silo_id":
                 silo_id = v
+            elif k == "edit_date":
+                edit_date = datetime.datetime.fromtimestamp(item['edit_date']['$date']/1000)
+                data[k] = edit_date.strftime('%Y-%m-%d %H:%M:%S')
+            elif k == "create_date":
+                create_date = datetime.datetime.fromtimestamp(item['create_date']['$date']/1000)
+                data[k] = create_date.strftime('%Y-%m-%d')
             else:
                 data[k] = v
     if request.method == 'POST': # If the form has been submitted...
@@ -441,6 +450,7 @@ def valueEdit(request,id):
             for lbl, val in form.cleaned_data.iteritems():
                 if lbl != "id" and lbl != "silo_id" and lbl != "csrfmiddlewaretoken":
                     setattr(lvs, lbl, val)
+            lvs.edit_date = timezone.now()
             lvs.save()
             return HttpResponseRedirect('/value_edit/' + id)
         else:

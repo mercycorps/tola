@@ -136,6 +136,9 @@ class MongoEditForm(forms.Form):
         super(MongoEditForm, self).__init__(*args, **kwargs)
         
         for item in extra:
-            if item != "_id" and item != "silo_id":
+            if item == "edit_date" or item == "create_date":
+                self.fields[item] = forms.CharField(label = item, initial=extra[item], required=False, widget=forms.TextInput(attrs={'readonly': "readonly"}))
+            elif item != "_id" and item != "silo_id":
                 self.fields[item] = forms.CharField(label = item, initial=extra[item], required=False)
+
     
