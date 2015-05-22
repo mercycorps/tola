@@ -229,7 +229,7 @@ def uploadFile(request, id):
                 lvs = LabelValueStore()
                 lvs.silo_id = silo_id
                 for col_counter, val in enumerate(row):
-                    setattr(lvs, labels[col_counter], val)
+                    if labels[col_counter] is not "" and labels[col_counter] is not None: setattr(lvs, labels[col_counter], val) 
                 lvs.create_date = timezone.now()
                 lvs.save()
             
@@ -720,80 +720,54 @@ def export_to_google_spreadsheet(credential_json, silo_id, spreadsheet_key):
 
         # authorize the SpreadsheetClient object
         sp_client = token.authorize(sp_client)
-
         #print(sp_client)
+        
+        
         # Create a WorksheetQuery object to allow for filtering for worksheets by the title
         worksheet_query = gdata.spreadsheets.client.WorksheetQuery(title="Sheet1", title_exact=True)
-        #print("OK")
+        
+        
         # Get a feed of all worksheets in the specified spreadsheet that matches the worksheet_query
         worksheets_feed = sp_client.get_worksheets(spreadsheet_key, query=worksheet_query)
         #print("worksheets_feed: %s" % worksheets_feed)
+        
+        
         # Retrieve the worksheet_key from the first match in the worksheets_feed object
         worksheet_key = worksheets_feed.entry[0].id.text.rsplit("/", 1)[1]
         #print("worksheet_key: %s" % worksheet_key)
         
-        #silo_data = ValueStore.objects.filter(field__silo__id=silo_id).order_by("row_number")
+        from collections import OrderedDict
+        silo_data = LabelValueStore.objects(silo_id=silo_id)
+        #silo_data_json = OrderedDict(json.loads(silo_data))
         
-        silo_data = LabelValueStore.objects(silo_id=silo_id).to_json()
-        silo_data_json = json.loads(silo_data)
-        
-        ################################
-        #TODO: complete this to work with mongodb
-        ################################
-        
-        column_names = silo_data_json[0].keys()
-        
-        num_cols = len(column_names)
-        #print("num_cols: %s" % num_cols)
-        # By default a blank Google Spreadsheet has 26 columns but if our data has more column
-        # then add more columns to Google Spreadsheet otherwise there would be a 500 Error!
-        if num_cols and num_cols > 26:
-            worksheet = worksheets_feed.entry[0]
-            worksheet.col_count.text = str(num_cols)
-
-            # Send the worksheet update call to Google Server
-            sp_client.update(worksheet, force=True)
-
         # Create a CellBatchUpdate object so that all cells update is sent as one http request
         batch = gdata.spreadsheets.data.BuildBatchCellsUpdate(spreadsheet_key, worksheet_key)
         
         col_index = 0
-        row_index = 0
+        row_index = 1
         col_info = {}
-        for i, col_name in enumerate(column_names):
-            row_index = 1
-            col_index = i + 1
-            col_info[col_name] = col_index
-            batch.add_set_cell(row_index, col_index, col_name)
-
-        print ("About TO start data population")
-        for row in silo_data_json:
+        
+        for row in silo_data:
+            print(row)
             row_index = row_index + 1
             for i, col_name in enumerate(row):
-                if col_name not in column_names:
+                if col_name not in col_info.keys():
                     col_index = col_index + 1
-                    column_names.append(col_name)
                     col_info[col_name] = col_index
                     batch.add_set_cell(1, col_index, col_name)
                 batch.add_set_cell(row_index, col_info[col_name], str(row[col_name]))
-        sp_client.batch(batch, force=True)
+        
+        # By default a blank Google Spreadsheet has 26 columns but if our data has more column
+        # then add more columns to Google Spreadsheet otherwise there would be a 500 Error!
+        if col_index and col_index > 26:
+            worksheet = worksheets_feed.entry[0]
+            worksheet.col_count.text = str(col_index)
 
-        """
-        # Add column names to the batch object
-        for i, col_name in enumerate(column_names):
-            row_index = 1
-            col_index = i + 1
-            batch.add_set_cell(row_index, col_index, col_name)
-
-        # Populate the CellBatchUpdate object with data
-        for row in silo_data:
-            row_index = row.row_number + 1
-            col_index = row.field.id
-            value = row.char_store
-            batch.add_set_cell(row_index, col_index, value)
-        """
+            # Send the worksheet update call to Google Server
+            sp_client.update(worksheet, force=True)
+        
         # Finally send the CellBatchUpdate object to Google
-        #sp_client.batch(batch, force=True)
+        sp_client.batch(batch, force=True)
     except Exception as e:
         print(e)
         return False
