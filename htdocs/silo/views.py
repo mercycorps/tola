@@ -731,8 +731,19 @@ def export_to_google_spreadsheet(credential_json, silo_id, spreadsheet_key):
         # Retrieve the worksheet_key from the first match in the worksheets_feed object
         worksheet_key = worksheets_feed.entry[0].id.text.rsplit("/", 1)[1]
         #print("worksheet_key: %s" % worksheet_key)
-        silo_data = ValueStore.objects.filter(field__silo__id=silo_id).order_by("row_number")
-        num_cols = len(silo_data)
+        
+        #silo_data = ValueStore.objects.filter(field__silo__id=silo_id).order_by("row_number")
+        
+        silo_data = LabelValueStore.objects(silo_id=silo_id).to_json()
+        silo_data_json = json.loads(silo_data)
+        
+        ################################
+        #TODO: complete this to work with mongodb
+        ################################
+        
+        column_names = silo_data_json[0].keys()
+        
+        num_cols = len(column_names)
         #print("num_cols: %s" % num_cols)
         # By default a blank Google Spreadsheet has 26 columns but if our data has more column
         # then add more columns to Google Spreadsheet otherwise there would be a 500 Error!
@@ -745,10 +756,29 @@ def export_to_google_spreadsheet(credential_json, silo_id, spreadsheet_key):
 
         # Create a CellBatchUpdate object so that all cells update is sent as one http request
         batch = gdata.spreadsheets.data.BuildBatchCellsUpdate(spreadsheet_key, worksheet_key)
+        
+        col_index = 0
+        row_index = 0
+        col_info = {}
+        for i, col_name in enumerate(column_names):
+            row_index = 1
+            col_index = i + 1
+            col_info[col_name] = col_index
+            batch.add_set_cell(row_index, col_index, col_name)
 
-        # Get all of the column names for the current silo_id
-        column_names = DataField.objects.filter(silo_id=1).values_list('name', flat=True)
+        print ("About TO start data population")
+        for row in silo_data_json:
+            row_index = row_index + 1
+            for i, col_name in enumerate(row):
+                if col_name not in column_names:
+                    col_index = col_index + 1
+                    column_names.append(col_name)
+                    col_info[col_name] = col_index
+                    batch.add_set_cell(1, col_index, col_name)
+                batch.add_set_cell(row_index, col_info[col_name], str(row[col_name]))
+        sp_client.batch(batch, force=True)
 
+        """
         # Add column names to the batch object
         for i, col_name in enumerate(column_names):
             row_index = 1
@@ -761,9 +791,9 @@ def export_to_google_spreadsheet(credential_json, silo_id, spreadsheet_key):
             col_index = row.field.id
             value = row.char_store
             batch.add_set_cell(row_index, col_index, value)
-
+        """
         # Finally send the CellBatchUpdate object to Google
-        sp_client.batch(batch, force=True)
+        #sp_client.batch(batch, force=True)
     except Exception as e:
         print(e)
         return False
