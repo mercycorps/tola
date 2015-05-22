@@ -738,7 +738,6 @@ def export_to_google_spreadsheet(credential_json, silo_id, spreadsheet_key):
         
         from collections import OrderedDict
         silo_data = LabelValueStore.objects(silo_id=silo_id)
-        #silo_data_json = OrderedDict(json.loads(silo_data))
         
         # Create a CellBatchUpdate object so that all cells update is sent as one http request
         batch = gdata.spreadsheets.data.BuildBatchCellsUpdate(spreadsheet_key, worksheet_key)
