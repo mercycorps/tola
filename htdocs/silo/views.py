@@ -614,52 +614,20 @@ def createFeed(request):
         return render(request, 'feed/json.html', {"jsonData": jsonData}, content_type="application/json")
 
 def export_silo(request, id):
-    """
-    Export a silo to a CSV file
-    id = Silo
-    """
-    getSiloRows = ValueStore.objects.all().filter(field__silo__id=id).values('row_number').distinct().order_by('row_number')
-    getColumns = DataField.objects.all().filter(silo__id=id).values('name').distinct()
-
-    # Create the HttpResponse object with the appropriate CSV header.
+    
     response = HttpResponse(content_type='text/csv')
-    getSiloName = Silo.objects.get(pk=id)
-    file = getSiloName.name + ".csv"
-
-    response['Content-Disposition'] = 'attachment; filename=file'
-
+    response['Content-Disposition'] = 'attachment; filename="somefilename.csv"'
     writer = csv.writer(response)
 
-    #create a list of column names
-    column_list = []
-    value_list = []
-    for column in getColumns:
-        column_list.append(str(column['name']))
-    #print the list of column names
-    writer.writerow(column_list)
-
-    #loop over each row of the silo
-    for row in getSiloRows:
-        getSiloColumns = ValueStore.objects.all().filter(field__silo__id=id, row_number=str(row['row_number'])).values_list('field__name', flat=True).distinct()
-        #print "row"
-        #print str(row['row_number'])
-        #get a column value for each column in the row
-        for x in column_list:
-            if x in getSiloColumns:
-                #print x
-                getSiloValues = ValueStore.objects.get(field__silo__id=id, row_number=str(row['row_number']), field__name=x)
-                value_list.append(str(getSiloValues.char_store.encode(errors="ignore")))
-            else:
-                value_list.append("")
-
-
-        #print the row
-        writer.writerow(value_list)
-        value_list = []
-
+    silo_data = LabelValueStore.objects(silo_id=id)
+    if silo_data:
+        columns_headings = [col for col in silo_data[0]]
+        writer.writerow(columns_headings)
+        
+        for row in silo_data:
+            writer.writerow([row[col] for col in row])
 
     return response
-
 
 def createDynamicModel(request):
     """
@@ -736,7 +704,6 @@ def export_to_google_spreadsheet(credential_json, silo_id, spreadsheet_key):
         worksheet_key = worksheets_feed.entry[0].id.text.rsplit("/", 1)[1]
         #print("worksheet_key: %s" % worksheet_key)
         
-        from collections import OrderedDict
         silo_data = LabelValueStore.objects(silo_id=silo_id)
         
         # Create a CellBatchUpdate object so that all cells update is sent as one http request
@@ -747,7 +714,6 @@ def export_to_google_spreadsheet(credential_json, silo_id, spreadsheet_key):
         col_info = {}
         
         for row in silo_data:
-            print(row)
             row_index = row_index + 1
             for i, col_name in enumerate(row):
                 if col_name not in col_info.keys():
