@@ -615,8 +615,10 @@ def createFeed(request):
 
 def export_silo(request, id):
     
+    silo_name = Silo.objects.get(id=id).name
+    
     response = HttpResponse(content_type='text/csv')
-    response['Content-Disposition'] = 'attachment; filename="somefilename.csv"'
+    response['Content-Disposition'] = 'attachment; filename="%s.csv"' % silo_name
     writer = csv.writer(response)
 
     silo_data = LabelValueStore.objects(silo_id=id)
