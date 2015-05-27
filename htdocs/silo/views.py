@@ -36,36 +36,6 @@ from django.core.urlresolvers import reverse
 
 from django.utils import timezone
 
-# Merge 2 silos together.
-@csrf_protect
-def doMerge(request):
-    """ 
-    TODO: DELETE THIS? since there is another view called "mergeForm"
-    """
-    from_silo_id = request.POST["from_silo_id"]
-    to_silo_id = request.POST["to_silo_id"]
-    getSourceFrom = DataField.objects.all().filter(silo__id=from_silo_id)
-
-    #update row numbers to start at last row of from silo
-    offset = ValueStore.objects.filter(field__silo=from_silo_id).aggregate(Max('row_number'))['row_number__max']
-    update_row_numbers = ValueStore.objects.filter(field__silo=to_silo_id).update(row_number=F('row_number')+offset)
-
-    # update each column, set value to evaluated column name which will equal the selected value in from column drop down
-    for column in getSourceFrom:
-        #If it's a new column just update the column to use the new silo
-        if request.POST.get(column.name) == "0":
-            update_column_silo = DataField.objects.filter(name=column.name).update(silo=to_silo_id)
-        #if it's an existing column update the values to use the existing column
-        elif request.POST.get(column.name) != "Ignore" and request.POST.get(column.name) != "0":
-            update_column_name = DataField.objects.filter(name=column.name).update(name=request.POST.get(column.name), silo=to_silo_id)
-
-    #delete silo and original fields
-    deleteSilo = Silo.objects.get(pk=from_silo_id).delete()
-    #get new combined silo values then display them
-    getSilo = ValueStore.objects.all().filter(field__silo__id=to_silo_id)
-
-    return render(request, "display/stored_values.html", {'getSilo': getSilo})
-
 # Edit existing silo meta data
 @csrf_protect
 def editSilo(request, id):
@@ -309,18 +279,6 @@ def getJSON(request):
     #return render(request, "read/show-columns.html", {'getFields': None, 'silo_id': silo_id})
     return HttpResponseRedirect('/silo_detail/' + silo_id + '/')
 
-
-def updateUID(request):
-    """
-    Set the PK for each row by allowing the user to select a column
-    """
-    for row in request.POST['is_uid']:
-        update_uid = DataField.objects.filter(pk=row).update(is_uid=1)
-
-    messages.success(request, 'Silo updated, view new silo data below')
-    return redirect('/silo_detail/' + request.POST['silo_id'] + '/')
-
-
 #display
 #INDEX
 def index(request):
@@ -479,31 +437,8 @@ def valueDelete(request,id):
     messages.success(request, "Record deleted successfully")
     return render(request, 'read/delete_value.html')
 
-def fieldEdit(request,id):
-    """
-    Edit a field
-    TODO: DELETE THIS?
-    """
-    if request.method == 'POST': # If the form has been submitted...
-        form = FieldEditForm(request.POST) # A form bound to the POST data
-        if form.is_valid(): # All validation rules pass
-            # save data to read
-            update = DataField.objects.get(pk=id)
-            form = FieldEditForm(request.POST, instance=update)
-            new = form.save(commit=True)
-            return HttpResponseRedirect('/field_edit/' + id)
-        else:
-            print "not valid"
-    else:
-        field= get_object_or_404(DataField, pk=id)
-        form = FieldEditForm(instance=field) # An unbound form
-
-    return render(request, 'read/field_edit.html', {'form': form,'field':field})
-
-
 #FEED VIEWS
 # API Classes
-
 
 class UserViewSet(viewsets.ModelViewSet):
     queryset = User.objects.all()
@@ -630,26 +565,6 @@ def export_silo(request, id):
             writer.writerow([row[col] for col in row])
 
     return response
-
-def createDynamicModel(request):
-    """
-    Create an XML or JSON Feed from a given Silo
-    """
-    getSilo = Silo.objects.filter(silo_id=request.POST['silo_id'])
-    getValues = ValueStore.objects.filter(field__silo__id=request.POST['silo_id'])
-    getFields = DataField.objects.filter(field__silo__id=request.POST['silo_id'])
-
-    #return a dict with label value pair data
-    formatted_data = siloToModel(getSilo['name'],getFields['name'])
-
-    getFeedType = FeedType.objects.get(pk = request.POST['feed_type'])
-
-    if getFeedType.description == "XML":
-        xmlData = serialize(formatted_data)
-        return render(request, 'feed/xml.html', {"xml": xmlData}, content_type="application/xhtml+xml")
-    elif getFeedType.description == "JSON":
-        jsonData = simplejson.dumps(formatted_data)
-        return render(request, 'feed/json.html', {"jsonData": jsonData}, content_type="application/json")
 
 from oauth2client.client import flow_from_clientsecrets
 from oauth2client.django_orm import Storage

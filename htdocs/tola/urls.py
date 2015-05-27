@@ -73,9 +73,6 @@ urlpatterns = patterns('',
                         #getJSON data
                         url(r'^json', 'silo.views.getJSON', name='getJSON'),
 
-                        #updateUID data
-                        url(r'^update', 'silo.views.updateUID', name='updateUID'),
-
                         #login data
                         url(r'^read/login/$', 'silo.views.getLogin', name='getLogin'),
 
@@ -107,18 +104,8 @@ urlpatterns = patterns('',
                         #delete single silo value
                         url(r'^value_delete/(?P<id>\w+)/$', 'silo.views.valueDelete', name='valueDelete'),
 
-                        #edit single field
-                        url(r'^field_edit/(?P<id>\w+)/$', 'silo.views.fieldEdit', name='fieldEdit'),
-
-
-                        ###SILO
-                        url(r'^do_merge', 'silo.views.doMerge', name='doMerge'),
-
                         #edit silo
                         url(r'^silo_edit/(?P<id>\w+)/$', 'silo.views.editSilo', name='editSilo'),
-
-                        #merge silos
-                        url(r'^doMerge', 'silo.views.doMerge', name='doMerge'),
 
                         #delete a silo
                         url(r'^silo_delete/(?P<id>\w+)/$','silo.views.deleteSilo', name='deleteSilo'),
@@ -129,7 +116,7 @@ urlpatterns = patterns('',
                         url(r'^export_new_gsheet/(?P<id>\d+)/$', 'silo.views.export_new_gsheet', name='export_new_gsheet'),
                         url(r'^export_gsheet/(?P<id>\d+)/$', 'silo.views.export_gsheet', name='export_existing_gsheet'),
                         url(r'^oauth2callback/$', 'silo.views.oauth2callback', name='oauth2callback'),
-                        
+
                         #create a feed
                         url(r'^create_feed', 'silo.views.createFeed', name='createFeed'),
 
