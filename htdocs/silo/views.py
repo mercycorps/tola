@@ -369,6 +369,7 @@ def mergeColumns(request):
     """
     from_silo_id = request.POST["from_silo_id"]
     to_silo_id = request.POST["to_silo_id"]
+    """
     lvs1 = LabelValueStore.objects(silo_id=from_silo_id).count()
     lvs2 = LabelValueStore.objects(silo_id=to_silo_id).count()
     
@@ -380,7 +381,66 @@ def mergeColumns(request):
     messages.success(request, "Merged your silos")
     
     return HttpResponseRedirect("/display/")
+    """
 
+    lvs = json.loads(LabelValueStore.objects(silo_id__in = [from_silo_id, to_silo_id]).to_json())
+    getSourceFrom = []
+    getSourceTo = []
+    for l in lvs:
+        if from_silo_id == str(l['silo_id']):
+            getSourceFrom.extend([k for k in l.keys() if k not in getSourceFrom])
+        else:
+            getSourceTo.extend([k for k in l.keys() if k not in getSourceTo])
+    
+    return render(request, "display/merge-column-form.html", {'getSourceFrom':getSourceFrom, 'getSourceTo':getSourceTo, 'from_silo_id':from_silo_id, 'to_silo_id':to_silo_id})
+
+import pymongo
+def doMerge(request):
+    from_silo_id = int(request.POST['from_silo_id'])
+    to_silo_id = int(request.POST["to_silo_id"])
+
+    conn = pymongo.Connection()
+    db = conn.tola
+
+    for k in request.POST:
+        if k != "silo_id" and k !=  "_id" and k != "to_silo_id" and k != "from_silo_id" and k != "csrfmiddlewaretoken": 
+            from_field = request.POST.getlist(k)[0].lower()
+            to_field = request.POST.getlist(k)[1].lower()
+            
+            if to_field == "Ignore":
+                "This field should be deleted from the silo_id = 'from_silo_id'"
+                print ("FROM FIELD: %s and SILO_ID: %s" % (from_field, from_silo_id))
+                db.label_value_store.update( 
+                    { "silo_id": from_silo_id }, 
+                    { 
+                        "$unset": {from_field: ""}, 
+                    }, 
+                    False,  False,  None, True 
+                )
+            elif to_field == "0":
+                "Nothing should be done in this case because when the silo_id is updated to to_silo_id this field will become part of the to_silo_id "
+                pass
+            else:
+                db.label_value_store.update(
+                    { "silo_id": from_silo_id }, 
+                    { 
+                        "$rename": { from_field:  to_field },  
+                        "$currentDate": { 'edit_date': True } 
+                    }, 
+                    False, False, None, True 
+                )
+    
+    #print ("successful merged from silo_id = %s into silo_id = %s" % (from_silo_id, to_silo_id))
+    db.label_value_store.update( 
+        { "silo_id": from_silo_id }, 
+        { 
+            "$set": { "silo_id": to_silo_id }, 
+        }, 
+        False, False, None, True 
+    )
+    
+    #messages.success(request, "Silos merged successfully")
+    return HttpResponseRedirect("/silo_detail/%s" % to_silo_id)
 
 #EDIT A SINGLE VALUE STORE
 def valueEdit(request,id):

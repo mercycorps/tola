@@ -91,7 +91,8 @@ urlpatterns = patterns('',
 
                         #merge select columns
                         url(r'^merge_columns', 'silo.views.mergeColumns', name='mergeColumns'),
-
+                        url(r'^doMerge', 'silo.views.doMerge', name='doMerge'),
+                        
                         #list all silos
                         url(r'^display', 'silo.views.listSilos', name='listSilos'),
 
