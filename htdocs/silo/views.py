@@ -345,13 +345,18 @@ def siloDetail(request,id):
     """
     table = LabelValueStore.objects(silo_id=id).to_json()
     decoded_json = json.loads(table)
-    silo = define_table(decoded_json[0].keys())(decoded_json)
     
-    #This is needed in order for table sorting to work
-    RequestConfig(request).configure(silo)
+    if decoded_json:
+        silo = define_table(decoded_json[0].keys())(decoded_json)
     
-    #send the keys and vars from the json data to the template along with submitted feed info and silos for new form
-    return render(request, "display/stored_values.html", {"silo": silo})
+        #This is needed in order for table sorting to work
+        RequestConfig(request).configure(silo)
+    
+        #send the keys and vars from the json data to the template along with submitted feed info and silos for new form
+        return render(request, "display/stored_values.html", {"silo": silo})
+    else:
+        messages.error(request, "Silo with id = %s does not exist" % id)
+        return HttpResponseRedirect(request.META['HTTP_REFERER'])
 
 #SHOW-MERGE FORM
 def mergeForm(request,id):
@@ -369,19 +374,6 @@ def mergeColumns(request):
     """
     from_silo_id = request.POST["from_silo_id"]
     to_silo_id = request.POST["to_silo_id"]
-    """
-    lvs1 = LabelValueStore.objects(silo_id=from_silo_id).count()
-    lvs2 = LabelValueStore.objects(silo_id=to_silo_id).count()
-    
-    if lvs1 > lvs2:
-        LabelValueStore.objects(silo_id=to_silo_id).update(silo_id=from_silo_id)
-    else:
-        LabelValueStore.objects(silo_id=from_silo_id).update(silo_id=to_silo_id)
-    
-    messages.success(request, "Merged your silos")
-    
-    return HttpResponseRedirect("/display/")
-    """
 
     lvs = json.loads(LabelValueStore.objects(silo_id__in = [from_silo_id, to_silo_id]).to_json())
     getSourceFrom = []
@@ -396,49 +388,57 @@ def mergeColumns(request):
 
 import pymongo
 def doMerge(request):
-    from_silo_id = int(request.POST['from_silo_id'])
-    to_silo_id = int(request.POST["to_silo_id"])
+    from_silo_id = request.POST['from_silo_id']
+    to_silo_id = request.POST["to_silo_id"]
 
+    try:
+        from_silo_id = int(from_silo_id)
+        to_silo_id = int(to_silo_id)
+    except ValueError as e:
+        from_silo_id = None
+        to_silo_id = None
+        print("The from_silo_id and/or the to_silo_id is not an integer")
+    
     conn = pymongo.Connection()
     db = conn.tola
 
-    for k in request.POST:
-        if k != "silo_id" and k !=  "_id" and k != "to_silo_id" and k != "from_silo_id" and k != "csrfmiddlewaretoken": 
-            from_field = request.POST.getlist(k)[0].lower()
-            to_field = request.POST.getlist(k)[1].lower()
+    if from_silo_id != None and to_silo_id != None:
+        for k in request.POST:
+            if k != "silo_id" and k !=  "_id" and k != "to_silo_id" and k != "from_silo_id" and k != "csrfmiddlewaretoken": 
+                from_field = request.POST.getlist(k)[0].lower()
+                to_field = request.POST.getlist(k)[1].lower()
             
-            if to_field == "Ignore":
-                "This field should be deleted from the silo_id = 'from_silo_id'"
-                print ("FROM FIELD: %s and SILO_ID: %s" % (from_field, from_silo_id))
-                db.label_value_store.update( 
-                    { "silo_id": from_silo_id }, 
-                    { 
-                        "$unset": {from_field: ""}, 
-                    }, 
-                    False,  False,  None, True 
-                )
-            elif to_field == "0":
-                "Nothing should be done in this case because when the silo_id is updated to to_silo_id this field will become part of the to_silo_id "
-                pass
-            else:
-                db.label_value_store.update(
-                    { "silo_id": from_silo_id }, 
-                    { 
-                        "$rename": { from_field:  to_field },  
-                        "$currentDate": { 'edit_date': True } 
-                    }, 
-                    False, False, None, True 
-                )
-    
-    #print ("successful merged from silo_id = %s into silo_id = %s" % (from_silo_id, to_silo_id))
-    db.label_value_store.update( 
-        { "silo_id": from_silo_id }, 
-        { 
-            "$set": { "silo_id": to_silo_id }, 
-        }, 
-        False, False, None, True 
-    )
-    
+                if to_field == "Ignore":
+                    "This field should be deleted from the silo_id = 'from_silo_id'"
+                    print ("FROM FIELD: %s and SILO_ID: %s" % (from_field, from_silo_id))
+                    db.label_value_store.update( 
+                        { "silo_id": from_silo_id }, 
+                        { 
+                            "$unset": {from_field: ""}, 
+                        }, 
+                        False,  False,  None, True 
+                    )
+                elif to_field == "0":
+                    "Nothing should be done in this case because when the silo_id is updated to to_silo_id this field will become part of the to_silo_id "
+                    pass
+                else:
+                    db.label_value_store.update(
+                        { "silo_id": from_silo_id }, 
+                        { 
+                            "$rename": { from_field:  to_field },  
+                            "$currentDate": { 'edit_date': True } 
+                        }, 
+                        False, False, None, True 
+                    )
+
+        db.label_value_store.update( 
+            { "silo_id": from_silo_id }, 
+            { 
+                "$set": { "silo_id": to_silo_id }, 
+            }, 
+            False, False, None, True 
+        )
+        Silo.objects.filter(pk = from_silo_id).delete()
     #messages.success(request, "Silos merged successfully")
     return HttpResponseRedirect("/silo_detail/%s" % to_silo_id)
 
