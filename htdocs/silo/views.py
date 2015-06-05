@@ -89,7 +89,7 @@ def initRead(request):
             new_read = form.save()
             id = str(new_read.id)
             if form.instance.file_data:
-                redirect_var = "file"
+                redirect_var = "file/%s" % id
             else:
                 redirect_var = "read/login"
             return HttpResponseRedirect('/' + redirect_var + '/')  # Redirect after POST to getLogin
@@ -650,69 +650,86 @@ FLOW = flow_from_clientsecrets(
 
 def export_to_google_spreadsheet(credential_json, silo_id, spreadsheet_key):
 
+
+    # Create OAuth2Token for authorizing the SpreadsheetClient
+    token = gdata.gauth.OAuth2Token(
+        client_id = credential_json['client_id'],
+        client_secret = credential_json['client_secret'],
+        scope = 'https://spreadsheets.google.com/feeds',
+        user_agent = "TOLA",
+        access_token = credential_json['access_token'],
+        refresh_token = credential_json['refresh_token'])
+
+    # Instantiate the SpreadsheetClient object
+    sp_client = gdata.spreadsheets.client.SpreadsheetsClient(source="TOLA")
+
+    # authorize the SpreadsheetClient object
+    sp_client = token.authorize(sp_client)
+    #print(sp_client)
+    
+    
+    # Create a WorksheetQuery object to allow for filtering for worksheets by the title
+    worksheet_query = gdata.spreadsheets.client.WorksheetQuery(title="Sheet1", title_exact=True)
+    
+    
+    # Get a feed of all worksheets in the specified spreadsheet that matches the worksheet_query
+    worksheets_feed = sp_client.get_worksheets(spreadsheet_key, query=worksheet_query)
+    #print("worksheets_feed: %s" % worksheets_feed)
+    
+    
+    # Retrieve the worksheet_key from the first match in the worksheets_feed object
+    worksheet_key = worksheets_feed.entry[0].id.text.rsplit("/", 1)[1]
+    #print("worksheet_key: %s" % worksheet_key)
+    
+    silo_data = LabelValueStore.objects(silo_id=silo_id)
+    
+    # Create a CellBatchUpdate object so that all cells update is sent as one http request
+    batch = gdata.spreadsheets.data.BuildBatchCellsUpdate(spreadsheet_key, worksheet_key)
+    
+    col_index = 0
+    row_index = 1
+    col_info = {}
+    
+    for row in silo_data:
+        row_index = row_index + 1
+        for i, col_name in enumerate(row):
+            if col_name not in col_info.keys():
+                col_index = col_index + 1
+                col_info[col_name] = col_index
+                batch.add_set_cell(1, col_index, col_name) #Add column names
+            #print("%s = %s - %s: %s" % (col_info[col_name], col_name, type(row[col_name]),  row[col_name]))
+            
+            val = row[col_name]
+            if col_name != "isd":
+                try:
+                    #val = str(val)#.encode('ascii', 'ignore')
+                    val = val.encode('ascii', 'xmlcharrefreplace')
+                except Exception as e:
+                    try:
+                        val = str(val)
+                    except Exception as e1:                        
+                        print(e)
+                        print(val)
+                        pass
+            
+                batch.add_set_cell(row_index, col_info[col_name], val)
+    
+    # By default a blank Google Spreadsheet has 26 columns but if our data has more column
+    # then add more columns to Google Spreadsheet otherwise there would be a 500 Error!
+    if col_index and col_index > 26:
+        worksheet = worksheets_feed.entry[0]
+        worksheet.col_count.text = str(col_index)
+
+        # Send the worksheet update call to Google Server
+        sp_client.update(worksheet, force=True)
+
     try:
-        # Create OAuth2Token for authorizing the SpreadsheetClient
-        token = gdata.gauth.OAuth2Token(
-            client_id = credential_json['client_id'],
-            client_secret = credential_json['client_secret'],
-            scope = 'https://spreadsheets.google.com/feeds',
-            user_agent = "TOLA",
-            access_token = credential_json['access_token'],
-            refresh_token = credential_json['refresh_token'])
-
-        # Instantiate the SpreadsheetClient object
-        sp_client = gdata.spreadsheets.client.SpreadsheetsClient(source="TOLA")
-
-        # authorize the SpreadsheetClient object
-        sp_client = token.authorize(sp_client)
-        #print(sp_client)
-        
-        
-        # Create a WorksheetQuery object to allow for filtering for worksheets by the title
-        worksheet_query = gdata.spreadsheets.client.WorksheetQuery(title="Sheet1", title_exact=True)
-        
-        
-        # Get a feed of all worksheets in the specified spreadsheet that matches the worksheet_query
-        worksheets_feed = sp_client.get_worksheets(spreadsheet_key, query=worksheet_query)
-        #print("worksheets_feed: %s" % worksheets_feed)
-        
-        
-        # Retrieve the worksheet_key from the first match in the worksheets_feed object
-        worksheet_key = worksheets_feed.entry[0].id.text.rsplit("/", 1)[1]
-        #print("worksheet_key: %s" % worksheet_key)
-        
-        silo_data = LabelValueStore.objects(silo_id=silo_id)
-        
-        # Create a CellBatchUpdate object so that all cells update is sent as one http request
-        batch = gdata.spreadsheets.data.BuildBatchCellsUpdate(spreadsheet_key, worksheet_key)
-        
-        col_index = 0
-        row_index = 1
-        col_info = {}
-        
-        for row in silo_data:
-            row_index = row_index + 1
-            for i, col_name in enumerate(row):
-                if col_name not in col_info.keys():
-                    col_index = col_index + 1
-                    col_info[col_name] = col_index
-                    batch.add_set_cell(1, col_index, col_name)
-                batch.add_set_cell(row_index, col_info[col_name], str(row[col_name]))
-        
-        # By default a blank Google Spreadsheet has 26 columns but if our data has more column
-        # then add more columns to Google Spreadsheet otherwise there would be a 500 Error!
-        if col_index and col_index > 26:
-            worksheet = worksheets_feed.entry[0]
-            worksheet.col_count.text = str(col_index)
-
-            # Send the worksheet update call to Google Server
-            sp_client.update(worksheet, force=True)
-        
         # Finally send the CellBatchUpdate object to Google
         sp_client.batch(batch, force=True)
     except Exception as e:
-        print(e)
+        print("ERROR: %s" % e)
         return False
+
     return True
 
 
