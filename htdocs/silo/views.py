@@ -345,9 +345,13 @@ def siloDetail(request,id):
     """
     table = LabelValueStore.objects(silo_id=id).to_json()
     decoded_json = json.loads(table)
+    column_names = []
+    #column_names = decoded_json[0].keys()
+    for row in decoded_json:
+        column_names.extend([k for k in row.keys() if k not in column_names])
     
     if decoded_json:
-        silo = define_table(decoded_json[0].keys())(decoded_json)
+        silo = define_table(column_names)(decoded_json)
     
         #This is needed in order for table sorting to work
         RequestConfig(request).configure(silo)
