@@ -32,7 +32,7 @@
                             {{item.id}}, 0
                         {% endif %}
                     );">
-                    <div id="remote_end_point" >
+                    <div id="remote_end_point" style="display: none;">
                         <div id="link">{{ item.remote_end_points.all.0.link }}</div>
                         <div id="rid">{{ item.remote_end_points.all.0.resource_id }}</div>
                     </div>
@@ -72,13 +72,10 @@
         
         // After Google's auth library is loaded, this function is called
         function onAuthApiLoad(id, gid) {
-            console.log("id: " + id + " gid: " + gid);
             if (gid) {
                 var divs = $("#remote_end_point").children("div");
                 var url = divs[0].innerHTML;
                 var rid = divs[1].innerHTML;
-                console.log(url);
-                console.log(rid);
                 export_to_gsheet(id, url,  rid);
                 return;
             }
