@@ -562,22 +562,9 @@ def customFeed(request,id):
     All tags in use on this system
     id = Silo
     """
-    #get all of the data fields for the silo
-    #queryset = DataField.objects.filter(silo__id=id)
-    queryset = ValueStore.objects.filter(field__silo=id).order_by('row_number','id').select_related('field').values('char_store', 'field__name')
+    queryset = LabelValueStore.objects.filter(silo_id=id).to_json()
 
-    formatted_data = []
-
-    #loop over the labels and populate the first list with lables
-    for row in queryset:
-        #append the label to the list
-        formatted_data.append(row['field__name'])
-
-        formatted_data.append(row['char_store'])
-
-    #output list to json
-    jsonData = simplejson.dumps(formatted_data)
-    return render(request, 'feed/json.html', {"jsonData": jsonData}, content_type="application/json")
+    return render(request, 'feed/json.html', {"jsonData": queryset}, content_type="application/json")
 
 #Feeds
 def listFeeds(request):
