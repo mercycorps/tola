@@ -140,7 +140,8 @@
             }
             
             //$(location).attr('href', '/export_gsheet/' + silo_id + "/?link=" + url);
-            $.get('/export_gsheet/' + silo_id + "/", { "link": url , "resource_id": id} );
+            //$.get('/export_gsheet/' + silo_id + "/", { "link": url , "resource_id": id} );
+            export_to_gsheet(silo_id, url, id);
         }
         
     </script>
