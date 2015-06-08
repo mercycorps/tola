@@ -26,7 +26,7 @@ import django_tables2 as tables
 from django_tables2 import RequestConfig
 
 from .models import Silo, DataField, ValueStore, RemoteEndPoint, Read, ReadType, LabelValueStore
-from .serializers import SiloSerializer, DataFieldSerializer, ValueStoreSerializer, UserSerializer, ReadSerializer, ReadTypeSerializer
+from .serializers import SiloSerializer, UserSerializer, ReadSerializer, ReadTypeSerializer
 
 from django.contrib.auth.decorators import login_required
 from tola.util import siloToDict
@@ -512,32 +512,6 @@ class SiloViewSet(viewsets.ModelViewSet):
     queryset = Silo.objects.all()
     serializer_class = SiloSerializer
 
-class FeedViewSet(viewsets.ModelViewSet):
-    """
-    This viewset automatically provides `list`, `create`, `retrieve`,
-    `update` and `destroy` actions.
-    """
-    queryset = Silo.objects.all()
-    serializer_class = SiloSerializer
-
-
-class DataFieldViewSet(viewsets.ModelViewSet):
-    """
-    This viewset automatically provides `list`, `create`, `retrieve`,
-    `update` and `destroy` actions.
-    """
-    queryset = DataField.objects.all()
-    serializer_class = DataFieldSerializer
-
-
-class ValueStoreViewSet(viewsets.ModelViewSet):
-    """
-    This viewset automatically provides `list`, `create`, `retrieve`,
-    `update` and `destroy` actions.
-    """
-    queryset = ValueStore.objects.all()
-    serializer_class = ValueStoreSerializer
-
 class ReadViewSet(viewsets.ModelViewSet):
     """
     This viewset automatically provides `list`, `create`, `retrieve`,
@@ -562,7 +536,7 @@ def customFeed(request,id):
     All tags in use on this system
     id = Silo
     """
-    queryset = LabelValueStore.objects.filter(silo_id=id).to_json()
+    queryset = LabelValueStore.objects.exclude("silo_id").filter(silo_id=id).to_json()
 
     return render(request, 'feed/json.html', {"jsonData": queryset}, content_type="application/json")
 

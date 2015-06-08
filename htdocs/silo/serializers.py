@@ -12,21 +12,6 @@ class SiloSerializer(serializers.HyperlinkedModelSerializer):
         depth =1
 
 
-class DataFieldSerializer(serializers.HyperlinkedModelSerializer):
-
-    class Meta:
-        model = DataField
-        fields = ('silo', 'name', 'is_uid', 'create_date', 'edit_date')
-        depth=1
-
-
-class ValueStoreSerializer(serializers.HyperlinkedModelSerializer):
-
-    class Meta:
-        model = ValueStore
-        fields = ('field', 'char_store', 'create_date', 'edit_date')
-
-
 class UserSerializer(serializers.HyperlinkedModelSerializer):
 
     class Meta:

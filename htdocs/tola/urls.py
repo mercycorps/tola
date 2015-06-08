@@ -1,5 +1,5 @@
 from silo import views
-from silo.views import FeedViewSet,DataFieldViewSet,ValueStoreViewSet, UserViewSet, ReadViewSet, ReadTypeViewSet, SiloViewSet
+from silo.views import  UserViewSet, ReadViewSet, ReadTypeViewSet, SiloViewSet
 from django.conf.urls import patterns, include, url
 from django.views.generic import TemplateView
 from django.contrib.auth.models import User
@@ -18,12 +18,8 @@ admin.autodiscover()
 router = routers.DefaultRouter()
 router.register(r'silo', SiloViewSet)
 router.register(r'users', UserViewSet)
-router.register(r'feed', FeedViewSet)
-router.register(r'datafield', DataFieldViewSet)
-router.register(r'valuestore', ValueStoreViewSet)
 router.register(r'read', ReadViewSet)
 router.register(r'readtype', ReadTypeViewSet)
-
 
 
 

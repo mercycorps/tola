@@ -18,9 +18,9 @@
             <th align="center">Existing Google Sheet</th>
             </tr>
             {% for item in getSilos %}
-            <h1>{{ item.remote_end_points.all.0.id }}</h1>
+            
             <tr>
-                <td><a href="/api/feed/{{ item.id }}" target="_new">{{ item.name }}</a></td>
+                <td><a href="/api/silo/{{ item.id }}" target="_new">{{ item.name }}</a></td>
                 <td><a href="/api/custom/{{ item.id }}" target="_new">{{ item.name }}</a></td>
                 <td><a href="/export/{{ item.id }}" class="btn btn-sm btn-info"><span class="glyphicon glyphicon-file"></span></a></td>
                 <td align="center"><a href="/export_new_gsheet/{{ item.id }}/" class="btn btn-sm btn-info"><span class="glyphicon glyphicon-cloud-upload"></span></a></td>
