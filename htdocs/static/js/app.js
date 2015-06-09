@@ -10,7 +10,6 @@ $(document).ready(function() {
         e.preventDefault();
         var response = confirm("Are you sure you want to delete this record?");
         if (response == true) {
-            console.log($(this).attr('href'));
             window.location = $(this).attr('href');
         }
     });
