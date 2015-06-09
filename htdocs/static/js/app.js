@@ -1,6 +1,3 @@
-
-
-
 //App specific JavaScript//App specific JavaScript
 $(function () {
   $('[data-toggle="tooltip"]').tooltip()
@@ -9,8 +6,15 @@ $(function () {
 //custom jquery to trigger dat picker, info pop-over and print category text
 $(document).ready(function() {
     $('.datepicker').datepicker();
+    $('.btn-del').click(function(e) {
+        e.preventDefault();
+        var response = confirm("Are you sure you want to delete this record?");
+        if (response == true) {
+            console.log($(this).attr('href'));
+            window.location = $(this).attr('href');
+        }
+    });
 });
-
 
 $('input[type="file"]').each(function() {
     var $file = $(this), $form = $file.closest('.upload-form');
