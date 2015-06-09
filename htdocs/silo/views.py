@@ -499,7 +499,7 @@ def valueDelete(request,id):
     lvs.delete()
     
     messages.success(request, "Record deleted successfully")
-    return render(request, 'read/delete_value.html')
+    return HttpResponseRedirect('/silo_detail/%s/' % silo_id)
 
 #FEED VIEWS
 # API Classes
