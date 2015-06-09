@@ -1,6 +1,7 @@
 from django.forms import ModelForm
 from silo.models import Silo,ValueStore,DataField,Read
-import floppyforms as forms
+#import floppyforms as forms
+from django import forms
 from crispy_forms.helper import FormHelper
 from crispy_forms.layout import Layout, Div, Submit, Reset, HTML, Button, Row, Field, Hidden
 from crispy_forms.bootstrap import FormActions
@@ -118,7 +119,7 @@ class MongoEditForm(forms.Form):
     """
     id = forms.CharField(required=False, max_length=24, widget=forms.HiddenInput())
     silo_id = forms.IntegerField(required=False, widget=forms.HiddenInput())
-    
+
     def __init__(self, *args, **kwargs):
         extra = kwargs.pop("extra")
         self.helper = FormHelper()
@@ -129,11 +130,11 @@ class MongoEditForm(forms.Form):
         self.helper.html5_required = True
         self.helper.form_tag = False
         super(MongoEditForm, self).__init__(*args, **kwargs)
-        
+
         for item in extra:
             if item == "edit_date" or item == "create_date":
                 self.fields[item] = forms.CharField(label = item, initial=extra[item], required=False, widget=forms.TextInput(attrs={'readonly': "readonly"}))
             elif item != "_id" and item != "silo_id":
                 self.fields[item] = forms.CharField(label = item, initial=extra[item], required=False)
 
-    
+

@@ -212,7 +212,7 @@ THIRD_PARTY_APPS = (
     'rest_framework',
     'django_tables2',
     'crispy_forms',
-    'floppyforms',
+    #'floppyforms',
     'django_extensions',
 
     #'mongoengine'
