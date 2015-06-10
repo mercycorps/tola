@@ -117,9 +117,6 @@ urlpatterns = patterns('',
                         #create a feed
                         url(r'^create_feed', 'silo.views.createFeed', name='createFeed'),
 
-                        #app include of readtoken urls
-                        url(r'^readtoken/', include('readtoken.urls')),
-
                         #local login
                         (r'^accounts/login/',  login),
                         url(r'^accounts/logout/$', 'tola.views.logout_view', name='logout'),
