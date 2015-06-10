@@ -10,7 +10,7 @@ import hashlib
 
 
 from django.http import HttpResponseRedirect, Http404
-from silo.models import Silo, DataField, ValueStore,Read
+from silo.models import Silo, Read
 from .models import Token
 from forms import ReadForm, TokenFormSet, EditTokenFormSet
 from django.shortcuts import render_to_response

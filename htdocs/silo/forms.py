@@ -1,5 +1,5 @@
 from django.forms import ModelForm
-from silo.models import Silo,ValueStore,DataField,Read
+from silo.models import Silo, Read
 #import floppyforms as forms
 from django import forms
 from crispy_forms.helper import FormHelper
@@ -107,11 +107,6 @@ class FileField(Field):
 
 
 #Display forms
-
-class FieldEditForm(ModelForm):
-    class Meta:
-        model = DataField
-        fields = ['original_name','name','is_uid','create_date','edit_date']
 
 class MongoEditForm(forms.Form):
     """

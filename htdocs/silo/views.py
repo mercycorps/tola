@@ -6,7 +6,7 @@ import csv
 import operator
 
 from django.http import HttpResponseRedirect
-from .forms import ReadForm, UploadForm, ODKForm, SiloForm, FieldEditForm, MongoEditForm
+from .forms import ReadForm, UploadForm, ODKForm, SiloForm, MongoEditForm
 from django.contrib import messages
 from django.contrib.auth.models import User
 from django.core.urlresolvers import reverse
@@ -21,11 +21,10 @@ from django.shortcuts import render
 from django.db.models import Max
 from django.db.models import F
 from django.views.decorators.csrf import csrf_protect
-from .tables import SiloTable
 import django_tables2 as tables
 from django_tables2 import RequestConfig
 
-from .models import Silo, DataField, ValueStore, RemoteEndPoint, Read, ReadType, LabelValueStore
+from .models import Silo, RemoteEndPoint, Read, ReadType, LabelValueStore
 from .serializers import SiloSerializer, UserSerializer, ReadSerializer, ReadTypeSerializer
 
 from django.contrib.auth.decorators import login_required
