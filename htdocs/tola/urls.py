@@ -57,9 +57,6 @@ urlpatterns = patterns('',
                         #read init form
                         url(r'^new_read', 'silo.views.initRead', name='initRead'),
 
-                        #read ODK form
-                        url(r'^new_odk', 'silo.views.odk', name='odk'),
-
                         #show read or source
                         url(r'^show_read/(?P<id>\w+)/$', 'silo.views.showRead', name='showRead'),
 
@@ -72,15 +69,10 @@ urlpatterns = patterns('',
                         #login data
                         url(r'^read/login/$', 'silo.views.getLogin', name='getLogin'),
 
-                        url(r'^read/odk_login/$', 'silo.views.odkLogin', name='odkLogin'),
-
 
                         ###DISPLAY
                         #list all silos
                         url(r'^silos', 'silo.views.listSilos', name='listSilos'),
-
-                        #show silo detail and sources
-                        url(r'^silo/(?P<id>\w+)/$', 'silo.views.viewSilo', name='viewSilo'),
 
                         #merge form
                         url(r'^merge/(?P<id>\w+)/$', 'silo.views.mergeForm', name='mergeForm'),
@@ -89,9 +81,6 @@ urlpatterns = patterns('',
                         url(r'^merge_columns', 'silo.views.mergeColumns', name='mergeColumns'),
                         url(r'^doMerge', 'silo.views.doMerge', name='doMerge'),
                         
-                        #list all silos
-                        url(r'^display', 'silo.views.listSilos', name='listSilos'),
-
                         #view silo detail
                         url(r'^silo_detail/(?P<id>\w+)/$', 'silo.views.siloDetail', name='siloDetail'),
 

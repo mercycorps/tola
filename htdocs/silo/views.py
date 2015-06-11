@@ -67,11 +67,17 @@ def deleteSilo(request, id):
 
 
 #READ VIEWS
+@login_required
 def home(request):
     """
     List of Current Read sources that can be updated or edited
     """
-    get_reads = Read.objects.all()
+    try:
+        user = User.objects.get(username__exact=request.user)
+        get_reads = Read.objects.filter(owner=user)
+    except User.DoesNotExist as e:
+        messages.info(request, "There are no available silos")
+        get_reads = None
 
     return render(request, 'read/home.html', {'getReads': get_reads, })
 
@@ -100,48 +106,6 @@ def initRead(request):
     return render(request, 'read/read.html', {
         'form': form,
     })
-
-def odk(request):
-    """
-    Create a form to get add an ODK service like formhub or Ona
-    and re-direct to login
-    """
-    if request.method == 'POST':  # If the form has been submitted...
-        form = ODKForm(request.POST, request.FILES)  # A form bound to the POST data
-        if form.is_valid():  # All validation rules pass
-            # save data to read
-            if request.POST['url_source']:
-                url_read = request.POST['url_source']
-            else:
-                url_read = request.POST['source']
-            redirect_var = "read/odk_login"
-            return HttpResponseRedirect('/' + redirect_var + '/?read_url=' + url_read)  # Redirect after POST to getLogin
-        else:
-            messages.error(request, 'Invalid Form', fail_silently=False)
-    else:
-        form = ODKForm()  # An unbound form
-
-    return render(request, 'read/odkform.html', {
-        'form': form,
-    })
-
-def odkLogin(request):
-    """
-    Some services require a login provide user with a
-    login to service if needed and select a silo
-    """
-    # get all of the silo info to pass to the form
-    get_silo = Silo.objects.all()
-
-    #url from service
-    url = request.GET.get('read_url', 'TEST')
-
-    #redirect to JSON list of forms
-    redirect_var = "read/odk_login"
-
-    # display login form
-    return render(request, 'read/login.html', {'get_silo': get_silo, 'url': url, 'redirect_var': redirect_var})
-
 
 def showRead(request, id):
     """
@@ -276,7 +240,7 @@ def getJSON(request):
         lvs.save()
     messages.success(request, "Data imported correctly into MONGO")
     #return render(request, "read/show-columns.html", {'getFields': None, 'silo_id': silo_id})
-    return HttpResponseRedirect('/silo_detail/' + silo_id + '/')
+    return HttpResponseRedirect('/silo_detail/' + str(silo_id) + '/')
 
 #display
 #INDEX
@@ -292,28 +256,6 @@ def listSilos(request):
     get_silos = Silo.objects.all()
 
     return render(request, 'display/silos.html',{'get_silos':get_silos})
-
-#SILO-SOURCES
-def listSiloSources(request):
-    """
-    List all of the silo sources (From Read model) and provide links to edit
-    """
-    #get fields to display back to user for verification
-    getSources = Read.objects.filter(silo_id=silo_id)
-
-    #send the keys and vars from the json data to the template along with submitted feed info and silos for new form
-    return render_to_response("display/stores.html", {'getSilo':getSilo,'silo_id':silo_id})
-
-#Display a single Silo
-def viewSilo(request,id):
-    """
-    View a silo and it's meta data
-    """
-    silo_id = id
-    #get all of the silos
-    get_sources = Read.objects.all().filter(silo__id=silo_id)
-
-    return render(request, 'display/silo-sources.html',{'get_sources':get_sources})
 
         
 def define_table(columns):
