@@ -6,7 +6,7 @@ import csv
 import operator
 
 from django.http import HttpResponseRedirect
-from .forms import ReadForm, UploadForm, ODKForm, SiloForm, MongoEditForm
+from .forms import ReadForm, UploadForm, SiloForm, MongoEditForm
 from django.contrib import messages
 from django.contrib.auth.models import User
 from django.core.urlresolvers import reverse
@@ -24,7 +24,7 @@ from django.views.decorators.csrf import csrf_protect
 import django_tables2 as tables
 from django_tables2 import RequestConfig
 
-from .models import Silo, RemoteEndPoint, Read, ReadType, LabelValueStore
+from .models import Silo, Read, ReadType, LabelValueStore
 from .serializers import SiloSerializer, UserSerializer, ReadSerializer, ReadTypeSerializer
 
 from django.contrib.auth.decorators import login_required
@@ -132,7 +132,7 @@ def showRead(request, id):
         'form': form, 'read_id': id,
     })
 
-
+@login_required
 def uploadFile(request, id):
     """
     Upload CSV file and save its data
@@ -145,14 +145,14 @@ def uploadFile(request, id):
             today.strftime('%Y-%m-%d')
             today = str(today)
             
-            #New silo or existing
-            if request.POST['new_silo']:
-                new_silo = Silo(name=request.POST['new_silo'], source=read_obj, owner=read_obj.owner, create_date=today)
-                new_silo.save()
-                silo_id = new_silo.id
-            else:
-                silo_id = request.POST['silo_id']
+            user = User.objects.get(username__exact=request.user)
+            silo, created = Silo.objects.get_or_create(id = request.POST['silo_id'], defaults={'name': request.POST['new_silo'], 'owner': user, 'create_date': today})
 
+            if created: 
+                silo.save()
+            silo.reads.add(read_obj)
+            silo_id = silo.id
+    
             #create object from JSON String
             data = csv.reader(read_obj.file_data)
             
@@ -190,58 +190,58 @@ def getLogin(request):
     # display login form
     return render(request, 'read/login.html', {'get_silo': get_silo})
 
-
+@login_required
 def getJSON(request):
     """
     Get JSON feed info from form then grab data
     """
-    # retrieve submitted Feed info from database
-    read_obj = Read.objects.latest('id')
-    # set date time stamp
-    today = datetime.date.today()
-    today.strftime('%Y-%m-%d')
-    today = str(today)
-    try:
-        request2 = urllib2.Request(read_obj.read_url)
-        #if they passed in a usernmae get auth info from form post then encode and add to the request header
-        if request.POST['user_name']:
-            username = request.POST['user_name']
-            password = request.POST['password']
-            base64string = base64.encodestring('%s:%s' % (username, password))[:-1]
-            request2.add_header("Authorization", "Basic %s" % base64string)
-        #retrieve JSON data from formhub via auth info
-        json_file = urllib2.urlopen(request2)
-    except Exception as e:
-        print e
-        messages.success(request, 'Authentication Failed, Please double check your login credentials and URL!')
+    if request.method == 'POST':
+        # retrieve submitted Feed info from database
+        read_obj = Read.objects.latest('id')
+        # set date time stamp
+        today = datetime.date.today()
+        today.strftime('%Y-%m-%d')
+        today = str(today)
+        try:
+            request2 = urllib2.Request(read_obj.read_url)
+            #if they passed in a usernmae get auth info from form post then encode and add to the request header
+            if request.POST['user_name']:
+                username = request.POST['user_name']
+                password = request.POST['password']
+                base64string = base64.encodestring('%s:%s' % (username, password))[:-1]
+                request2.add_header("Authorization", "Basic %s" % base64string)
+            #retrieve JSON data from formhub via auth info
+            json_file = urllib2.urlopen(request2)
+        except Exception as e:
+            print e
+            messages.success(request, 'Authentication Failed, Please double check your login credentials and URL!')
 
-    #New silo or existing
-    if request.POST['new_silo']:
-        #print "NEW"
-        new_silo = Silo(name=request.POST['new_silo'], source=read_obj, owner=read_obj.owner, create_date=today)
-        new_silo.save()
-        silo_id = new_silo.id
-    else:
-        #print "EXISTING"
-        silo_id = request.POST['silo_id']
+        user = User.objects.get(username__exact=request.user)
+        silo, created = Silo.objects.get_or_create(id = request.POST['silo_id'], defaults={'name': request.POST['new_silo'], 'owner': user, 'create_date': today})
 
-    #create object from JSON String
-    data = json.load(json_file)
-    json_file.close()
+        if created: 
+            silo.save()
+        silo.reads.add(read_obj)
+        silo_id = silo.id
     
-    #loop over data and insert create and edit dates and append to dict
-    for row in data:
-        lvs = LabelValueStore()
-        lvs.silo_id = silo_id
-        for new_label, new_value in row.iteritems():
-            if new_value is not "" and new_label is not None:
-                setattr(lvs, new_label, new_value)
-        lvs.create_date = timezone.now()
-        lvs.save()
-    messages.success(request, "Data imported correctly into MONGO")
-    #return render(request, "read/show-columns.html", {'getFields': None, 'silo_id': silo_id})
-    return HttpResponseRedirect('/silo_detail/' + str(silo_id) + '/')
-
+        #create object from JSON String
+        data = json.load(json_file)
+        json_file.close()
+    
+        #loop over data and insert create and edit dates and append to dict
+        for row in data:
+            lvs = LabelValueStore()
+            lvs.silo_id = silo_id
+            for new_label, new_value in row.iteritems():
+                if new_value is not "" and new_label is not None and new_label is not "edit_date" and new_label is not "create_date":
+                    setattr(lvs, new_label, new_value)
+            lvs.create_date = timezone.now()
+            lvs.save()
+        messages.success(request, "Data imported correctly into MONGO")
+        return HttpResponseRedirect('/silo_detail/' + str(silo_id) + '/')
+    else:
+        messages.error(request, "Invalid Request for importing JSON data")
+        return HttpResponseRedirect("/")
 #display
 #INDEX
 def index(request):
@@ -252,8 +252,9 @@ def listSilos(request):
     """
     Each silo is listed with links to details
     """
+    
     #get all of the silos
-    get_silos = Silo.objects.all()
+    get_silos = Silo.objects.all().prefetch_related('reads')
 
     return render(request, 'display/silos.html',{'get_silos':get_silos})
 
@@ -485,16 +486,18 @@ def customFeed(request,id):
 
     return render(request, 'feed/json.html', {"jsonData": queryset}, content_type="application/json")
 
+"""
 #Feeds
 def listFeeds(request):
-    """
+    
     Get all Silos and Link to REST API pages
-    """
+    
     #get all of the silos
     #getSilos = Silo.objects.all()
     getSilos = Silo.objects.all().prefetch_related('remote_end_points')
 
     return render(request, 'feed/list.html',{'getSilos': getSilos})
+"""
 
 def createFeed(request):
     """

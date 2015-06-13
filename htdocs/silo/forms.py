@@ -20,7 +20,7 @@ class SiloForm(forms.ModelForm):
         self.helper.layout.append(Submit('save', 'save'))
     class Meta:
         model = Silo
-        fields = ['id', 'name', 'description', 'source','owner']
+        fields = ['id', 'name', 'description','owner']
 
 
 #READ FORMS
@@ -40,6 +40,7 @@ class ReadForm(forms.ModelForm):
     class Meta:
         model = Read
         fields = ['read_name', 'read_url', 'description','type','file_data','owner']
+        #exclude = ['create_date',]
 
 class UploadForm(forms.Form):
     def __init__(self, *args, **kwargs):
