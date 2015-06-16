@@ -48,7 +48,7 @@
                             <li class="divider"></li>
                             <li><a href="/export_new_gsheet/{{ silo.id }}/"><span class="glyphicon glyphicon-cloud-upload"></span> New Google SHEET</a></li>
                             <li>
-                                <a href="#" onclick="onAuthApiLoad({% for read in silo.reads.all %}{% if read.resource_id %}{{ silo.id }}, '{{ read.resource_id }}', '{{ read.read_url }}' {% endif %}{% endfor %});">
+                                <a href="#" onclick="onAuthApiLoad({% for read in silo.reads.all %}{% if read.resource_id %}{{ silo.id }}, '{{ read.resource_id }}', '{{ read.read_url }}' {% else %} 0, '', '' {% endif %}{% endfor %});">
                                 <span class="glyphicon glyphicon-cloud"></span>Export Existing GSHEET</a>
                             </li>
                         </ul>
@@ -90,7 +90,7 @@
             silo_id = silo_id.toString().trim();
             resource_id = resource_id.toString().trim();
             read_url = read_url.toString().trim();
-            if (silo_id != undefined && resource_id != undefined && read_url != undefined) {
+            if (silo_id && resource_id  && read_url ) {
                 export_to_gsheet(silo_id, read_url,  resource_id);
                 return;
             }
