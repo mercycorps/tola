@@ -5,14 +5,10 @@ html {
     position: relative;
     min-height: 100%;
 }
-body {
-    /* Margin bottom by footer height */
-    height: 100%;
-    margin-bottom: 60px;
-}
-.footer {
-    position: absolute;
-    bottom: 0;
+
+#footer {
+    position: fixed;
+    bottom: 0px;
     width: 100%;
     /* Set the fixed height of the footer here */
     height: 60px;
@@ -25,30 +21,9 @@ body {
 -------------------------------------------------- */
 /* Not required for template or sticky footer method. */
 
-
-body > .container {
-    height: 100%;
-    margin-top: 40px;
-}
-
 .alert{
     margin-top: 40px;
     margin-bottom: -20px;
-}
-
-.container .text-muted {
-    height: 100%;
-    /* Margin bottom by footer height */
-    margin-bottom: 60px;
-}
-
-#footer > .container {
-    padding: 15px;
-    position:relative;
-    bottom:0;
-    left:0;
-    height: 60px;
-    margin-top: 40px;
 }
 
 

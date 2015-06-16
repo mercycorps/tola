@@ -27,6 +27,8 @@ from django_tables2 import RequestConfig
 from .models import Silo, Read, ReadType, LabelValueStore
 from .serializers import SiloSerializer, UserSerializer, ReadSerializer, ReadTypeSerializer
 
+from .tables import define_table
+
 from django.contrib.auth.decorators import login_required
 from tola.util import siloToDict
 
@@ -258,28 +260,6 @@ def listSilos(request):
 
     return render(request, 'display/silos.html',{'get_silos':get_silos})
 
-        
-def define_table(columns):
-    from django.template.base import add_to_builtins
-    add_to_builtins('silo.templatetags.underscoretags')
-    
-    """
-    Dynamically builds a django-tables2 table without specifying the column names
-    It is important to build the django-tables2 dynamically because each time a silo 
-    is loaded from MongoDB, it is not known what columns heading it has or how mnay columns it has
-    """
-    EDIT_DEL_TEMPLATE = '''
-        <a class="btn btn-default btn-xs" role="button" href="/value_edit/{{ record|get:'_id'|get:'$oid' }}">Edit</a>
-        <a class="btn btn-danger btn-xs btn-del" style="color: #FFF;" role="button" href="/value_delete/{{ record|get:'_id'|get:'$oid'  }}">Delete</button> 
-        '''
-    attrs = dict((c, tables.Column()) for c in columns)
-    attrs['Operation'] = tables.TemplateColumn(EDIT_DEL_TEMPLATE)
-    attrs['Meta'] = type('Meta', (), dict(exclude=["_id", "edit_date", "create_date"], attrs={"class":"paleblue", "orderable":"True", "width":"100%"}) )
-    
-    klass = type('DynamicTable', (tables.Table,), attrs)
-    return klass
-
-
 #SILO-DETAIL Show data from source
 def siloDetail(request,id):
     """
@@ -485,19 +465,6 @@ def customFeed(request,id):
     queryset = LabelValueStore.objects.exclude("silo_id").filter(silo_id=id).to_json()
 
     return render(request, 'feed/json.html', {"jsonData": queryset}, content_type="application/json")
-
-"""
-#Feeds
-def listFeeds(request):
-    
-    Get all Silos and Link to REST API pages
-    
-    #get all of the silos
-    #getSilos = Silo.objects.all()
-    getSilos = Silo.objects.all().prefetch_related('remote_end_points')
-
-    return render(request, 'feed/list.html',{'getSilos': getSilos})
-"""
 
 def createFeed(request):
     """
