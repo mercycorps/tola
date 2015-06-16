@@ -656,11 +656,14 @@ def export_gsheet(request, id):
 
     credential_json = json.loads(credential.to_json())
 
+    user = User.objects.get(username__exact=request.user)
+    gsheet_endpoint = None
+    read_type = ReadType.objects.get(read_type="Google Spreadsheet")
     try:
-        gsheet_endpoint = RemoteEndPoint.objects.get(silo__id=id, silo__owner = request.user, name='Google')
-    except RemoteEndPoint.MultipleObjectsReturned:
+        gsheet_endpoint = Read.objects.get(silos__id=id, type=read_type, silos__owner=user.id, read_name='Google')
+    except Read.MultipleObjectsReturned:
         print("multiple records exist and that should NOT be the case")
-    except RemoteEndPoint.DoesNotExist:
+    except Read.DoesNotExist:
         print("Remote End point does not exist; creating one...")
         url = request.GET.get('link', None)
         file_id = request.GET.get('resource_id', None)
@@ -668,18 +671,22 @@ def export_gsheet(request, id):
             print ("No link provided for the remote end point")
         if file_id == None:
             print("No file id is available")
-        gsheet_endpoint = RemoteEndPoint(name="Google", silo_id=id, link=url, resource_id=file_id)
+        
+        gsheet_endpoint = Read(read_name="Google", type=read_type, owner=user, read_url=url, resource_id=file_id)
         gsheet_endpoint.save()
+        silo = Silo.objects.get(id=id)
+        silo.reads.add(gsheet_endpoint)
+        silo.save()
     except Exception as e:
         print(e)
 
     #print("about to export to gsheet: %s" % gsheet_endpoint.resource_id)
     if export_to_google_spreadsheet(credential_json, id, gsheet_endpoint.resource_id) == True:
-        link = "Your exported data is available at <a href=" + gsheet_endpoint.link + " target='_blank'>Google Spreadsheet</a>"
+        link = "Your exported data is available at <a href=" + gsheet_endpoint.read_url + " target='_blank'>Google Spreadsheet</a>"
         messages.success(request, link)
     else:
         messages.error(request, 'Something went wrong; try again; here we go.')
-
+    print(link)
     return JsonResponse({'foo': 'bar'})
 
 @login_required
