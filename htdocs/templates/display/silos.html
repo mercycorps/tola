@@ -8,51 +8,46 @@
       <div class='panel-heading'>Data Silos</div>
       {% if get_silos %}
           <!-- Table -->
-          <table class="table">
+          <table class="table table-condensed table-responsive">
             <tr>
-            <th>Silo</th>
-            <th>Source(s)</th>
+            <th>Silo Name</th>
             <th>Description</th>
-            <th>Edit Silo</th>
-            <th>Edit Silo Data</th>
-            <th>Share Silo Data</th>
+            <th>Silo Source(s)</th>            
+            <th>Silo Operations</th>
+            <th>Share Data</th>
             </tr>
             {% for silo in get_silos %}
             <tr>
-                <td><h4><a href="/silo_detail/{{ silo.id }}">{{ silo.name }}</h4></a></td>
-                <td>
-                    {% for r in silo.reads.all %}
-                        <a href="/show_read/{{ r.id }}">{{ r.description }} </a><br />
-                    {% endfor %}
-                </td>
+                <td><a href="/silo_edit/{{ silo.id }}">{{ silo.name }}</a></td>
                 <td>{{ silo.description }}</td>
                 <td>
-                    <div class="btn-group">
-                        <a href="/silo_edit/{{ silo.id }}" class="btn btn-sm btn-success">Edit Silo</a>
-                        <a href="/merge/{{ silo.id }}" class="btn btn-sm btn-info">Merge Silo</a>
-                        <a href="/silo_delete/{{ silo.id }}" class="btn btn-sm btn-warning">Delete Silo</a>
-                     </div>
+                    {% for r in silo.reads.all %}
+                        {% if r.read_name != "Google" %} <a href="/show_read/{{ r.id }}" > {{ r.read_name }}</a> <br />{% endif %}
+                    {% endfor %}
                 </td>
                 <td>
-                    <div class="btn-group">
-                        <a href="/silo_detail/{{ silo.id }}" class="btn btn-sm btn-success">Edit Silo Data</a>
-                    </div>
+                    <div class="btn-group" role="group">
+                        <a href="/silo_detail/{{ silo.id }}" class="btn btn-sm btn-success">Edit</a>
+                        <a href="/merge/{{ silo.id }}" class="btn btn-sm btn-warning">Merge</a>
+                        <a href="/silo_delete/{{ silo.id }}" class="btn btn-sm btn-danger">Delete</a>
+                     </div>
                 </td>
                 <td>
                     <div class="input-group-btn">
                         <button type="button" class="btn btn-default dropdown-toggle" data-toggle="dropdown" aria-expanded="false">Share <span class="caret"></span></button>
                         <ul class="dropdown-menu" role="menu">
-                            <li><a href="/api/silo/{{ silo.id }}" target="_new">{{ silo.name }} REST API</a></li>
-                            <li><a href="/api/custom/{{ silo.id }}" target="_new">{{ silo.name }} JSON FEED</a></li>
+                            <li><a href="/api/silo/{{ silo.id }}" target="_new">REST API</a></li>
+                            <li><a href="/api/custom/{{ silo.id }}" target="_new">JSON FEED</a></li>
                             <li><a href="/export/{{ silo.id }}"><span class="glyphicon glyphicon-file"></span> Excel </a></li>
                             <li class="divider"></li>
                             <li><a href="/export_new_gsheet/{{ silo.id }}/"><span class="glyphicon glyphicon-cloud-upload"></span> New Google SHEET</a></li>
                             <li>
-                                <a href="#" onclick="onAuthApiLoad({% for read in silo.reads.all %}{% if read.resource_id %}{{ silo.id }}, '{{ read.resource_id }}', '{{ read.read_url }}' {% else %} 0, '', '' {% endif %}{% endfor %});">
-                                <span class="glyphicon glyphicon-cloud"></span>Export Existing GSHEET</a>
+                                <a href="#" onclick="onAuthApiLoad({% for read in silo.reads.all %} {% if read.resource_id %}'{{ read.resource_id }}', '{{ read.read_url }}'{% endif %}{% endfor %});">
+                                <span class="glyphicon glyphicon-cloud"></span> Export Existing GSHEET</a>
                             </li>
                         </ul>
                     </div><!-- /btn-group -->
+                    <div id="silo_id" style="display: none;"> {{ silo.id }} </div>
                 </td>
             </tr>   
             {% endfor %}
@@ -86,10 +81,16 @@
         }
         
         // After Google's auth library is loaded, this function is called
-        function onAuthApiLoad(silo_id, resource_id, read_url) {
-            silo_id = silo_id.toString().trim();
-            resource_id = resource_id.toString().trim();
-            read_url = read_url.toString().trim();
+        function onAuthApiLoad(resource_id, read_url) {
+            silo_id = $("#silo_id").text().trim();
+            if (silo_id == undefined || silo_id.length <= 0) {
+                alert("No silo selected");
+                return;
+            }
+            
+            if (resource_id != undefined) resource_id = resource_id.toString().trim();
+            if (read_url != undefined) read_url = read_url.toString().trim();
+            
             if (silo_id && resource_id  && read_url ) {
                 export_to_gsheet(silo_id, read_url,  resource_id);
                 return;
