@@ -97,7 +97,6 @@ urlpatterns = patterns('',
                         url(r'^silo_delete/(?P<id>\w+)/$','silo.views.deleteSilo', name='deleteSilo'),
 
                         ###FEED
-                        #url(r'^feed', 'silo.views.listFeeds', name='listFeeds'),
                         url(r'^export/(?P<id>\w+)/$', 'silo.views.export_silo', name='export_silo'),
                         url(r'^export_new_gsheet/(?P<id>\d+)/$', 'silo.views.export_new_gsheet', name='export_new_gsheet'),
                         url(r'^export_gsheet/(?P<id>\d+)/$', 'silo.views.export_gsheet', name='export_existing_gsheet'),
