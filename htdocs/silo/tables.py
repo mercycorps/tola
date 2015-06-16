@@ -29,7 +29,7 @@ def define_table(columns):
     """
     EDIT_DEL_TEMPLATE = '''
         <a class="btn btn-default btn-xs" role="button" href="/value_edit/{{ record|get:'_id'|get:'$oid' }}">Edit</a>
-        <a class="btn btn-danger btn-xs btn-del" style="color: #FFF;" role="button" href="/value_delete/{{ record|get:'_id'|get:'$oid'  }}">Delete</button> 
+        <a class="btn btn-danger btn-xs btn-del" style="color: #FFF;" role="button" href="/value_delete/{{ record|get:'_id'|get:'$oid'  }}" title="Are you sure you want to delete this record?">Delete</a> 
         '''
     attrs = dict((c, tables.Column()) for c in columns)
     attrs['Operation'] = tables.TemplateColumn(EDIT_DEL_TEMPLATE)

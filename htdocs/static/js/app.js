@@ -8,7 +8,11 @@ $(document).ready(function() {
     $('.datepicker').datepicker();
     $('.btn-del').click(function(e) {
         e.preventDefault();
-        var response = confirm("Are you sure you want to delete this record?");
+        var msg = e.currentTarget.title;
+        if (msg == undefined || msg.length == 0) {
+            msg = "Are you sure you want to delete?";
+        }
+        var response = confirm(msg);
         if (response == true) {
             window.location = $(this).attr('href');
         }
