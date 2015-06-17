@@ -63,9 +63,20 @@ def editSilo(request, id):
 #DELETE-SILO
 @csrf_protect
 def deleteSilo(request, id):
-    deleteSilo = Silo.objects.get(pk=id).delete()
-
-    return render(request, 'silo/delete.html')
+    #deleteSilo = Silo.objects.get(pk=id).delete()
+    try:
+        silo_to_be_deleted = Silo.objects.get(pk=id)
+        silo_name = silo_to_be_deleted.name
+        lvs = LabelValueStore.objects(silo_id=silo_to_be_deleted.id)
+        num_rows_deleted = lvs.delete()
+        silo_to_be_deleted.delete()
+        messages.success(request, "Silo, %s, with all of its %s rows of data deleted successfully." % (silo_name, num_rows_deleted))
+    except Silo.DoesNotExist as e:
+        print(e)
+    except Exception as es:
+        print(es)
+    
+    return HttpResponseRedirect("/silos")
 
 
 #READ VIEWS
