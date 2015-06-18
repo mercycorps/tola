@@ -522,8 +522,6 @@ def export_silo(request, id):
         cols = list(cols)
         writer.writerow(list(cols))
         
-        num_cols = num_cols + 1
-        
         # Populate a 2x2 list structure that corresponds to the number of rows and cols in silo_data
         for i in xrange(num_rows): data += [[0]*num_cols]        
         
