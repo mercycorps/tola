@@ -495,6 +495,8 @@ def createFeed(request):
         jsonData = simplejson.dumps(formatted_data)
         return render(request, 'feed/json.html', {"jsonData": jsonData}, content_type="application/json")
 
+
+from collections import OrderedDict
 def export_silo(request, id):
     
     silo_name = Silo.objects.get(id=id).name
@@ -504,13 +506,32 @@ def export_silo(request, id):
     writer = csv.writer(response)
 
     silo_data = LabelValueStore.objects(silo_id=id)
+    data = []
+    num_cols = 0
+    cols = OrderedDict()
     if silo_data:
-        columns_headings = [col for col in silo_data[0]]
-        writer.writerow(columns_headings)
+        num_rows = len(silo_data)
         
         for row in silo_data:
-            writer.writerow([row[col] for col in row])
-
+            for i, col in enumerate(row):
+                if col not in cols.keys():
+                    num_cols = num_cols + 1
+                    cols[col] = num_cols
+        
+        # Convert OrderedDict to Python list so that it can be written to CSV writer.
+        cols = list(cols)
+        writer.writerow(list(cols))
+        
+        num_cols = num_cols + 1
+        
+        # Populate a 2x2 list structure that corresponds to the number of rows and cols in silo_data
+        for i in xrange(num_rows): data += [[0]*num_cols]        
+        
+        for r, row in enumerate(silo_data):
+            for col in row:
+                # Map values to column names and place them in the correct position in the data array
+                data[r][cols.index(col)] = row[col]
+            writer.writerow(data[r])
     return response
 
 from oauth2client.client import flow_from_clientsecrets
