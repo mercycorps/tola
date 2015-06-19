@@ -63,21 +63,24 @@ def editSilo(request, id):
 #DELETE-SILO
 @csrf_protect
 def deleteSilo(request, id):
-    #deleteSilo = Silo.objects.get(pk=id).delete()
-    try:
-        silo_to_be_deleted = Silo.objects.get(pk=id)
-        silo_name = silo_to_be_deleted.name
-        lvs = LabelValueStore.objects(silo_id=silo_to_be_deleted.id)
-        num_rows_deleted = lvs.delete()
-        silo_to_be_deleted.delete()
-        messages.success(request, "Silo, %s, with all of its %s rows of data deleted successfully." % (silo_name, num_rows_deleted))
-    except Silo.DoesNotExist as e:
-        print(e)
-    except Exception as es:
-        print(es)
+    owner = Silo.objects.get(id = id).owner
     
-    return HttpResponseRedirect("/silos")
-
+    if str(owner.username) == str(request.user):
+        try:
+            silo_to_be_deleted = Silo.objects.get(pk=id)
+            silo_name = silo_to_be_deleted.name
+            lvs = LabelValueStore.objects(silo_id=silo_to_be_deleted.id)
+            num_rows_deleted = lvs.delete()
+            silo_to_be_deleted.delete()
+            messages.success(request, "Silo, %s, with all of its %s rows of data deleted successfully." % (silo_name, num_rows_deleted))
+        except Silo.DoesNotExist as e:
+            print(e)
+        except Exception as es:
+            print(es)
+        return HttpResponseRedirect("/silos")
+    else:
+        messages.warn(request, "You do not have permission to delete this silo")
+        return HttpResponseRedirect(request.META['HTTP_REFERER'])
 
 #READ VIEWS
 @login_required
@@ -268,10 +271,12 @@ def index(request):
     return render(request, 'index.html')
 
 #SILOS
+@login_required
 def listSilos(request):
     """
     Each silo is listed with links to details
     """
+    #user = User.objects.get(username__exact=request.user)
     
     #get all of the silos
     get_silos = Silo.objects.all().prefetch_related('reads')
@@ -306,7 +311,7 @@ def siloDetail(request,id):
             messages.error(request, "Silo with id = %s does not exist" % id)
             return HttpResponseRedirect(request.META['HTTP_REFERER'])
     else:
-        messages.error(request, "You don't have the permission to delete records from this silo")
+        messages.info(request, "You don't have the permission to see data in this silo")
         return HttpResponseRedirect(request.META['HTTP_REFERER'])
 
 
