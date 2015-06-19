@@ -157,9 +157,10 @@ def uploadFile(request, id):
             today = datetime.date.today()
             today.strftime('%Y-%m-%d')
             today = str(today)
-            
+            silo_id = request.POST.get("silo_id", None)
+
             user = User.objects.get(username__exact=request.user)
-            silo, created = Silo.objects.get_or_create(id = request.POST['silo_id'], defaults={'name': request.POST['new_silo'], 'owner': user, 'create_date': today})
+            silo, created = Silo.objects.get_or_create(id = silo_id, defaults={'name': request.POST['new_silo'], 'owner': user, 'public': False, 'create_date': today})
 
             if created: 
                 silo.save()
