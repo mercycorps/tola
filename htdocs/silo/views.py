@@ -157,13 +157,15 @@ def uploadFile(request, id):
             today = datetime.date.today()
             today.strftime('%Y-%m-%d')
             today = str(today)
-            silo_id = request.POST.get("silo_id", None)
-
+            
+            silo = None
             user = User.objects.get(username__exact=request.user)
-            silo, created = Silo.objects.get_or_create(id = silo_id, defaults={'name': request.POST['new_silo'], 'owner': user, 'public': False, 'create_date': today})
-
-            if created: 
+            if request.POST.get("new_silo", None):
+                silo = Silo(name=request.POST['new_silo'], owner=user, public=False, create_date=today)
                 silo.save()
+            else:
+                silo = Silo.objects.get(id = request.POST["silo_id"])
+        
             silo.reads.add(read_obj)
             silo_id = silo.id
     
@@ -228,13 +230,17 @@ def getJSON(request):
             json_file = urllib2.urlopen(request2)
         except Exception as e:
             print e
-            messages.success(request, 'Authentication Failed, Please double check your login credentials and URL!')
+            messages.error(request, 'Authentication Failed, Please double check your login credentials and URL!')
 
+        silo = None
+        
         user = User.objects.get(username__exact=request.user)
-        silo, created = Silo.objects.get_or_create(id = request.POST['silo_id'], defaults={'name': request.POST['new_silo'], 'owner': user, 'create_date': today})
-
-        if created: 
+        if request.POST.get("new_silo", None):
+            silo = Silo(name=request.POST['new_silo'], owner=user, public=False, create_date=today)
             silo.save()
+        else:
+            silo = Silo.objects.get(id = request.POST["silo_id"])
+        
         silo.reads.add(read_obj)
         silo_id = silo.id
     
