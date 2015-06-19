@@ -272,28 +272,36 @@ def listSilos(request):
     return render(request, 'display/silos.html',{'get_silos':get_silos})
 
 #SILO-DETAIL Show data from source
+@login_required
 def siloDetail(request,id):
     """
     Show silo source details
     """
-    table = LabelValueStore.objects(silo_id=id).to_json()
-    decoded_json = json.loads(table)
-    column_names = []
-    #column_names = decoded_json[0].keys()
-    for row in decoded_json:
-        column_names.extend([k for k in row.keys() if k not in column_names])
+    owner = Silo.objects.get(id = id).owner
     
-    if decoded_json:
-        silo = define_table(column_names)(decoded_json)
+    if str(owner.username) == str(request.user):
+        table = LabelValueStore.objects(silo_id=id).to_json()
+        decoded_json = json.loads(table)
+        column_names = []
+        #column_names = decoded_json[0].keys()
+        for row in decoded_json:
+            column_names.extend([k for k in row.keys() if k not in column_names])
     
-        #This is needed in order for table sorting to work
-        RequestConfig(request).configure(silo)
+        if decoded_json:
+            silo = define_table(column_names)(decoded_json)
     
-        #send the keys and vars from the json data to the template along with submitted feed info and silos for new form
-        return render(request, "display/stored_values.html", {"silo": silo})
+            #This is needed in order for table sorting to work
+            RequestConfig(request).configure(silo)
+    
+            #send the keys and vars from the json data to the template along with submitted feed info and silos for new form
+            return render(request, "display/stored_values.html", {"silo": silo})
+        else:
+            messages.error(request, "Silo with id = %s does not exist" % id)
+            return HttpResponseRedirect(request.META['HTTP_REFERER'])
     else:
-        messages.error(request, "Silo with id = %s does not exist" % id)
+        messages.error(request, "You don't have the permission to delete records from this silo")
         return HttpResponseRedirect(request.META['HTTP_REFERER'])
+
 
 #SHOW-MERGE FORM
 def mergeForm(request,id):
@@ -380,6 +388,7 @@ def doMerge(request):
     return HttpResponseRedirect("/silo_detail/%s" % to_silo_id)
 
 #EDIT A SINGLE VALUE STORE
+@login_required
 def valueEdit(request,id):
     """
     Edit a value
@@ -421,15 +430,21 @@ def valueEdit(request,id):
 
     return render(request, 'read/edit_value.html', {'form': form, 'silo_id': silo_id})
 
+@login_required
 def valueDelete(request,id):
     """
     Delete a value
     """
-    #deleteStore = ValueStore.objects.get(pk=id).delete()
-    
+    silo_id = None
     lvs = LabelValueStore.objects(id=id)[0]
-    silo_id = lvs.silo_id
-    lvs.delete()
+    owner = Silo.objects.get(id = lvs.silo_id).owner
+    
+    if str(owner.username) == str(request.user):
+        silo_id = lvs.silo_id
+        lvs.delete()
+    else:
+        messages.error(request, "You don't have the permission to delete records from this silo")
+        return HttpResponseRedirect(request.META['HTTP_REFERER'])
     
     messages.success(request, "Record deleted successfully")
     return HttpResponseRedirect('/silo_detail/%s/' % silo_id)
