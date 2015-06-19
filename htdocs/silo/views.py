@@ -79,7 +79,7 @@ def deleteSilo(request, id):
             print(es)
         return HttpResponseRedirect("/silos")
     else:
-        messages.warn(request, "You do not have permission to delete this silo")
+        messages.error(request, "You do not have permission to delete this silo")
         return HttpResponseRedirect(request.META['HTTP_REFERER'])
 
 #READ VIEWS
@@ -276,10 +276,10 @@ def listSilos(request):
     """
     Each silo is listed with links to details
     """
-    #user = User.objects.get(username__exact=request.user)
+    user = User.objects.get(username__exact=request.user)
     
     #get all of the silos
-    get_silos = Silo.objects.all().prefetch_related('reads')
+    get_silos = Silo.objects.filter(owner=user).prefetch_related('reads')
 
     return render(request, 'display/silos.html',{'get_silos':get_silos})
 
