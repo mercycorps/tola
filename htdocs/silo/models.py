@@ -62,6 +62,7 @@ class Silo(models.Model):
     name = models.TextField()
     reads = models.ManyToManyField(Read, related_name='silos')
     description = models.TextField()
+    public = models.BooleanField()
     create_date = models.DateTimeField(null=True, blank=True)
     class Meta:
         ordering = ('create_date',)
@@ -72,24 +73,7 @@ class Silo(models.Model):
     def __unicode__(self):
         return self.name
 
-"""
-class RemoteEndPoint(models.Model):
-    
-    Remote_end_points are end-points that data could be exported to
-    or imported from on a per silo basis.
-    
-    name = models.CharField(max_length=60, null=False, blank=False)
-    silo = models.ForeignKey(Silo, related_name = "remote_end_points")
-    link = models.URLField(null=False, blank=False)
-    resource_id = models.CharField(max_length=200, null=True, blank=True)
-    token = models.CharField(max_length=254, null=True, blank=True)
-    username = models.CharField(max_length=20, null=True, blank=True)
-    create_date = models.DateTimeField(auto_now=True, auto_now_add=False)
-    edit_date = models.DateTimeField(auto_now=True, auto_now_add=False)
 
-    def __unicode__(self):
-        return self.name
-"""
 
 class SiloAdmin(admin.ModelAdmin):
     list_display = ('owner', 'name', 'source', 'description', 'create_date')
