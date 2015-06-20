@@ -189,8 +189,9 @@ def uploadFile(request, id):
     else:
         form = UploadForm()  # An unbound form
 
+    user = User.objects.get(username__exact=request.user)
     # get all of the silo info to pass to the form
-    get_silo = Silo.objects.all()
+    get_silo = Silo.objects.filter(owner=user)
     
     # display login form
     return render(request, 'read/file.html', {
