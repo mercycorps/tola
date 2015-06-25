@@ -11,7 +11,7 @@ from django.test import RequestFactory
 from django.core.urlresolvers import resolve, reverse
 from django.template.loader import render_to_string
 from silo.views import *
-
+from silo.models import *
 
 class ReadTest(TestCase):
     fixtures = ['fixtures/read_types.json']
@@ -63,15 +63,43 @@ class ReadTest(TestCase):
         self.assertEqual(response.status_code, 200)
 
 class SiloTest(TestCase):
+
+    silo_detail_url = "/silo_edit/"
+    def setUp(self):
+        self.client = Client()
+        self.factory = RequestFactory()
+        self.user = User.objects.create_user(username="bob", email="bob@email.com", password="tola123")
+        self.today = datetime.date.today()
+        self.today.strftime('%Y-%m-%d')
+        self.today = str(self.today)
+    
     def test_new_silo(self):
-        pass
-    
-    def test_update_silo(self):
-        pass
-    
-    def test_view_silo(self):
-        pass
-    
+        # Create a New Silo
+        silo = Silo.objects.create(name="Test Silo", owner=self.user, public=False, create_date=self.today)
+        self.assertEqual(silo.pk, 1)
+        
+        # Fetch the silo that just got created above
+        request = self.factory.get(self.silo_detail_url)
+        request.user = self.user
+        response = editSilo(request, silo.pk)
+        self.assertEqual(response.status_code, 200)
+        
+        # update the silo that just got created above
+        params = {
+            'owner': self.user.pk,
+            'name': 'Test Silo Updated',
+            'description': 'Adding this description in a unit-test.',
+        }
+        request = self.factory.post(self.silo_detail_url, data = params)
+        request.user = self.user
+        request._dont_enforce_csrf_checks = True
+        response = editSilo(request, silo.pk)
+        if response.status_code == 302:
+            print("Redirecting")
+            self.assertEqual(response.url, "/display")
+        else:
+            self.assertEqual(response.status_code, 200)
+        
     def test_new_silodata(self):
         pass
     

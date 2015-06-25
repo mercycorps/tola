@@ -49,10 +49,8 @@ def editSilo(request, id):
             updated = form.save()
             return HttpResponseRedirect('/display')  # Redirect after POST to getLogin
         else:
-            print form.errors
-            return HttpResponse("Form Did Not Save!")
+            messages.error(request, 'Invalid Form', fail_silently=False)
     else:
-
         form = SiloForm(instance=getSilo)  # An unbound form
 
     return render(request, 'silo/edit.html', {
