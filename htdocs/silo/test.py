@@ -13,22 +13,22 @@ from django.template.loader import render_to_string
 from silo.views import *
 
 
-class LoginTest(TestCase):
+class ReadTest(TestCase):
     fixtures = ['fixtures/read_types.json']
-    
-    read_url = '/new_read/'
+    show_read_url = '/show_read/'
+    new_read_url = '/new_read/'
     
     def setUp(self):
+        self.client = Client()
         self.factory = RequestFactory()
         self.user = User.objects.create_user(username="joe", email="joe@email.com", password="tola123")
     
-    def test_login(self):    
-        c = Client()
-        response = c.post('/accounts/login/', {'username': 'jj', 'password': 'kkk'})
+    def test_login(self):
+        response = self.client.post('/accounts/login/', {'username': 'jj', 'password': 'kkk'})
         self.assertEqual(response.status_code, 200)
     
     def test_new_read_get(self):
-        request = self.factory.get(self.read_url)
+        request = self.factory.get(self.new_read_url)
         request.user = self.user
         response = initRead(request)
         self.assertEqual(response.status_code, 200)
@@ -44,7 +44,7 @@ class LoginTest(TestCase):
             'resource_id':'testsssszzz',
             'create_date': '2015-06-24 20:33:47',
         }
-        request = self.factory.post(self.read_url, data = params)
+        request = self.factory.post(self.new_read_url, data = params)
         request.user = self.user
         
         response = initRead(request)
@@ -55,8 +55,14 @@ class LoginTest(TestCase):
                 self.assertEqual(response.url, "/read/login or /file/x")
         else:
             self.assertEqual(response.status_code, 200)
-        print(response)
     
+        # Now test the show_read view to make sure that I can retrieve the objec
+        # that just got created using the POST method above.
+        source = Read.objects.get(read_name='TEST READ SOURCE')
+        response = self.client.get(self.show_read_url + str(source.pk) + "/")
+        self.assertEqual(response.status_code, 200)
+
+class SiloTest(TestCase):
     def test_new_silo(self):
         pass
     
