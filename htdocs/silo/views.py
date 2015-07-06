@@ -57,6 +57,34 @@ def editSilo(request, id):
         'form': form, 'silo_id': id,
     })
 
+from silo.forms import *
+import requests
+from requests.auth import HTTPDigestAuth
+@login_required
+def getOnaForms(request):
+    data = {}
+    if request.method == 'POST':
+        form = OnaLoginForm(request.POST)
+        if form.is_valid():
+            auth_handler = urllib2.HTTPDigestAuthHandler()
+            realm = 'DJANGO'
+            url = 'https://ona.io/api/v1/data'
+            """
+            auth_handler.add_password(realm, url, "mkhan", "xxxxxxxx")
+            opener = urllib2.build_opener(auth_handler)
+            urllib2.install_opener(opener)
+            result = urllib2.urlopen(url)
+            for line in result:
+                data = line
+            """
+            res = requests.get(url, auth=HTTPDigestAuth('mkhan', 'xxxxxx'))
+            #res = requests.get(url, auth=('mkhan','xxxxx'))
+            data = res.content
+    else:
+        form = OnaLoginForm()
+    return render(request, 'silo/getonaforms.html', {
+        'form': form, 'data': data
+    })
 
 #DELETE-SILO
 @csrf_protect
@@ -135,7 +163,7 @@ def showRead(request, id):
             if form.instance.file_data:
                 redirect_var = "file/" + id + "/"
             else:
-                redirect_var = "read/login/"
+                redirect_var = "read/login/?read_id=%s" % request.POST['read_id']
             return HttpResponseRedirect('/' + redirect_var)  # Redirect after POST to getLogin
         else:
             messages.error(request, 'Invalid Form', fail_silently=False)
@@ -206,7 +234,7 @@ def getLogin(request):
     get_silo = Silo.objects.all()
 
     # display login form
-    return render(request, 'read/login.html', {'get_silo': get_silo})
+    return render(request, 'read/login.html', {'get_silo': get_silo, 'read_id': request.GET.get('read_id', None)})
 
 @login_required
 def getJSON(request):
@@ -215,7 +243,8 @@ def getJSON(request):
     """
     if request.method == 'POST':
         # retrieve submitted Feed info from database
-        read_obj = Read.objects.latest('id')
+        read_obj = Read.objects.get(id = request.POST.get("read_id", None))
+
         # set date time stamp
         today = datetime.date.today()
         today.strftime('%Y-%m-%d')
@@ -343,6 +372,9 @@ def mergeColumns(request):
     return render(request, "display/merge-column-form.html", {'getSourceFrom':getSourceFrom, 'getSourceTo':getSourceTo, 'from_silo_id':from_silo_id, 'to_silo_id':to_silo_id})
 
 import pymongo
+from bson.objectid import ObjectId
+from pymongo import MongoClient
+uri = 'mongodb://localhost/tola'
 def doMerge(request):
     from_silo_id = request.POST['from_silo_id']
     to_silo_id = request.POST["to_silo_id"]
@@ -355,9 +387,11 @@ def doMerge(request):
         to_silo_id = None
         print("The from_silo_id and/or the to_silo_id is not an integer")
     
-    conn = pymongo.Connection()
-    db = conn.tola
-
+    #conn = pymongo.Connection()
+    #db = conn.tola
+    client = MongoClient(uri)
+    db = client.tola
+    
     if from_silo_id != None and to_silo_id != None:
         for k in request.POST:
             if k != "silo_id" and k !=  "_id" and k != "to_silo_id" and k != "from_silo_id" and k != "csrfmiddlewaretoken": 
@@ -366,35 +400,51 @@ def doMerge(request):
             
                 if to_field == "Ignore":
                     "This field should be deleted from the silo_id = 'from_silo_id'"
-                    print ("FROM FIELD: %s and SILO_ID: %s" % (from_field, from_silo_id))
-                    db.label_value_store.update( 
+                    #print ("FROM FIELD: %s and SILO_ID: %s" % (from_field, from_silo_id))
+                    db.label_value_store.update_many( 
                         { "silo_id": from_silo_id }, 
                         { 
                             "$unset": {from_field: ""}, 
                         }, 
-                        False,  False,  None, True 
+                        False #, False,  None, True 
                     )
                 elif to_field == "0":
                     "Nothing should be done in this case because when the silo_id is updated to to_silo_id this field will become part of the to_silo_id "
                     pass
                 else:
-                    db.label_value_store.update(
-                        { "silo_id": from_silo_id }, 
-                        { 
-                            "$rename": { from_field:  to_field },  
-                            "$currentDate": { 'edit_date': True } 
-                        }, 
-                        False, False, None, True 
-                    )
+                    if from_field != to_field:
+                        db.label_value_store.update_many(
+                            { "silo_id": from_silo_id }, 
+                            { 
+                                "$rename": { from_field:  to_field },  
+                                "$currentDate": { 'edit_date': True } 
+                            }, 
+                            False
+                        )
 
-        db.label_value_store.update( 
+        db.label_value_store.update_many( 
             { "silo_id": from_silo_id }, 
             { 
                 "$set": { "silo_id": to_silo_id }, 
             }, 
-            False, False, None, True 
+            False #, False, None, True 
         )
         Silo.objects.filter(pk = from_silo_id).delete()
+        
+        lvs = json.loads(LabelValueStore.objects(silo_id = to_silo_id).to_json())
+        cols = []
+        for l in lvs:
+            cols.extend([k for k in l.keys() if k not in cols])
+        
+        for l in lvs:
+            for c in cols:
+                if c not in l.keys():
+                    db.label_value_store.update_one(
+                        {"_id": ObjectId(l['_id']['$oid'])},
+                        {"$set": {c: ''}},
+                        False
+                    )
+            
     #messages.success(request, "Silos merged successfully")
     return HttpResponseRedirect("/silo_detail/%s" % to_silo_id)
 

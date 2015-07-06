@@ -14,6 +14,7 @@ from django.test import RequestFactory
 
 from silo.views import *
 from silo.models import *
+from silo.forms import *
 
 class ReadTest(TestCase):
     fixtures = ['fixtures/read_types.json']
@@ -43,7 +44,7 @@ class ReadTest(TestCase):
             'read_url': 'https://www.lclark.edu',
             'resource_id':'testsssszzz',
             'create_date': '2015-06-24 20:33:47',
-            'name': upload_file,
+            'file_data': upload_file,
         }
         request = self.factory.post(self.new_read_url, data = params)
         request.user = self.user
@@ -135,9 +136,22 @@ class SiloTest(TestCase):
         self.assertEqual(found.func, index)
     
     def test_read_form(self):
+        read_type = ReadType.objects.get(read_type="CSV")
         upload_file = open('test.csv', 'rb')
-        file_dict = {'file': SimpleUploadedFile(upload_file.name, upload_file.read())}
-        
+        params = {
+            'owner': self.user.pk,
+            'type': read_type.pk,
+            'read_name': 'TEST READ SOURCE',
+            'description': 'TEST DESCRIPTION for test read source',
+            'read_url': 'https://www.lclark.edu',
+            'resource_id':'testsssszzz',
+            'create_date': '2015-06-24 20:33:47',
+            #'file_data': upload_file,
+        }
+        file_dict = {'file_data': SimpleUploadedFile(upload_file.name, upload_file.read())}
+        form = ReadForm(params, file_dict)
+        self.assertTrue(form.is_valid())
+
     def test_delete_data_from_silodata(self):
         pass
     

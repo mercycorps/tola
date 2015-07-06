@@ -1,3 +1,4 @@
+from django.core.urlresolvers import reverse_lazy
 from django.forms import ModelForm
 from silo.models import Silo, Read
 #import floppyforms as forms
@@ -7,6 +8,21 @@ from crispy_forms.layout import Layout, Div, Submit, Reset, HTML, Button, Row, F
 from crispy_forms.bootstrap import FormActions
 from django.forms.formsets import formset_factory
 
+class OnaLoginForm(forms.Form):
+    username = forms.CharField(max_length=60, required=True)
+    password = forms.CharField(required=True, widget=forms.PasswordInput())
+
+    def __init__(self, *args, **kwargs):
+        self.helper = FormHelper()
+        self.helper.form_class = 'form-horizontal'
+        self.helper.label_class = 'col-sm-2'
+        self.helper.field_class = 'col-sm-10'
+        self.helper.form_method = 'post'
+        self.helper.form_action = reverse_lazy('getOnaForms')
+        self.helper.add_input(Submit('submit', 'Submit'))
+        self.helper.add_input(Reset('rest', 'Reset', css_class='btn-warning'))
+        super(OnaLoginForm, self).__init__(*args, **kwargs)
+        
 
 class SiloForm(forms.ModelForm):
     def __init__(self, *args, **kwargs):
@@ -72,9 +88,9 @@ class MongoEditForm(forms.Form):
         extra = kwargs.pop("extra")
         self.helper = FormHelper()
         self.helper.form_class = 'form-horizontal'
-        self.helper.label_class = 'col-sm-2'
-        self.helper.field_class = 'col-sm-10'
-        self.helper.label_size = ' col-sm-offset-2'
+        self.helper.label_class = 'col-sm-5'
+        self.helper.field_class = 'col-sm-7'
+        #self.helper.label_size = ' col-sm-offset-2'
         self.helper.html5_required = True
         self.helper.form_tag = False
         super(MongoEditForm, self).__init__(*args, **kwargs)

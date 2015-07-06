@@ -68,7 +68,7 @@ urlpatterns = patterns('',
 
                         #login data
                         url(r'^read/login/$', 'silo.views.getLogin', name='getLogin'),
-
+                        url(r'^onalogin/$', 'silo.views.getOnaForms', name='getOnaForms'),
 
                         ###DISPLAY
                         #list all silos
