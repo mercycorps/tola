@@ -31,7 +31,7 @@ from .serializers import SiloSerializer, UserSerializer, ReadSerializer, ReadTyp
 from .tables import define_table
 
 from django.contrib.auth.decorators import login_required
-from tola.util import siloToDict
+from tola.util import siloToDict, combineColumns
 
 from rest_framework import renderers, viewsets
 from django.core.urlresolvers import reverse
@@ -118,8 +118,8 @@ def saveAndImportRead(request):
                     setattr(lvs, new_label, new_value)
             lvs.create_date = timezone.now()
             result = lvs.save()
-        print(counter)
         if num_rows == (counter+1):
+            combineColumns(silo_id)
             return HttpResponse("EVERYTHING WENT WELL! <a href='/silo_detail/%s'>See your data</a>" % silo.pk)
     return HttpResponse(read.pk)
 
@@ -499,20 +499,7 @@ def doMerge(request):
         )
         Silo.objects.filter(pk = from_silo_id).delete()
         
-        lvs = json.loads(LabelValueStore.objects(silo_id = to_silo_id).to_json())
-        cols = []
-        for l in lvs:
-            cols.extend([k for k in l.keys() if k not in cols])
-        
-        for l in lvs:
-            for c in cols:
-                if c not in l.keys():
-                    db.label_value_store.update_one(
-                        {"_id": ObjectId(l['_id']['$oid'])},
-                        {"$set": {c: ''}},
-                        False
-                    )
-            
+        combineColumns(to_silo_id)
     #messages.success(request, "Silos merged successfully")
     return HttpResponseRedirect("/silo_detail/%s" % to_silo_id)
 
