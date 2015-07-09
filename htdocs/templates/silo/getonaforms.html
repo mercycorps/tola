@@ -4,7 +4,73 @@
 {% block page_title %}ONA Login{% endblock %} 
 
 {% block content %}
-    {% csrf_token %}
-    {% crispy form %}
-    {{ data }}
+
+    {% if not data %}
+        {% crispy form %}
+    {% else %}
+        <table id="onaforms" class="table table-bordered table-hover table-striped">
+            <tr>
+                <th>No</th>
+                <th>Title</title>
+                <th>Description</th>
+                <th>URL</th>
+                <th>Silo</th>
+                <th>Action</th>
+            </tr>
+        {% for row in data %}
+            <tr>
+                <form action="/new_read" method="POST" id = "{{ forloop.counter }}">{% csrf_token %}
+                <td> {{ forloop.counter }} </td>
+                <td> <input type="hidden" value="{{ row.title }}" name="title"></input>{{ row.title }} </td>
+                <td> <input type="hidden" value="{{ row.description }}" name="description"></input>{{ row.description }} </td>
+                <td> <input type="hidden" value="{{ row.url }}" name="read_url"></input>{{ row.url }} </td>
+                     <input type="hidden" value="1" name="title"></input>
+                     <input type="hidden" value="1" name="type"></input>
+                     <input type="hidden" value="{{ request.user.id }}" name="owner"></input>
+                <td>
+                    <select id="id_silo-{{forloop.counter}}" name="silo_id" class="form-control input-sm">
+                        <option selected="selected" value=""></option>
+                        <option value="0">Create New Silo</option>
+                        {% for silo in silos %}
+                            <option value="{{ silo.id }}"> {{ silo.name }} </option>
+                        {% endfor %}
+                    </select>
+                </td>
+                <td>
+                    <input type="submit" name="submit-id-save-{{forloop.counter}}" value="Import" class="btn btn-sm btn-primary">
+                </td>
+                </form>
+            </tr>
+        {% endfor %}
+        </table>
+    {% endif %}
 {% endblock content %}
+
+{% block extra_js_in_body %}
+    <script type="text/javascript">
+        $(document).ready(function() {
+            $("#onaforms .btn").click(function(e) {
+                e.preventDefault();
+                var id = $(this).closest('tr').find("td:nth-child(3)").text().trim();
+                var name = $(this).closest('tr').find("td:nth-child(4)").text().trim();
+                var desc = $(this).closest('tr').find("td:nth-child(5)").text().trim();
+                var url = $(this).closest('tr').find("td:nth-child(6)").text().trim();
+                var silo_id = $("#id_silo-"+id).val();
+                if (!silo_id) {
+                    alert("You must select a silo for storing data before you can import");
+                    return;
+                }
+                console.log("Name: " + name + " description: " + desc + " url: " + url + " silo: " + silo_id);
+                
+                $.post("/saveAndImportRead/", {read_name: name, description: desc, read_url: url, silo_id: silo_id })
+                    .done(function(data) {
+                        alert( "Data Loaded: " + data );
+                    })
+                    .fail(function(data) {
+                        alert( "post failed: " + data );
+                    });
+                
+            });
+        });
+    </script>
+{% endblock %}

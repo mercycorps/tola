@@ -14,6 +14,7 @@ from django.http import HttpResponseForbidden,\
     HttpResponseRedirect, HttpResponseNotFound, HttpResponseBadRequest,\
     HttpResponse
 from django.shortcuts import render_to_response, get_object_or_404, redirect, render
+from django.http import HttpResponse
 from django.template import RequestContext, Context
 from django.db import models
 from django.shortcuts import render_to_response
@@ -24,7 +25,7 @@ from django.views.decorators.csrf import csrf_protect
 import django_tables2 as tables
 from django_tables2 import RequestConfig
 
-from .models import Silo, Read, ReadType, LabelValueStore
+from .models import Silo, Read, ReadType, ThirdPartyTokens, LabelValueStore
 from .serializers import SiloSerializer, UserSerializer, ReadSerializer, ReadTypeSerializer
 
 from .tables import define_table
@@ -60,31 +61,98 @@ def editSilo(request, id):
 from silo.forms import *
 import requests
 from requests.auth import HTTPDigestAuth
+
+
+@login_required
+def saveAndImportRead(request):
+    """ 
+    Saves ONA read if not already in the db and then imports its data 
+    """
+    if request.method != 'POST':
+        return HttpResponseBadRequest("HTTP method, %s, is not supported" % request.method)
+
+    read_type = ReadType.objects.get(read_type="JSON")
+    name = request.POST.get('read_name', None)
+    url = request.POST.get('read_url', None)
+    owner = request.user
+    description = request.POST.get('description', None)
+    silo_id = None
+    read = None
+    silo = None
+    provider = "ONA"
+    try:
+        silo_id = int(request.POST.get("silo_id", None))
+    except Exception as e:
+         print(e)
+         return HttpResponse("Silo ID can only be an integer")
+
+    try:
+        read, created = Read.objects.get_or_create(read_name=name, owner=owner, 
+            defaults={'read_url': url, 'type': read_type, 'description': description})
+        if created: read.save()
+    except Exception as e:
+        print(e)
+        return HttpResponse("Invalid name and/or URL")
+    
+    if silo_id == 0:
+        # create a new silo by the name of "name"
+        silo = Silo(name=name, public=False, owner=owner)
+        silo.save()
+        silo.reads.add(read)
+    else:
+        # import into existing silo
+        silo = Silo.objects.get(pk=silo_id)
+    
+    if silo:
+        # import data into this silo
+        ona_token = ThirdPartyTokens.objects.get(user=request.user, name=provider)
+        response = requests.get(read.read_url, headers={'Authorization': 'Token %s' % ona_token.token})
+        data = json.loads(response.content)
+        num_rows = len(data)
+        #loop over data and insert create and edit dates and append to dict
+        for counter, row in enumerate(data):
+            lvs = LabelValueStore()
+            lvs.silo_id = silo.pk
+            for new_label, new_value in row.iteritems():
+                if new_value is not "" and new_label is not None and new_label is not "edit_date" and new_label is not "create_date":
+                    setattr(lvs, new_label, new_value)
+            lvs.create_date = timezone.now()
+            result = lvs.save()
+        print(counter)
+        if num_rows == (counter+1):
+            return HttpResponse("EVERYTHING WENT WELL! <a href='/silo_detail/%s'>See your data</a>" % silo.pk)
+    return HttpResponse(read.pk)
+
 @login_required
 def getOnaForms(request):
     data = {}
+    ona_token = None
+    form = None
+    provider = "ONA"
+    url_user_token = "https://ona.io/api/v1/user.json"
+    url_user_forms = 'https://ona.io/api/v1/data'
     if request.method == 'POST':
         form = OnaLoginForm(request.POST)
         if form.is_valid():
-            auth_handler = urllib2.HTTPDigestAuthHandler()
-            realm = 'DJANGO'
-            url = 'https://ona.io/api/v1/data'
-            """
-            auth_handler.add_password(realm, url, "mkhan", "xxxxxxxx")
-            opener = urllib2.build_opener(auth_handler)
-            urllib2.install_opener(opener)
-            result = urllib2.urlopen(url)
-            for line in result:
-                data = line
-            """
-            res = requests.get(url, auth=HTTPDigestAuth('mkhan', 'xxxxxx'))
-            #res = requests.get(url, auth=('mkhan','xxxxx'))
-            data = res.content
+            response = requests.get(url_user_token, auth=HTTPDigestAuth(request.POST['username'], request.POST['password']))
+            token = json.loads(response.content)['api_token']
+            ona_token, created = ThirdPartyTokens.objects.get_or_create(user=request.user, name=provider, token=token)
+            if created: ona_token.save()
     else:
-        form = OnaLoginForm()
+        try:
+            ona_token = ThirdPartyTokens.objects.get(name=provider, user=request.user)
+        except Exception as e:
+            form = OnaLoginForm()
+    
+    if ona_token:
+        onaforms = requests.get(url_user_forms, headers={'Authorization': 'Token %s' % ona_token.token})
+        data = json.loads(onaforms.content)
+        
+    silos = Silo.objects.filter(owner=request.user)
     return render(request, 'silo/getonaforms.html', {
-        'form': form, 'data': data
+        'form': form, 'data': data, 'silos': silos
     })
+
 
 #DELETE-SILO
 @csrf_protect
@@ -123,7 +191,7 @@ def home(request):
 
     return render(request, 'read/home.html', {'getReads': get_reads, })
 
-
+@login_required
 def initRead(request):
     """
     Create a form to get feed info then save data to Read
@@ -336,7 +404,7 @@ def siloDetail(request,id):
             #send the keys and vars from the json data to the template along with submitted feed info and silos for new form
             return render(request, "display/stored_values.html", {"silo": silo})
         else:
-            messages.error(request, "Silo with id = %s does not exist" % id)
+            messages.error(request, "There is not data in Silo with id = %s" % id)
             return HttpResponseRedirect(request.META['HTTP_REFERER'])
     else:
         messages.info(request, "You don't have the permission to see data in this silo")

@@ -10,7 +10,13 @@ class GoogleCredentialsModel(models.Model):
     id = models.ForeignKey(User, primary_key=True, related_name='google_credentials')
     credential = CredentialsField()
 
-
+class ThirdPartyTokens(models.Model):
+    user = models.ForeignKey(User, related_name="tokens")
+    name = models.CharField(max_length=60)
+    token = models.CharField(max_length=255)
+    create_date = models.DateTimeField(null=True, blank=True, auto_now=False, auto_now_add=True)
+    edit_date = models.DateTimeField(null=True, blank=True, auto_now=True, auto_now_add=False)
+    
 #READ MODELS
 class ReadType(models.Model):
     read_type = models.CharField(max_length=135, blank=True)
