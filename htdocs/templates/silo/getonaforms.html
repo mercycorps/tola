@@ -1,7 +1,7 @@
 {% extends "base.html" %} 
 {% load crispy_forms_tags %}
 
-{% block page_title %}ONA Login{% endblock %} 
+{% block page_title %}ONA Forms{% endblock %} 
 
 {% block content %}
 
@@ -60,14 +60,14 @@
                     alert("You must select a silo for storing data before you can import");
                     return;
                 }
-                console.log("Name: " + name + " description: " + desc + " url: " + url + " silo: " + silo_id);
+                //console.log("Name: " + name + " description: " + desc + " url: " + url + " silo: " + silo_id);
                 
                 $.post("/saveAndImportRead/", {read_name: name, description: desc, read_url: url, silo_id: silo_id })
-                    .done(function(data) {
-                        alert( "Data Loaded: " + data );
+                    .success(function(data) {
+                        addMessage(data, "success");
                     })
                     .fail(function(data) {
-                        alert( "post failed: " + data );
+                        addMessage(data, "error");
                     });
                 
             });

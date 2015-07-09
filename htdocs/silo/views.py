@@ -120,7 +120,7 @@ def saveAndImportRead(request):
             result = lvs.save()
         if num_rows == (counter+1):
             combineColumns(silo_id)
-            return HttpResponse("EVERYTHING WENT WELL! <a href='/silo_detail/%s'>See your data</a>" % silo.pk)
+            return HttpResponse("View silo data at <a href='/silo_detail/%s'>See your data</a>" % silo.pk)
     return HttpResponse(read.pk)
 
 @login_required
