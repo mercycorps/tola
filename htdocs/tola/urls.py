@@ -70,6 +70,8 @@ urlpatterns = patterns('',
                         url(r'^read/login/$', 'silo.views.getLogin', name='getLogin'),
                         url(r'^onalogin/$', 'silo.views.getOnaForms', name='getOnaForms'),
                         url(r'^saveAndImportRead/$', 'silo.views.saveAndImportRead', name='saveAndImportRead'),
+                        url(r'^tolacon/$', 'silo.views.tolaCon', name='tolacon'),
+                        
                         ###DISPLAY
                         #list all silos
                         url(r'^silos', 'silo.views.listSilos', name='listSilos'),

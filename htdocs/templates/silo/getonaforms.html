@@ -49,6 +49,22 @@
 {% block extra_js_in_body %}
     <script type="text/javascript">
         $(document).ready(function() {
+            
+            $("select").on("change", function() {
+                //var silo_id =  $("#" + this.id).val());
+                var select_obj = $("#" + this.id);
+                var silo_id =  select_obj.val();
+                if (silo_id <= 0) {
+                    var new_silo_name = prompt("Enter the name of your name silo");
+                    if (new_silo_name) {
+                        var num_options = select_obj.children("option").length;
+                        var new_val = num_options * (-1);
+                        $("#" + select_obj[0].id + " option").eq(2).before($("<option></option>").val(new_val).text(new_silo_name));
+                        $("#" + select_obj[0].id).val(new_val);
+                    }
+                }
+            });          
+  
             $("#onaforms .btn").click(function(e) {
                 e.preventDefault();
                 var id = $(this).closest('tr').find("td:nth-child(3)").text().trim();
@@ -60,6 +76,10 @@
                     alert("You must select a silo for storing data before you can import");
                     return;
                 }
+                if (silo_id < 0) {
+                    name = $("#id_silo-"+id).find("option:selected").text();
+                }
+    
                 //console.log("Name: " + name + " description: " + desc + " url: " + url + " silo: " + silo_id);
                 
                 $.post("/saveAndImportRead/", {read_name: name, description: desc, read_url: url, silo_id: silo_id })
@@ -69,7 +89,6 @@
                     .fail(function(data) {
                         addMessage(data, "error");
                     });
-                
             });
         });
     </script>

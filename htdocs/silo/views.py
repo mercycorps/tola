@@ -63,6 +63,24 @@ import requests
 from requests.auth import HTTPDigestAuth
 
 
+def tolaCon(request):
+    params = {'_method': 'OPTIONS'}
+    #response = requests.post("https://tola-activity-dev.mercycorps.org/api/proposals/", params)
+    response = requests.get("https://tola-activity-dev.mercycorps.org/api/")
+    #jsondata = json.loads(response.content)['actions']['POST']
+    jsondata = json.loads(response.content)
+    print(jsondata)
+    """
+    data = {}
+    for field in jsondata:
+        data[field] = {'label': jsondata[field]['label'], 'type': jsondata[field]['type']}
+    
+    #print (data)
+    """
+    return render(request, 'silo/tolaactivity.html', {'data': jsondata })
+    
+
+
 @login_required
 def saveAndImportRead(request):
     """ 
@@ -94,7 +112,7 @@ def saveAndImportRead(request):
         print(e)
         return HttpResponse("Invalid name and/or URL")
     
-    if silo_id == 0:
+    if silo_id <= 0:
         # create a new silo by the name of "name"
         silo = Silo(name=name, public=False, owner=owner)
         silo.save()
@@ -106,6 +124,7 @@ def saveAndImportRead(request):
     if silo:
         # import data into this silo
         ona_token = ThirdPartyTokens.objects.get(user=request.user, name=provider)
+        print(read.read_url)
         response = requests.get(read.read_url, headers={'Authorization': 'Token %s' % ona_token.token})
         data = json.loads(response.content)
         num_rows = len(data)
@@ -120,7 +139,7 @@ def saveAndImportRead(request):
             result = lvs.save()
         if num_rows == (counter+1):
             combineColumns(silo_id)
-            return HttpResponse("View silo data at <a href='/silo_detail/%s'>See your data</a>" % silo.pk)
+            return HttpResponse("View silo data at <a href='/silo_detail/%s' target='_blank'>See your data</a>" % silo.pk)
     return HttpResponse(read.pk)
 
 @login_required
