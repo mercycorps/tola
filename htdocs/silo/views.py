@@ -112,6 +112,14 @@ def saveAndImportRead(request):
         print(e)
         return HttpResponse("Invalid name and/or URL")
     
+    # Fetch the data from ONA
+    ona_token = ThirdPartyTokens.objects.get(user=request.user, name=provider)
+    response = requests.get(read.read_url, headers={'Authorization': 'Token %s' % ona_token.token})
+    data = json.loads(response.content)
+    existing_silo_cols = []
+    new_cols = []
+    show_mapping = False
+    
     if silo_id <= 0:
         # create a new silo by the name of "name"
         silo = Silo(name=name, public=False, owner=owner)
@@ -119,14 +127,30 @@ def saveAndImportRead(request):
         silo.reads.add(read)
     else:
         # import into existing silo
+        # Compare the columns of imported data with existing silo in case it needs merging
         silo = Silo.objects.get(pk=silo_id)
+        lvs = json.loads(LabelValueStore.objects(silo_id=silo.id).to_json())
+        for l in lvs:
+            existing_silo_cols.extend(c for c in l.keys() if c not in existing_silo_cols)
+        
+        for row in data:
+            new_cols.extend(c for c in row.keys() if c not in new_cols)
+        
+        for c in existing_silo_cols:
+            if c == "silo_id" or c == "create_date": continue
+            if c not in new_cols: show_mapping = True
+            if show_mapping == True: 
+                params = {'getSourceFrom':existing_silo_cols, 'getSourceTo':new_cols, 'from_silo_id':0, 'to_silo_id':silo.id}
+                response = render_to_response("display/merge-column-form-inner.html", params, context_instance=RequestContext(request))
+                response['show_mapping'] = '1'
+            else:
+                response = HttpResponse("Your data imported successfully and is available at <a href='/silo_detail/%s' target='_blank'> here </a>" % silo.pk)
+                response['show_mapping'] = '0'
+                
+            return response
     
     if silo:
         # import data into this silo
-        ona_token = ThirdPartyTokens.objects.get(user=request.user, name=provider)
-        print(read.read_url)
-        response = requests.get(read.read_url, headers={'Authorization': 'Token %s' % ona_token.token})
-        data = json.loads(response.content)
         num_rows = len(data)
         #loop over data and insert create and edit dates and append to dict
         for counter, row in enumerate(data):
@@ -134,9 +158,10 @@ def saveAndImportRead(request):
             lvs.silo_id = silo.pk
             for new_label, new_value in row.iteritems():
                 if new_value is not "" and new_label is not None and new_label is not "edit_date" and new_label is not "create_date":
-                    setattr(lvs, new_label, new_value)
+                    #setattr(lvs, new_label, new_value)=
+                    pass
             lvs.create_date = timezone.now()
-            result = lvs.save()
+            #result = lvs.save()
         if num_rows == (counter+1):
             combineColumns(silo_id)
             return HttpResponse("View silo data at <a href='/silo_detail/%s' target='_blank'>See your data</a>" % silo.pk)

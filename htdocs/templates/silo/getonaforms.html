@@ -44,6 +44,13 @@
         {% endfor %}
         </table>
     {% endif %}
+    <div class="modal fade" id="form_modal" tabindex="-1" role="dialog" aria-labelledby="form_modal_label" aria-hidden="true">
+    <div class="modal-dialog modal-lg">
+        <div class="modal-content" id="modal_content">
+            <!-- form will be inserted here -->
+        </div> <!-- .modal-content div collapse -->
+    </div><!-- .modal-dialog .modal-lg div collapse -->
+</div> <!-- .modal fade div collapse -->
 {% endblock content %}
 
 {% block extra_js_in_body %}
@@ -83,13 +90,45 @@
                 //console.log("Name: " + name + " description: " + desc + " url: " + url + " silo: " + silo_id);
                 
                 $.post("/saveAndImportRead/", {read_name: name, description: desc, read_url: url, silo_id: silo_id })
-                    .success(function(data) {
-                        addMessage(data, "success");
+                    .success(function(data, textStatus, xhr) {
+                        /*
+                        console.log("status: " + xhr.status + 
+                              //", data: " + data + 
+                              //", this.data: " + this.data + 
+                              ", responseText: " + xhr.responseText + 
+                              ", textStatus: " + textStatus +
+                              ", this.usl: " + this.url +
+                              ", xhr.getResponseHeader('Content-Type')" + xhr.getResponseHeader("Content-Type")
+                        );
+                        */
+                        //addMessage(data, "success" );
+                        console.log(this.url);
+                        if (xhr.getResponseHeader('show_mapping') == "1") {
+                            $("#modal_content").html(data);
+                            $('#form_modal').modal('toggle');
+                        } else {
+                            addMessage(data, "success" );
+                        }
                     })
                     .fail(function(data) {
-                        addMessage(data, "error");
+                        addMessage(data, "error ");
+                    })
+                    .done(function(data, xhr) {
+                        //alert(xhr.status);
+                        
+                    })
+                    .complete(function(data, xhr) {
+                        //show_column_mapping();
                     });
             });
         });
+        
+        function show_column_mapping() {
+            console.log("OK... showing column mapping.");
+            $.post("/merge_columns", {from_silo_id: "0", to_silo_id: "0"})
+                .success(function(data, textStatus, xhr) {
+                    console.log("OK");
+                });
+        }
     </script>
 {% endblock %}
