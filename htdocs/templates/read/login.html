@@ -6,6 +6,7 @@
 	<form action="/json" method="post">
     {% csrf_token %}
 	<div><b>Login Information</b></div>
+	<input name="read_id" type="hidden" value = "{{ read_id }}" />
 	<div>
 	user name: <input name="user_name" type="text" value=""> 
 	</div>

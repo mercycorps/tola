@@ -8,36 +8,157 @@
       <div class='panel-heading'>Data Silos</div>
       {% if get_silos %}
           <!-- Table -->
-          <table class="table">
+          <table class="table table-condensed table-responsive">
             <tr>
-            <th>Silo</th>
-            <th>Source</th>
+            <th>Silo Name</th>
             <th>Description</th>
-            <th>Edit Silo</th>
-            <th>Edit Silo Data</th>
+            <th>Silo Source(s)</th>            
+            <th>Silo Operations</th>
+            <th>Share Data</th>
             </tr>
-            {% for item in get_silos %}
+            {% for silo in get_silos %}
             <tr>
-                <td><h4><a href="/silo_detail/{{ item.id }}">{{ item.name }}</h4></a></td>
-                <td><h4><a href="/show_read/{{ item.source.id }}">{{ item.source }}</h4></a></td>
-                <td>{{ item.source.description }}</td>
+                <td><a href="/silo_edit/{{ silo.id }}">{{ silo.name }}</a></td>
+                <td>{{ silo.description }}</td>
                 <td>
-                    <div class="btn-group">
-                        <a href="/silo_edit/{{ item.id }}" class="btn btn-sm btn-success">Edit Silo</a>
-                        <a href="/merge/{{ item.id }}" class="btn btn-sm btn-info">Merge Silo</a>
-                        <a href="/silo_delete/{{ item.id }}" class="btn btn-sm btn-warning">Delete Silo</a>
+                    {% for r in silo.reads.all %}
+                        {% if r.read_name != "Google" %} <a href="/show_read/{{ r.id }}" > {{ r.read_name }}</a> <br />{% endif %}
+                    {% endfor %}
+                </td>
+                <td>
+                    <div class="btn-group" role="group">
+                        <a href="/silo_detail/{{ silo.id }}" class="btn btn-sm btn-success">Edit</a>
+                        <a href="/merge/{{ silo.id }}" class="btn btn-sm btn-warning">Merge</a>
+                        <a href="/silo_delete/{{ silo.id }}" class="btn btn-del btn-sm btn-danger" title="Are you sure you want to delete this silo? All of the data stored in this Silo will also be deleted.">Delete</a>
                      </div>
                 </td>
                 <td>
-                    <div class="btn-group">
-                        <a href="/silo_detail/{{ item.id }}" class="btn btn-sm btn-success">Edit Silo Data</a>
-                    </div>
+                    <div class="input-group-btn">
+                        <button type="button" class="btn btn-default dropdown-toggle" data-toggle="dropdown" aria-expanded="false">Share <span class="caret"></span></button>
+                        <ul class="dropdown-menu" role="menu">
+                            <li><a href="/api/silo/{{ silo.id }}" target="_new">REST API</a></li>
+                            <li><a href="/api/custom/{{ silo.id }}" target="_new">JSON FEED</a></li>
+                            <li><a href="/export/{{ silo.id }}"><span class="glyphicon glyphicon-file"></span> Excel </a></li>
+                            <li class="divider"></li>
+                            <li><a href="/export_new_gsheet/{{ silo.id }}/"><span class="glyphicon glyphicon-cloud-upload"></span> New Google SHEET</a></li>
+                            <li>
+                                <a href="#" onclick="onAuthApiLoad({% for read in silo.reads.all %} {% if read.resource_id %}'{{ read.resource_id }}', '{{ read.read_url }}'{% endif %}{% endfor %});">
+                                <span class="glyphicon glyphicon-cloud"></span> Export Existing GSHEET</a>
+                            </li>
+                        </ul>
+                    </div><!-- /btn-group -->
+                    <div id="silo_id" style="display: none;"> {{ silo.id }} </div>
                 </td>
-            </tr>
+            </tr>   
             {% endfor %}
           </table>
       {% endif %}
         </div>
     </div>
 {% endblock content %}
+{% block extra_js_in_body %}
+    <script type="text/javascript">
 
+        // The Client ID obtained from the Google Developers Console.
+        var clientId = "859950034311-r6gsqnipugbtv6a2j4h4eo2tt2a1js2t.apps.googleusercontent.com"
+
+        // The list of scopes to request access to is available at: https://developers.google.com/picker/docs/#otherviews
+        var scope = ['https://www.googleapis.com/auth/drive.readonly'];
+
+        // Replace with your own App ID. (Its the first number in your Client ID)
+        var appId = "859950034311";
+        
+        var pickerApiLoaded = false;
+        var oauthToken;
+        var silo_id; 
+        
+        // Use the API Loader script to load google.picker and gapi.auth.
+        function onApiLoad() {
+            //gapi.load('auth', {'callback': onAuthApiLoad});
+            //gapi.load('picker', {'callback': onPickerApiLoad});
+            gapi.load('auth');
+            gapi.load('picker', {'callback': onPickerApiLoad});
+        }
+        
+        // After Google's auth library is loaded, this function is called
+        function onAuthApiLoad(resource_id, read_url) {
+            silo_id = $("#silo_id").text().trim();
+            if (silo_id == undefined || silo_id.length <= 0) {
+                alert("No silo selected");
+                return;
+            }
+            
+            if (resource_id != undefined) resource_id = resource_id.toString().trim();
+            if (read_url != undefined) read_url = read_url.toString().trim();
+            
+            if (silo_id && resource_id  && read_url ) {
+                export_to_gsheet(silo_id, read_url,  resource_id);
+                return;
+            }
+        
+            window.gapi.auth.authorize( {
+                'client_id': clientId,
+                'scope': scope,
+                'immediate': false
+            },
+            handleAuthResult);
+        }
+        
+        function onPickerApiLoad() {
+            pickerApiLoaded = true;
+        }
+    
+    
+        // After the authentication is complete, this method is called
+        function handleAuthResult(authResult) {
+            if (authResult && !authResult.error) {
+                oauthToken = authResult.access_token;
+                createPicker();
+            }
+        }
+        
+        // Create and render a Picker object for picking user Photos.
+        function createPicker() {
+            if (pickerApiLoaded && oauthToken) {
+                var view = new google.picker.DocsView(google.picker.ViewId.SPREADSHEETS);
+                view.setIncludeFolders(true);
+                view.setOwnedByMe(true);
+                view.setSelectFolderEnabled(false);
+                view.setMode("DocsViewMode.LIST");
+                var picker = new google.picker.PickerBuilder().
+                    enableFeature(google.picker.Feature.NAV_HIDDEN).
+                    setAppId(appId).
+                    addView(view).
+                    setOAuthToken(oauthToken).
+                    setCallback(pickerCallback).
+                    build();
+                picker.setVisible(true);
+            }
+        }
+        
+        function export_to_gsheet(silo_id, url, resource_id) {
+            $.get('/export_gsheet/' + silo_id + "/", { "link": url , "resource_id": resource_id} );
+        }
+        
+        // A simple callback implementation.
+        function pickerCallback(data) {
+            //console.log(JSON.stringify(data));
+            var url = null;
+            var id = null;
+            if (data[google.picker.Response.ACTION] == google.picker.Action.PICKED) {
+                var doc = data[google.picker.Response.DOCUMENTS][0];
+                url = doc[google.picker.Document.URL];
+                id = doc[google.picker.Document.ID];
+            }
+            if (url == null | id == null) {
+                return
+            }
+            
+            //$(location).attr('href', '/export_gsheet/' + silo_id + "/?link=" + url);
+            //$.get('/export_gsheet/' + silo_id + "/", { "link": url , "resource_id": id} );
+            export_to_gsheet(silo_id, url, id);
+        }
+        
+    </script>
+    <script type="text/javascript" src="https://apis.google.com/js/api.js?onload=onApiLoad"></script>
+{% endblock extra_js_in_body %}

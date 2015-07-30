@@ -6,7 +6,7 @@ import csv
 import operator
 
 from django.http import HttpResponseRedirect
-from .forms import ReadForm, UploadForm, ODKForm, SiloForm, EditForm, FieldEditForm
+from .forms import ReadForm, UploadForm, SiloForm, MongoEditForm
 from django.contrib import messages
 from django.contrib.auth.models import User
 from django.core.urlresolvers import reverse
@@ -14,6 +14,7 @@ from django.http import HttpResponseForbidden,\
     HttpResponseRedirect, HttpResponseNotFound, HttpResponseBadRequest,\
     HttpResponse
 from django.shortcuts import render_to_response, get_object_or_404, redirect, render
+from django.http import HttpResponse
 from django.template import RequestContext, Context
 from django.db import models
 from django.shortcuts import render_to_response
@@ -21,45 +22,21 @@ from django.shortcuts import render
 from django.db.models import Max
 from django.db.models import F
 from django.views.decorators.csrf import csrf_protect
-from .tables import SiloTable
+import django_tables2 as tables
+from django_tables2 import RequestConfig
 
+from .models import Silo, Read, ReadType, ThirdPartyTokens, LabelValueStore
+from .serializers import SiloSerializer, UserSerializer, ReadSerializer, ReadTypeSerializer
 
-from .models import Silo, DataField, ValueStore, RemoteEndPoint, Read, ReadType
-from .serializers import SiloSerializer, DataFieldSerializer, ValueStoreSerializer, UserSerializer, ReadSerializer, ReadTypeSerializer
+from .tables import define_table
 
 from django.contrib.auth.decorators import login_required
-from tola.util import siloToDict
+from tola.util import siloToDict, combineColumns
 
 from rest_framework import renderers, viewsets
 from django.core.urlresolvers import reverse
 
-
-# Merge 2 silos together.
-@csrf_protect
-def doMerge(request):
-    from_silo_id = request.POST["from_silo_id"]
-    to_silo_id = request.POST["to_silo_id"]
-    getSourceFrom = DataField.objects.all().filter(silo__id=from_silo_id)
-
-    #update row numbers to start at last row of from silo
-    offset = ValueStore.objects.filter(field__silo=from_silo_id).aggregate(Max('row_number'))['row_number__max']
-    update_row_numbers = ValueStore.objects.filter(field__silo=to_silo_id).update(row_number=F('row_number')+offset)
-
-    # update each column, set value to evaluated column name which will equal the selected value in from column drop down
-    for column in getSourceFrom:
-        #If it's a new column just update the column to use the new silo
-        if request.POST.get(column.name) == "0":
-            update_column_silo = DataField.objects.filter(name=column.name).update(silo=to_silo_id)
-        #if it's an existing column update the values to use the existing column
-        elif request.POST.get(column.name) != "Ignore" and request.POST.get(column.name) != "0":
-            update_column_name = DataField.objects.filter(name=column.name).update(name=request.POST.get(column.name), silo=to_silo_id)
-
-    #delete silo and original fields
-    deleteSilo = Silo.objects.get(pk=from_silo_id).delete()
-    #get new combined silo values then display them
-    getSilo = ValueStore.objects.all().filter(field__silo__id=to_silo_id)
-
-    return render(request, "display/stored_values.html", {'getSilo': getSilo})
+from django.utils import timezone
 
 # Edit existing silo meta data
 @csrf_protect
@@ -73,35 +50,192 @@ def editSilo(request, id):
             updated = form.save()
             return HttpResponseRedirect('/display')  # Redirect after POST to getLogin
         else:
-            print form.errors
-            return HttpResponse("Form Did Not Save!")
+            messages.error(request, 'Invalid Form', fail_silently=False)
     else:
-
         form = SiloForm(instance=getSilo)  # An unbound form
 
     return render(request, 'silo/edit.html', {
         'form': form, 'silo_id': id,
     })
 
+from silo.forms import *
+import requests
+from requests.auth import HTTPDigestAuth
+
+
+def tolaCon(request):
+    params = {'_method': 'OPTIONS'}
+    #response = requests.post("https://tola-activity-dev.mercycorps.org/api/proposals/", params)
+    response = requests.get("https://tola-activity-dev.mercycorps.org/api/")
+    #jsondata = json.loads(response.content)['actions']['POST']
+    jsondata = json.loads(response.content)
+    print(jsondata)
+    """
+    data = {}
+    for field in jsondata:
+        data[field] = {'label': jsondata[field]['label'], 'type': jsondata[field]['type']}
+    
+    #print (data)
+    """
+    return render(request, 'silo/tolaactivity.html', {'data': jsondata })
+    
+
+
+@login_required
+def saveAndImportRead(request):
+    """ 
+    Saves ONA read if not already in the db and then imports its data 
+    """
+    if request.method != 'POST':
+        return HttpResponseBadRequest("HTTP method, %s, is not supported" % request.method)
+
+    read_type = ReadType.objects.get(read_type="JSON")
+    name = request.POST.get('read_name', None)
+    url = request.POST.get('read_url', None)
+    owner = request.user
+    description = request.POST.get('description', None)
+    silo_id = None
+    read = None
+    silo = None
+    provider = "ONA"
+    try:
+        silo_id = int(request.POST.get("silo_id", None))
+    except Exception as e:
+         print(e)
+         return HttpResponse("Silo ID can only be an integer")
+
+    try:
+        read, created = Read.objects.get_or_create(read_name=name, owner=owner, 
+            defaults={'read_url': url, 'type': read_type, 'description': description})
+        if created: read.save()
+    except Exception as e:
+        print(e)
+        return HttpResponse("Invalid name and/or URL")
+    
+    # Fetch the data from ONA
+    ona_token = ThirdPartyTokens.objects.get(user=request.user, name=provider)
+    response = requests.get(read.read_url, headers={'Authorization': 'Token %s' % ona_token.token})
+    data = json.loads(response.content)
+    existing_silo_cols = []
+    new_cols = []
+    show_mapping = False
+    
+    if silo_id <= 0:
+        # create a new silo by the name of "name"
+        silo = Silo(name=name, public=False, owner=owner)
+        silo.save()
+        silo.reads.add(read)
+    else:
+        # import into existing silo
+        # Compare the columns of imported data with existing silo in case it needs merging
+        silo = Silo.objects.get(pk=silo_id)
+        lvs = json.loads(LabelValueStore.objects(silo_id=silo.id).to_json())
+        for l in lvs:
+            existing_silo_cols.extend(c for c in l.keys() if c not in existing_silo_cols)
+        
+        for row in data:
+            new_cols.extend(c for c in row.keys() if c not in new_cols)
+        
+        for c in existing_silo_cols:
+            if c == "silo_id" or c == "create_date": continue
+            if c not in new_cols: show_mapping = True
+            if show_mapping == True: 
+                params = {'getSourceFrom':existing_silo_cols, 'getSourceTo':new_cols, 'from_silo_id':0, 'to_silo_id':silo.id}
+                response = render_to_response("display/merge-column-form-inner.html", params, context_instance=RequestContext(request))
+                response['show_mapping'] = '1'
+            else:
+                response = HttpResponse("Your data imported successfully and is available at <a href='/silo_detail/%s' target='_blank'> here </a>" % silo.pk)
+                response['show_mapping'] = '0'
+                
+            return response
+    
+    if silo:
+        # import data into this silo
+        num_rows = len(data)
+        #loop over data and insert create and edit dates and append to dict
+        for counter, row in enumerate(data):
+            lvs = LabelValueStore()
+            lvs.silo_id = silo.pk
+            for new_label, new_value in row.iteritems():
+                if new_value is not "" and new_label is not None and new_label is not "edit_date" and new_label is not "create_date":
+                    #setattr(lvs, new_label, new_value)=
+                    pass
+            lvs.create_date = timezone.now()
+            #result = lvs.save()
+        if num_rows == (counter+1):
+            combineColumns(silo_id)
+            return HttpResponse("View silo data at <a href='/silo_detail/%s' target='_blank'>See your data</a>" % silo.pk)
+    return HttpResponse(read.pk)
+
+@login_required
+def getOnaForms(request):
+    data = {}
+    ona_token = None
+    form = None
+    provider = "ONA"
+    url_user_token = "https://ona.io/api/v1/user.json"
+    url_user_forms = 'https://ona.io/api/v1/data'
+    if request.method == 'POST':
+        form = OnaLoginForm(request.POST)
+        if form.is_valid():
+            response = requests.get(url_user_token, auth=HTTPDigestAuth(request.POST['username'], request.POST['password']))
+            token = json.loads(response.content)['api_token']
+            ona_token, created = ThirdPartyTokens.objects.get_or_create(user=request.user, name=provider, token=token)
+            if created: ona_token.save()
+    else:
+        try:
+            ona_token = ThirdPartyTokens.objects.get(name=provider, user=request.user)
+        except Exception as e:
+            form = OnaLoginForm()
+    
+    if ona_token:
+        onaforms = requests.get(url_user_forms, headers={'Authorization': 'Token %s' % ona_token.token})
+        data = json.loads(onaforms.content)
+        
+    silos = Silo.objects.filter(owner=request.user)
+    return render(request, 'silo/getonaforms.html', {
+        'form': form, 'data': data, 'silos': silos
+    })
+
 
 #DELETE-SILO
 @csrf_protect
 def deleteSilo(request, id):
-    deleteSilo = Silo.objects.get(pk=id).delete()
-
-    return render(request, 'silo/delete.html')
-
+    owner = Silo.objects.get(id = id).owner
+    
+    if str(owner.username) == str(request.user):
+        try:
+            silo_to_be_deleted = Silo.objects.get(pk=id)
+            silo_name = silo_to_be_deleted.name
+            lvs = LabelValueStore.objects(silo_id=silo_to_be_deleted.id)
+            num_rows_deleted = lvs.delete()
+            silo_to_be_deleted.delete()
+            messages.success(request, "Silo, %s, with all of its %s rows of data deleted successfully." % (silo_name, num_rows_deleted))
+        except Silo.DoesNotExist as e:
+            print(e)
+        except Exception as es:
+            print(es)
+        return HttpResponseRedirect("/silos")
+    else:
+        messages.error(request, "You do not have permission to delete this silo")
+        return HttpResponseRedirect(request.META['HTTP_REFERER'])
 
 #READ VIEWS
+@login_required
 def home(request):
     """
     List of Current Read sources that can be updated or edited
     """
-    get_reads = Read.objects.all()
+    try:
+        user = User.objects.get(username__exact=request.user)
+        get_reads = Read.objects.filter(owner=user)
+    except User.DoesNotExist as e:
+        messages.info(request, "There are no available silos")
+        get_reads = None
 
     return render(request, 'read/home.html', {'getReads': get_reads, })
 
-
+@login_required
 def initRead(request):
     """
     Create a form to get feed info then save data to Read
@@ -114,7 +248,7 @@ def initRead(request):
             new_read = form.save()
             id = str(new_read.id)
             if form.instance.file_data:
-                redirect_var = "file"
+                redirect_var = "file/%s" % id
             else:
                 redirect_var = "read/login"
             return HttpResponseRedirect('/' + redirect_var + '/')  # Redirect after POST to getLogin
@@ -126,48 +260,6 @@ def initRead(request):
     return render(request, 'read/read.html', {
         'form': form,
     })
-
-def odk(request):
-    """
-    Create a form to get add an ODK service like formhub or Ona
-    and re-direct to login
-    """
-    if request.method == 'POST':  # If the form has been submitted...
-        form = ODKForm(request.POST, request.FILES)  # A form bound to the POST data
-        if form.is_valid():  # All validation rules pass
-            # save data to read
-            if request.POST['url_source']:
-                url_read = request.POST['url_source']
-            else:
-                url_read = request.POST['source']
-            redirect_var = "read/odk_login"
-            return HttpResponseRedirect('/' + redirect_var + '/?read_url=' + url_read)  # Redirect after POST to getLogin
-        else:
-            messages.error(request, 'Invalid Form', fail_silently=False)
-    else:
-        form = ODKForm()  # An unbound form
-
-    return render(request, 'read/odkform.html', {
-        'form': form,
-    })
-
-def odkLogin(request):
-    """
-    Some services require a login provide user with a
-    login to service if needed and select a silo
-    """
-    # get all of the silo info to pass to the form
-    get_silo = Silo.objects.all()
-
-    #url from service
-    url = request.GET.get('read_url', 'TEST')
-
-    #redirect to JSON list of forms
-    redirect_var = "read/odk_login"
-
-    # display login form
-    return render(request, 'read/login.html', {'get_silo': get_silo, 'url': url, 'redirect_var': redirect_var})
-
 
 def showRead(request, id):
     """
@@ -183,8 +275,8 @@ def showRead(request, id):
             if form.instance.file_data:
                 redirect_var = "file/" + id + "/"
             else:
-                redirect_var = "read/login"
-            return HttpResponseRedirect('/' + redirect_var + '/')  # Redirect after POST to getLogin
+                redirect_var = "read/login/?read_id=%s" % request.POST['read_id']
+            return HttpResponseRedirect('/' + redirect_var)  # Redirect after POST to getLogin
         else:
             messages.error(request, 'Invalid Form', fail_silently=False)
     else:
@@ -194,57 +286,51 @@ def showRead(request, id):
         'form': form, 'read_id': id,
     })
 
-
+@login_required
 def uploadFile(request, id):
     """
-    Upload CSV file and save to read
+    Upload CSV file and save its data
     """
-    # get all of the silo info to pass to the form
-    get_silo = Silo.objects.all()
-    if request.method == 'POST':  # If the form has been submitted...
+    if request.method == 'POST':
         form = UploadForm(request.POST)  # A form bound to the POST data
-        if form.is_valid():  # All validation rules pass
-
-            # save data to read
-            # retrieve submitted Feed info from database
+        if form.is_valid():
             read_obj = Read.objects.get(pk=id)
-            # set date time stamp
             today = datetime.date.today()
             today.strftime('%Y-%m-%d')
             today = str(today)
-            #New silo or existing
-            if request.POST['new_silo']:
-                print "NEW"
-                new_silo = Silo(name=request.POST['new_silo'], source=read_obj, owner=read_obj.owner, create_date=today)
-                new_silo.save()
-                silo_id = new_silo.id
+            
+            silo = None
+            user = User.objects.get(username__exact=request.user)
+            if request.POST.get("new_silo", None):
+                silo = Silo(name=request.POST['new_silo'], owner=user, public=False, create_date=today)
+                silo.save()
             else:
-                print "EXISTING"
-                silo_id = request.POST['silo_id']
-
+                silo = Silo.objects.get(id = request.POST["silo_id"])
+        
+            silo.reads.add(read_obj)
+            silo_id = silo.id
+    
             #create object from JSON String
-            print read_obj.file_data
             data = csv.reader(read_obj.file_data)
-            #First row of CSV should be Column Headers
-            labels = data.next()
-            #start a row count and iterate over each row of data
-            row_num = 1
+            
+            labels = data.next() #First row of CSV should be Column Headers
+
             for row in data:
-                col_num = 0
-                if row_num > 1:
-                    for col in row:
-                        saveData(col, labels[col_num], silo_id, row_num)
-                        col_num = col_num + 1
-                row_num = row_num + 1
-
-            #get fields to display back to user for verification
-            get_fields = DataField.objects.filter(silo_id=silo_id).values('name').distinct()
-
-            #saved data now show the columns of data
-            return render(request, "read/show-columns.html", {'getFields': get_fields, 'silo_id': silo_id})
+                lvs = LabelValueStore()
+                lvs.silo_id = silo_id
+                for col_counter, val in enumerate(row):
+                    if labels[col_counter] is not "" and labels[col_counter] is not None: setattr(lvs, labels[col_counter], val) 
+                lvs.create_date = timezone.now()
+                lvs.save()
+            
+            return HttpResponseRedirect('/silo_detail/' + str(silo_id) + '/')
     else:
         form = UploadForm()  # An unbound form
 
+    user = User.objects.get(username__exact=request.user)
+    # get all of the silo info to pass to the form
+    get_silo = Silo.objects.filter(owner=user)
+    
     # display login form
     return render(request, 'read/file.html', {
         'form': form, 'read_id': id, 'get_silo': get_silo,
@@ -260,158 +346,114 @@ def getLogin(request):
     get_silo = Silo.objects.all()
 
     # display login form
-    return render(request, 'read/login.html', {'get_silo': get_silo})
+    return render(request, 'read/login.html', {'get_silo': get_silo, 'read_id': request.GET.get('read_id', None)})
 
-
+@login_required
 def getJSON(request):
     """
     Get JSON feed info from form then grab data
     """
-    # retrieve submitted Feed info from database
-    read_obj = Read.objects.latest('id')
-    # set date time stamp
-    today = datetime.date.today()
-    today.strftime('%Y-%m-%d')
-    today = str(today)
-    try:
-        request2 = urllib2.Request(read_obj.read_url)
-        #if they passed in a usernmae get auth info from form post then encode and add to the request header
-        if request.POST['user_name']:
-            username = request.POST['user_name']
-            password = request.POST['password']
-            base64string = base64.encodestring('%s:%s' % (username, password))[:-1]
-            request2.add_header("Authorization", "Basic %s" % base64string)
-        #retrieve JSON data from formhub via auth info
-        json_file = urllib2.urlopen(request2)
-    except Exception as e:
-        print e
-        messages.success(request, 'Authentication Failed, Please double check your login credentials and URL!')
+    if request.method == 'POST':
+        # retrieve submitted Feed info from database
+        read_obj = Read.objects.get(id = request.POST.get("read_id", None))
 
-    #New silo or existing
-    if request.POST['new_silo']:
-        #print "NEW"
-        new_silo = Silo(name=request.POST['new_silo'], source=read_obj, owner=read_obj.owner, create_date=today)
-        new_silo.save()
-        silo_id = new_silo.id
+        # set date time stamp
+        today = datetime.date.today()
+        today.strftime('%Y-%m-%d')
+        today = str(today)
+        try:
+            request2 = urllib2.Request(read_obj.read_url)
+            #if they passed in a usernmae get auth info from form post then encode and add to the request header
+            if request.POST['user_name']:
+                username = request.POST['user_name']
+                password = request.POST['password']
+                base64string = base64.encodestring('%s:%s' % (username, password))[:-1]
+                request2.add_header("Authorization", "Basic %s" % base64string)
+            #retrieve JSON data from formhub via auth info
+            json_file = urllib2.urlopen(request2)
+        except Exception as e:
+            print e
+            messages.error(request, 'Authentication Failed, Please double check your login credentials and URL!')
+
+        silo = None
+        
+        user = User.objects.get(username__exact=request.user)
+        if request.POST.get("new_silo", None):
+            silo = Silo(name=request.POST['new_silo'], owner=user, public=False, create_date=today)
+            silo.save()
+        else:
+            silo = Silo.objects.get(id = request.POST["silo_id"])
+        
+        silo.reads.add(read_obj)
+        silo_id = silo.id
+    
+        #create object from JSON String
+        data = json.load(json_file)
+        json_file.close()
+    
+        #loop over data and insert create and edit dates and append to dict
+        for row in data:
+            lvs = LabelValueStore()
+            lvs.silo_id = silo_id
+            for new_label, new_value in row.iteritems():
+                if new_value is not "" and new_label is not None and new_label is not "edit_date" and new_label is not "create_date":
+                    setattr(lvs, new_label, new_value)
+            lvs.create_date = timezone.now()
+            lvs.save()
+        messages.success(request, "Data imported correctly into MONGO")
+        return HttpResponseRedirect('/silo_detail/' + str(silo_id) + '/')
     else:
-        #print "EXISTING"
-        silo_id = request.POST['silo_id']
-
-    #create object from JSON String
-    data = json.load(json_file)
-    json_file.close()
-    #loop over data and insert create and edit dates and append to dict
-    row_num = 1
-    for row in data:
-        for new_label, new_value in row.iteritems():
-            if new_value is not "" and new_label is not None:
-                #save to DB
-                saveData(new_value, new_label, silo_id, row_num)
-        row_num = row_num + 1
-
-    #get fields to display back to user for verification
-    get_fields = DataField.objects.filter(silo_id=silo_id)
-
-    #send the keys and vars from the json data to the template along with submitted feed info and silos for new form
-    return render(request, "read/show-columns.html", {'getFields': get_fields, 'silo_id': silo_id})
-
-
-def updateUID(request):
-    """
-    Set the PK for each row by allowing the user to select a column
-    """
-    for row in request.POST['is_uid']:
-        update_uid = DataField.objects.filter(pk=row).update(is_uid=1)
-
-    messages.success(request, 'Silo updated, view new silo data below')
-    return redirect('/silo_detail/' + request.POST['silo_id'] + '/')
-
-
-def saveData(new_value, new_label, silo_id, row_num):
-    """
-    Function call no template associated with this
-    Save file data into data store and silo
-    """
-    # Need a silo set object to gather silos into programs
-    current_silo = Silo.objects.get(pk=silo_id)
-    # set date time stamp
-    today = datetime.date.today()
-    today.strftime('%Y-%m-%d')
-    today = str(today)
-    if new_value is not "" and new_value is not None:
-        #check to see if the field exists if it does use that field
-        check_for_field = DataField.objects.all().filter(silo=current_silo, name=new_label)
-        if check_for_field.exists():
-            field_id = check_for_field[0].id
-        else:
-            new_field = DataField(silo=current_silo, name=new_label, create_date=today, edit_date=today)
-            new_field.save()
-            #get the field id
-            latest = DataField.objects.latest('id')
-            field_id = latest.id
-        #convert to string
-        new_value = str(new_value)
-        print new_value
-        print len(new_value)
-        #if it's a long text field trim it first
-        if len(new_value) > 3000:
-            trimmed_value = new_value[:2990] + "!TRUNCATED!"
-            save_value = ValueStore(field_id=field_id, char_store=trimmed_value, create_date=today, edit_date=today, row_number=row_num)
-        else:
-            save_value = ValueStore(field_id=field_id, char_store=new_value, create_date=today, edit_date=today, row_number=row_num)
-
-        save_value.save()
-
-
+        messages.error(request, "Invalid Request for importing JSON data")
+        return HttpResponseRedirect("/")
 #display
 #INDEX
 def index(request):
     return render(request, 'index.html')
 
 #SILOS
+@login_required
 def listSilos(request):
     """
     Each silo is listed with links to details
     """
+    user = User.objects.get(username__exact=request.user)
+    
     #get all of the silos
-    get_silos = Silo.objects.all()
+    get_silos = Silo.objects.filter(owner=user).prefetch_related('reads')
 
     return render(request, 'display/silos.html',{'get_silos':get_silos})
 
-#SILO-SOURCES
-def listSiloSources(request):
-    """
-    List all of the silo sources (From Read model) and provide links to edit
-    """
-    #get fields to display back to user for verification
-    getSources = Read.objects.filter(silo_id=silo_id)
-
-    #send the keys and vars from the json data to the template along with submitted feed info and silos for new form
-    return render_to_response("display/stores.html", {'getSilo':getSilo,'silo_id':silo_id})
-
-#Display a single Silo
-def viewSilo(request,id):
-    """
-    View a silo and it's meta data
-    """
-    silo_id = id
-    #get all of the silos
-    get_sources = Read.objects.all().filter(silo__id=silo_id)
-
-    return render(request, 'display/silo-sources.html',{'get_sources':get_sources})
-
 #SILO-DETAIL Show data from source
+@login_required
 def siloDetail(request,id):
     """
     Show silo source details
     """
-    silo_id = id
-    #getSilo = ValueStore.objects.filter(field__silo_id=silo_id).order_by('row_number').select_related('field')
+    owner = Silo.objects.get(id = id).owner
+    
+    if str(owner.username) == str(request.user):
+        table = LabelValueStore.objects(silo_id=id).to_json()
+        decoded_json = json.loads(table)
+        column_names = []
+        #column_names = decoded_json[0].keys()
+        for row in decoded_json:
+            column_names.extend([k for k in row.keys() if k not in column_names])
+    
+        if decoded_json:
+            silo = define_table(column_names)(decoded_json)
+    
+            #This is needed in order for table sorting to work
+            RequestConfig(request).configure(silo)
+    
+            #send the keys and vars from the json data to the template along with submitted feed info and silos for new form
+            return render(request, "display/stored_values.html", {"silo": silo})
+        else:
+            messages.error(request, "There is not data in Silo with id = %s" % id)
+            return HttpResponseRedirect(request.META['HTTP_REFERER'])
+    else:
+        messages.info(request, "You don't have the permission to see data in this silo")
+        return HttpResponseRedirect(request.META['HTTP_REFERER'])
 
-    table = SiloTable(ValueStore.objects.all().filter(field__silo_id=silo_id).order_by('row_number', 'id').select_related('field'))
-
-    #send the keys and vars from the json data to the template along with submitted feed info and silos for new form
-    return render(request, "display/stored_values.html", {'getSilo':table})
 
 #SHOW-MERGE FORM
 def mergeForm(request,id):
@@ -429,71 +471,146 @@ def mergeColumns(request):
     """
     from_silo_id = request.POST["from_silo_id"]
     to_silo_id = request.POST["to_silo_id"]
-    getSourceFrom = DataField.objects.all().filter(silo__id=from_silo_id).values('name').distinct()
-    getSourceTo = DataField.objects.all().filter(silo__id=to_silo_id).values('name').distinct()
 
-   # definitions_list = [definition.encode("utf8") for definition in definitions.objects.values_list('title', flat=True)]
-    source_list = getSourceTo.values_list("name", flat=True)
+    lvs = json.loads(LabelValueStore.objects(silo_id__in = [from_silo_id, to_silo_id]).to_json())
+    getSourceFrom = []
+    getSourceTo = []
+    for l in lvs:
+        if from_silo_id == str(l['silo_id']):
+            getSourceFrom.extend([k for k in l.keys() if k not in getSourceFrom])
+        else:
+            getSourceTo.extend([k for k in l.keys() if k not in getSourceTo])
+    
+    return render(request, "display/merge-column-form.html", {'getSourceFrom':getSourceFrom, 'getSourceTo':getSourceTo, 'from_silo_id':from_silo_id, 'to_silo_id':to_silo_id})
 
-    return render(request, "display/merge-column-form.html", {'getSourceFrom':getSourceFrom, 'getSourceTo':getSourceTo, 'source_list':source_list, 'from_silo_id':from_silo_id, 'to_silo_id':to_silo_id})
+import pymongo
+from bson.objectid import ObjectId
+from pymongo import MongoClient
+uri = 'mongodb://localhost/tola'
+def doMerge(request):
+    from_silo_id = request.POST['from_silo_id']
+    to_silo_id = request.POST["to_silo_id"]
+
+    try:
+        from_silo_id = int(from_silo_id)
+        to_silo_id = int(to_silo_id)
+    except ValueError as e:
+        from_silo_id = None
+        to_silo_id = None
+        print("The from_silo_id and/or the to_silo_id is not an integer")
+    
+    #conn = pymongo.Connection()
+    #db = conn.tola
+    client = MongoClient(uri)
+    db = client.tola
+    
+    if from_silo_id != None and to_silo_id != None:
+        for k in request.POST:
+            if k != "silo_id" and k !=  "_id" and k != "to_silo_id" and k != "from_silo_id" and k != "csrfmiddlewaretoken": 
+                from_field = request.POST.getlist(k)[0].lower()
+                to_field = request.POST.getlist(k)[1].lower()
+            
+                if to_field == "Ignore":
+                    "This field should be deleted from the silo_id = 'from_silo_id'"
+                    #print ("FROM FIELD: %s and SILO_ID: %s" % (from_field, from_silo_id))
+                    db.label_value_store.update_many( 
+                        { "silo_id": from_silo_id }, 
+                        { 
+                            "$unset": {from_field: ""}, 
+                        }, 
+                        False #, False,  None, True 
+                    )
+                elif to_field == "0":
+                    "Nothing should be done in this case because when the silo_id is updated to to_silo_id this field will become part of the to_silo_id "
+                    pass
+                else:
+                    if from_field != to_field:
+                        db.label_value_store.update_many(
+                            { "silo_id": from_silo_id }, 
+                            { 
+                                "$rename": { from_field:  to_field },  
+                                "$currentDate": { 'edit_date': True } 
+                            }, 
+                            False
+                        )
+
+        db.label_value_store.update_many( 
+            { "silo_id": from_silo_id }, 
+            { 
+                "$set": { "silo_id": to_silo_id }, 
+            }, 
+            False #, False, None, True 
+        )
+        Silo.objects.filter(pk = from_silo_id).delete()
+        
+        combineColumns(to_silo_id)
+    #messages.success(request, "Silos merged successfully")
+    return HttpResponseRedirect("/silo_detail/%s" % to_silo_id)
 
 #EDIT A SINGLE VALUE STORE
+@login_required
 def valueEdit(request,id):
     """
     Edit a value
     """
-    #Get the silo id for the return link back to silo detail
-    getSilo = ValueStore.objects.all().filter(id=id).prefetch_related('field')
-    silo_id = getSilo[0].field.silo_id
-
+    doc = LabelValueStore.objects(id=id).to_json()
+    data = {}
+    jsondoc = json.loads(doc)
+    silo_id = None
+    for item in jsondoc:
+        for k, v in item.iteritems():
+            #print("The key and value are ({}) = ({})".format(k, v))
+            if k == "_id":
+                #data[k] = item['_id']['$oid']
+                pass
+            elif k == "silo_id":
+                silo_id = v
+            elif k == "edit_date":
+                edit_date = datetime.datetime.fromtimestamp(item['edit_date']['$date']/1000)
+                data[k] = edit_date.strftime('%Y-%m-%d %H:%M:%S')
+            elif k == "create_date":
+                create_date = datetime.datetime.fromtimestamp(item['create_date']['$date']/1000)
+                data[k] = create_date.strftime('%Y-%m-%d')
+            else:
+                data[k] = v
     if request.method == 'POST': # If the form has been submitted...
-        form = EditForm(request.POST) # A form bound to the POST data
-        if form.is_valid(): # All validation rules pass
-            # save data to read
-            update = ValueStore.objects.get(pk=id)
-            form = EditForm(request.POST, instance=update)
-            new = form.save(commit=True)
+        form = MongoEditForm(request.POST or None, extra = data) # A form bound to the POST data
+        if form.is_valid():
+            lvs = LabelValueStore.objects(id=id)[0]
+            for lbl, val in form.cleaned_data.iteritems():
+                if lbl != "id" and lbl != "silo_id" and lbl != "csrfmiddlewaretoken":
+                    setattr(lvs, lbl, val)
+            lvs.edit_date = timezone.now()
+            lvs.save()
             return HttpResponseRedirect('/value_edit/' + id)
         else:
             print "not valid"
     else:
-        value= get_object_or_404(ValueStore, pk=id)
-        form = EditForm(instance=value) # An unbound form
+        form = MongoEditForm(initial={'silo_id': silo_id, 'id': id}, extra=data)
 
-    return render(request, 'read/edit_value.html', {'form': form,'value':value,'silo_id':silo_id})
+    return render(request, 'read/edit_value.html', {'form': form, 'silo_id': silo_id})
 
+@login_required
 def valueDelete(request,id):
     """
     Delete a value
     """
-    deleteStore = ValueStore.objects.get(pk=id).delete()
-
-    return render(request, 'read/delete_value.html')
-
-def fieldEdit(request,id):
-    """
-    Edit a field
-    """
-    if request.method == 'POST': # If the form has been submitted...
-        form = FieldEditForm(request.POST) # A form bound to the POST data
-        if form.is_valid(): # All validation rules pass
-            # save data to read
-            update = DataField.objects.get(pk=id)
-            form = FieldEditForm(request.POST, instance=update)
-            new = form.save(commit=True)
-            return HttpResponseRedirect('/field_edit/' + id)
-        else:
-            print "not valid"
+    silo_id = None
+    lvs = LabelValueStore.objects(id=id)[0]
+    owner = Silo.objects.get(id = lvs.silo_id).owner
+    
+    if str(owner.username) == str(request.user):
+        silo_id = lvs.silo_id
+        lvs.delete()
     else:
-        field= get_object_or_404(DataField, pk=id)
-        form = FieldEditForm(instance=field) # An unbound form
-
-    return render(request, 'read/field_edit.html', {'form': form,'field':field})
-
+        messages.error(request, "You don't have the permission to delete records from this silo")
+        return HttpResponseRedirect(request.META['HTTP_REFERER'])
+    
+    messages.success(request, "Record deleted successfully")
+    return HttpResponseRedirect('/silo_detail/%s/' % silo_id)
 
 #FEED VIEWS
 # API Classes
-
 
 class UserViewSet(viewsets.ModelViewSet):
     queryset = User.objects.all()
@@ -506,32 +623,6 @@ class SiloViewSet(viewsets.ModelViewSet):
     """
     queryset = Silo.objects.all()
     serializer_class = SiloSerializer
-
-class FeedViewSet(viewsets.ModelViewSet):
-    """
-    This viewset automatically provides `list`, `create`, `retrieve`,
-    `update` and `destroy` actions.
-    """
-    queryset = Silo.objects.all()
-    serializer_class = SiloSerializer
-
-
-class DataFieldViewSet(viewsets.ModelViewSet):
-    """
-    This viewset automatically provides `list`, `create`, `retrieve`,
-    `update` and `destroy` actions.
-    """
-    queryset = DataField.objects.all()
-    serializer_class = DataFieldSerializer
-
-
-class ValueStoreViewSet(viewsets.ModelViewSet):
-    """
-    This viewset automatically provides `list`, `create`, `retrieve`,
-    `update` and `destroy` actions.
-    """
-    queryset = ValueStore.objects.all()
-    serializer_class = ValueStoreSerializer
 
 class ReadViewSet(viewsets.ModelViewSet):
     """
@@ -557,33 +648,9 @@ def customFeed(request,id):
     All tags in use on this system
     id = Silo
     """
-    #get all of the data fields for the silo
-    #queryset = DataField.objects.filter(silo__id=id)
-    queryset = ValueStore.objects.filter(field__silo=id).order_by('row_number','id').select_related('field').values('char_store', 'field__name')
+    queryset = LabelValueStore.objects.exclude("silo_id").filter(silo_id=id).to_json()
 
-    formatted_data = []
-
-    #loop over the labels and populate the first list with lables
-    for row in queryset:
-        #append the label to the list
-        formatted_data.append(row['field__name'])
-
-        formatted_data.append(row['char_store'])
-
-    #output list to json
-    jsonData = simplejson.dumps(formatted_data)
-    return render(request, 'feed/json.html', {"jsonData": jsonData}, content_type="application/json")
-
-#Feeds
-def listFeeds(request):
-    """
-    Get all Silos and Link to REST API pages
-    """
-    #get all of the silos
-    #getSilos = Silo.objects.all()
-    getSilos = Silo.objects.all().prefetch_related('remote_end_points')
-
-    return render(request, 'feed/list.html',{'getSilos': getSilos})
+    return render(request, 'feed/json.html', {"jsonData": queryset}, content_type="application/json")
 
 def createFeed(request):
     """
@@ -603,73 +670,42 @@ def createFeed(request):
         jsonData = simplejson.dumps(formatted_data)
         return render(request, 'feed/json.html', {"jsonData": jsonData}, content_type="application/json")
 
+
+from collections import OrderedDict
 def export_silo(request, id):
-    """
-    Export a silo to a CSV file
-    id = Silo
-    """
-    getSiloRows = ValueStore.objects.all().filter(field__silo__id=id).values('row_number').distinct().order_by('row_number')
-    getColumns = DataField.objects.all().filter(silo__id=id).values('name').distinct()
-
-    # Create the HttpResponse object with the appropriate CSV header.
+    
+    silo_name = Silo.objects.get(id=id).name
+    
     response = HttpResponse(content_type='text/csv')
-    getSiloName = Silo.objects.get(pk=id)
-    file = getSiloName.name + ".csv"
-
-    response['Content-Disposition'] = 'attachment; filename=file'
-
+    response['Content-Disposition'] = 'attachment; filename="%s.csv"' % silo_name
     writer = csv.writer(response)
 
-    #create a list of column names
-    column_list = []
-    value_list = []
-    for column in getColumns:
-        column_list.append(str(column['name']))
-    #print the list of column names
-    writer.writerow(column_list)
-
-    #loop over each row of the silo
-    for row in getSiloRows:
-        getSiloColumns = ValueStore.objects.all().filter(field__silo__id=id, row_number=str(row['row_number'])).values_list('field__name', flat=True).distinct()
-        #print "row"
-        #print str(row['row_number'])
-        #get a column value for each column in the row
-        for x in column_list:
-            if x in getSiloColumns:
-                #print x
-                getSiloValues = ValueStore.objects.get(field__silo__id=id, row_number=str(row['row_number']), field__name=x)
-                value_list.append(str(getSiloValues.char_store.encode(errors="ignore")))
-            else:
-                value_list.append("")
-
-
-        #print the row
-        writer.writerow(value_list)
-        value_list = []
-
-
+    silo_data = LabelValueStore.objects(silo_id=id)
+    data = []
+    num_cols = 0
+    cols = OrderedDict()
+    if silo_data:
+        num_rows = len(silo_data)
+        
+        for row in silo_data:
+            for i, col in enumerate(row):
+                if col not in cols.keys():
+                    num_cols = num_cols + 1
+                    cols[col] = num_cols
+        
+        # Convert OrderedDict to Python list so that it can be written to CSV writer.
+        cols = list(cols)
+        writer.writerow(list(cols))
+        
+        # Populate a 2x2 list structure that corresponds to the number of rows and cols in silo_data
+        for i in xrange(num_rows): data += [[0]*num_cols]        
+        
+        for r, row in enumerate(silo_data):
+            for col in row:
+                # Map values to column names and place them in the correct position in the data array
+                data[r][cols.index(col)] = row[col]
+            writer.writerow(data[r])
     return response
-
-
-def createDynamicModel(request):
-    """
-    Create an XML or JSON Feed from a given Silo
-    """
-    getSilo = Silo.objects.filter(silo_id=request.POST['silo_id'])
-    getValues = ValueStore.objects.filter(field__silo__id=request.POST['silo_id'])
-    getFields = DataField.objects.filter(field__silo__id=request.POST['silo_id'])
-
-    #return a dict with label value pair data
-    formatted_data = siloToModel(getSilo['name'],getFields['name'])
-
-    getFeedType = FeedType.objects.get(pk = request.POST['feed_type'])
-
-    if getFeedType.description == "XML":
-        xmlData = serialize(formatted_data)
-        return render(request, 'feed/xml.html', {"xml": xmlData}, content_type="application/xhtml+xml")
-    elif getFeedType.description == "JSON":
-        jsonData = simplejson.dumps(formatted_data)
-        return render(request, 'feed/json.html', {"jsonData": jsonData}, content_type="application/json")
 
 from oauth2client.client import flow_from_clientsecrets
 from oauth2client.django_orm import Storage
@@ -695,68 +731,86 @@ FLOW = flow_from_clientsecrets(
 
 def export_to_google_spreadsheet(credential_json, silo_id, spreadsheet_key):
 
+
+    # Create OAuth2Token for authorizing the SpreadsheetClient
+    token = gdata.gauth.OAuth2Token(
+        client_id = credential_json['client_id'],
+        client_secret = credential_json['client_secret'],
+        scope = 'https://spreadsheets.google.com/feeds',
+        user_agent = "TOLA",
+        access_token = credential_json['access_token'],
+        refresh_token = credential_json['refresh_token'])
+
+    # Instantiate the SpreadsheetClient object
+    sp_client = gdata.spreadsheets.client.SpreadsheetsClient(source="TOLA")
+
+    # authorize the SpreadsheetClient object
+    sp_client = token.authorize(sp_client)
+    #print(sp_client)
+    
+    
+    # Create a WorksheetQuery object to allow for filtering for worksheets by the title
+    worksheet_query = gdata.spreadsheets.client.WorksheetQuery(title="Sheet1", title_exact=True)
+    
+    
+    # Get a feed of all worksheets in the specified spreadsheet that matches the worksheet_query
+    worksheets_feed = sp_client.get_worksheets(spreadsheet_key, query=worksheet_query)
+    #print("worksheets_feed: %s" % worksheets_feed)
+    
+    
+    # Retrieve the worksheet_key from the first match in the worksheets_feed object
+    worksheet_key = worksheets_feed.entry[0].id.text.rsplit("/", 1)[1]
+    #print("worksheet_key: %s" % worksheet_key)
+    
+    silo_data = LabelValueStore.objects(silo_id=silo_id)
+    
+    # Create a CellBatchUpdate object so that all cells update is sent as one http request
+    batch = gdata.spreadsheets.data.BuildBatchCellsUpdate(spreadsheet_key, worksheet_key)
+    
+    col_index = 0
+    row_index = 1
+    col_info = {}
+    
+    for row in silo_data:
+        row_index = row_index + 1
+        for i, col_name in enumerate(row):
+            if col_name not in col_info.keys():
+                col_index = col_index + 1
+                col_info[col_name] = col_index
+                batch.add_set_cell(1, col_index, col_name) #Add column names
+            #print("%s = %s - %s: %s" % (col_info[col_name], col_name, type(row[col_name]),  row[col_name]))
+            
+            val = row[col_name]
+            if col_name != "isd":
+                try:
+                    #val = str(val)#.encode('ascii', 'ignore')
+                    val = val.encode('ascii', 'xmlcharrefreplace')
+                except Exception as e:
+                    try:
+                        val = str(val)
+                    except Exception as e1:                        
+                        print(e)
+                        print(val)
+                        pass
+            
+                batch.add_set_cell(row_index, col_info[col_name], val)
+    
+    # By default a blank Google Spreadsheet has 26 columns but if our data has more column
+    # then add more columns to Google Spreadsheet otherwise there would be a 500 Error!
+    if col_index and col_index > 26:
+        worksheet = worksheets_feed.entry[0]
+        worksheet.col_count.text = str(col_index)
+
+        # Send the worksheet update call to Google Server
+        sp_client.update(worksheet, force=True)
+
     try:
-        # Create OAuth2Token for authorizing the SpreadsheetClient
-        token = gdata.gauth.OAuth2Token(
-            client_id = credential_json['client_id'],
-            client_secret = credential_json['client_secret'],
-            scope = 'https://spreadsheets.google.com/feeds',
-            user_agent = "TOLA",
-            access_token = credential_json['access_token'],
-            refresh_token = credential_json['refresh_token'])
-
-        # Instantiate the SpreadsheetClient object
-        sp_client = gdata.spreadsheets.client.SpreadsheetsClient(source="TOLA")
-
-        # authorize the SpreadsheetClient object
-        sp_client = token.authorize(sp_client)
-
-        #print(sp_client)
-        # Create a WorksheetQuery object to allow for filtering for worksheets by the title
-        worksheet_query = gdata.spreadsheets.client.WorksheetQuery(title="Sheet1", title_exact=True)
-        #print("OK")
-        # Get a feed of all worksheets in the specified spreadsheet that matches the worksheet_query
-        worksheets_feed = sp_client.get_worksheets(spreadsheet_key, query=worksheet_query)
-        #print("worksheets_feed: %s" % worksheets_feed)
-        # Retrieve the worksheet_key from the first match in the worksheets_feed object
-        worksheet_key = worksheets_feed.entry[0].id.text.rsplit("/", 1)[1]
-        #print("worksheet_key: %s" % worksheet_key)
-        silo_data = ValueStore.objects.filter(field__silo__id=silo_id).order_by("row_number")
-        num_cols = len(silo_data)
-        #print("num_cols: %s" % num_cols)
-        # By default a blank Google Spreadsheet has 26 columns but if our data has more column
-        # then add more columns to Google Spreadsheet otherwise there would be a 500 Error!
-        if num_cols and num_cols > 26:
-            worksheet = worksheets_feed.entry[0]
-            worksheet.col_count.text = str(num_cols)
-
-            # Send the worksheet update call to Google Server
-            sp_client.update(worksheet, force=True)
-
-        # Create a CellBatchUpdate object so that all cells update is sent as one http request
-        batch = gdata.spreadsheets.data.BuildBatchCellsUpdate(spreadsheet_key, worksheet_key)
-
-        # Get all of the column names for the current silo_id
-        column_names = DataField.objects.filter(silo_id=1).values_list('name', flat=True)
-
-        # Add column names to the batch object
-        for i, col_name in enumerate(column_names):
-            row_index = 1
-            col_index = i + 1
-            batch.add_set_cell(row_index, col_index, col_name)
-
-        # Populate the CellBatchUpdate object with data
-        for row in silo_data:
-            row_index = row.row_number + 1
-            col_index = row.field.id
-            value = row.char_store
-            batch.add_set_cell(row_index, col_index, value)
-
         # Finally send the CellBatchUpdate object to Google
         sp_client.batch(batch, force=True)
     except Exception as e:
-        print(e)
+        print("ERROR: %s" % e)
         return False
+
     return True
 
 
@@ -774,11 +828,14 @@ def export_gsheet(request, id):
 
     credential_json = json.loads(credential.to_json())
 
+    user = User.objects.get(username__exact=request.user)
+    gsheet_endpoint = None
+    read_type = ReadType.objects.get(read_type="Google Spreadsheet")
     try:
-        gsheet_endpoint = RemoteEndPoint.objects.get(silo__id=id, silo__owner = request.user, name='Google')
-    except RemoteEndPoint.MultipleObjectsReturned:
+        gsheet_endpoint = Read.objects.get(silos__id=id, type=read_type, silos__owner=user.id, read_name='Google')
+    except Read.MultipleObjectsReturned:
         print("multiple records exist and that should NOT be the case")
-    except RemoteEndPoint.DoesNotExist:
+    except Read.DoesNotExist:
         print("Remote End point does not exist; creating one...")
         url = request.GET.get('link', None)
         file_id = request.GET.get('resource_id', None)
@@ -786,18 +843,22 @@ def export_gsheet(request, id):
             print ("No link provided for the remote end point")
         if file_id == None:
             print("No file id is available")
-        gsheet_endpoint = RemoteEndPoint(name="Google", silo_id=id, link=url, resource_id=file_id)
+        
+        gsheet_endpoint = Read(read_name="Google", type=read_type, owner=user, read_url=url, resource_id=file_id)
         gsheet_endpoint.save()
+        silo = Silo.objects.get(id=id)
+        silo.reads.add(gsheet_endpoint)
+        silo.save()
     except Exception as e:
         print(e)
 
     #print("about to export to gsheet: %s" % gsheet_endpoint.resource_id)
     if export_to_google_spreadsheet(credential_json, id, gsheet_endpoint.resource_id) == True:
-        link = "Your exported data is available at <a href=" + gsheet_endpoint.link + " target='_blank'>Google Spreadsheet</a>"
+        link = "Your exported data is available at <a href=" + gsheet_endpoint.read_url + " target='_blank'>Google Spreadsheet</a>"
         messages.success(request, link)
     else:
         messages.error(request, 'Something went wrong; try again; here we go.')
-
+    print(link)
     return JsonResponse({'foo': 'bar'})
 
 @login_required

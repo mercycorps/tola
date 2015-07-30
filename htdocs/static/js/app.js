@@ -1,6 +1,3 @@
-
-
-
 //App specific JavaScript//App specific JavaScript
 $(function () {
   $('[data-toggle="tooltip"]').tooltip()
@@ -9,8 +6,18 @@ $(function () {
 //custom jquery to trigger dat picker, info pop-over and print category text
 $(document).ready(function() {
     $('.datepicker').datepicker();
+    $('.btn-del').click(function(e) {
+        e.preventDefault();
+        var msg = e.currentTarget.title;
+        if (msg == undefined || msg.length == 0) {
+            msg = "Are you sure you want to delete?";
+        }
+        var response = confirm(msg);
+        if (response == true) {
+            window.location = $(this).attr('href');
+        }
+    });
 });
-
 
 $('input[type="file"]').each(function() {
     var $file = $(this), $form = $file.closest('.upload-form');
@@ -119,4 +126,43 @@ $(document).ready(function() {
         // page-specific-action call if a page has implemented the 'office_dropdown_has_changed' function
         if(typeof district_dropdown_has_changed != 'undefined') distirct_dropdown_has_changed(district_office);
     });
+});
+
+/*
+ * Get a cookie by name.
+ */
+function getCookie(name) {
+    var cookieValue = null;
+    if (document.cookie && document.cookie != '') {
+        var cookies = document.cookie.split(';');
+        for (var i = 0; i < cookies.length; i++) {
+            var cookie = jQuery.trim(cookies[i]);
+            // Does this cookie string begin with the name we want?
+            if (cookie.substring(0, name.length + 1) == (name + '=')) {
+                cookieValue = decodeURIComponent(cookie.substring(name.length + 1));
+                break;
+            }
+        }
+    }
+    return cookieValue;
+}
+
+
+function csrfSafeMethod(method) {
+    // these HTTP methods do not require CSRF protection
+    return (/^(GET|HEAD|OPTIONS|TRACE)$/.test(method));
+}
+
+/*
+ * Set the csrf header before sending the actual ajax request
+ * while protecting csrf token from being sent to other domains
+ */
+$.ajaxSetup({
+    crossDomain: false, // obviates need for sameOrigin test
+    beforeSend: function(xhr, settings) {
+        if (!csrfSafeMethod(settings.type)) {
+            //console.log("csrftoken: " + getCookie('csrftoken'));
+            xhr.setRequestHeader("X-CSRFToken", getCookie('csrftoken'));
+        }
+    }
 });

@@ -1,20 +1,21 @@
 {% extends "base.html" %}
-
-{% block page_title %}Edit Value{% endblock %}
+{% load crispy_forms_tags %}
+{% block page_title %}Update Record{% endblock %}
 
 {% block content %}
-	{% if form.subject.errors %}
+    {% if form.subject.errors %}
     <ol>
     {% for error in form.subject.errors %}
         <li><strong>{{ error|escape }}</strong></li>
     {% endfor %}
     </ol>
 {% endif %}
-	<p><a href="/silo_detail/{{silo_id}}"><< Back to Silo</a></p>
-	<form action="" method="post">
-	{% csrf_token %}
-	{{ form.as_p }}
-	<input type="submit" value="Submit" />
-	</form>
-
+    <p><a href="/silo_detail/{{silo_id}}"><< Back to Silo</a></p>
+    <form action="" method="post">
+        <div class="modal-body" id="form_modal_body">
+            {% crispy form form.helper %}
+        </div>
+        <input id="submit_btn" name="submit" value="Submit" class="btn btn-primary" type="submit" />
+        <input name="rest" value="Reset" class="btn btn-inverse btn-warning" id="reset-id-rest" type="reset">
+    </form>
 {% endblock content %}

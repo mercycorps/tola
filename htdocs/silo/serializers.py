@@ -1,6 +1,6 @@
 from django.forms import widgets
 from rest_framework import serializers
-from silo.models import ValueStore, Silo, DataField, Read, ReadType
+from silo.models import Silo, Read, ReadType
 from django.contrib.auth.models import User
 
 
@@ -10,21 +10,6 @@ class SiloSerializer(serializers.HyperlinkedModelSerializer):
         model = Silo
         fields = ('owner', 'name', 'source', 'description', 'create_date', 'id')
         depth =1
-
-
-class DataFieldSerializer(serializers.HyperlinkedModelSerializer):
-
-    class Meta:
-        model = DataField
-        fields = ('silo', 'name', 'is_uid', 'create_date', 'edit_date')
-        depth=1
-
-
-class ValueStoreSerializer(serializers.HyperlinkedModelSerializer):
-
-    class Meta:
-        model = ValueStore
-        fields = ('field', 'char_store', 'create_date', 'edit_date')
 
 
 class UserSerializer(serializers.HyperlinkedModelSerializer):

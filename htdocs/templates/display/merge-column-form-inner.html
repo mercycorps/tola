@@ -1,0 +1,35 @@
+{% block content %}
+<div class="table-responsive">
+    
+    <form action="/doMerge/" method="post" class="form-horizontal">
+    <table class = "table table-striped" >
+        {% csrf_token %}
+        <input type="hidden" name="from_silo_id" value="{{ from_silo_id }}">
+        <input type="hidden" name="to_silo_id" value="{{ to_silo_id }}">
+        <tr>
+            <th>From Silo</th>
+            <th>To Silo</th>
+        </tr>
+        {% for item in getSourceFrom %}
+            <tr>
+                <td>{{ item }}
+                    <input type="hidden" name="{{ item }}"" value="{{ item }}">
+                </td>
+                <td>
+                    <select class="form-control" name="{{ item }}">
+                        <option value="0">  New Column !!</option>
+                        <option name="Ignore">Ignore</option>
+                        {% for item2 in getSourceTo %}
+                            <option value="{{ item2 }}" {% if item2|lower == item|lower %} selected="selected" {% endif %}>{{ item2 }} </option>
+                        {% endfor %}
+                    </select>
+                </td>
+            </tr>
+        {% endfor %}
+        <tr>
+            <td colspan="2"><input type="submit" value="Submit" class="btn btn-primary"/></td>
+        </tr>
+    </table>
+    </form>
+</div>
+{% endblock content %}

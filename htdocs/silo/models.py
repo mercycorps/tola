@@ -10,7 +10,13 @@ class GoogleCredentialsModel(models.Model):
     id = models.ForeignKey(User, primary_key=True, related_name='google_credentials')
     credential = CredentialsField()
 
-
+class ThirdPartyTokens(models.Model):
+    user = models.ForeignKey(User, related_name="tokens")
+    name = models.CharField(max_length=60)
+    token = models.CharField(max_length=255)
+    create_date = models.DateTimeField(null=True, blank=True, auto_now=False, auto_now_add=True)
+    edit_date = models.DateTimeField(null=True, blank=True, auto_now=True, auto_now_add=False)
+    
 #READ MODELS
 class ReadType(models.Model):
     read_type = models.CharField(max_length=135, blank=True)
@@ -26,15 +32,20 @@ class ReadTypeAdmin(admin.ModelAdmin):
     list_display = ('read_type','description','create_date','edit_date')
     display = 'Read Type'
 
-
 class Read(models.Model):
     owner = models.ForeignKey('auth.User')
+    #silo = models.ManyToManyField(Silo, related_name = "reads") #RemoteEndPoint
     type = models.ForeignKey(ReadType)
-    read_name = models.CharField(max_length=100, blank=True, default='', verbose_name='source name')
-    read_url = models.CharField(max_length=100, blank=True, default='', verbose_name='source url')
+    read_name = models.CharField(max_length=100, blank=True, default='', verbose_name='source name') #RemoteEndPoint = name
     description = models.TextField()
-    create_date = models.DateTimeField(null=True, blank=True)
+    read_url = models.CharField(max_length=100, blank=True, default='', verbose_name='source url') #RemoteEndPoint = link
+    resource_id = models.CharField(max_length=200, null=True, blank=True) #RemoteEndPoint
+    username = models.CharField(max_length=20, null=True, blank=True) #RemoteEndPoint
+    token = models.CharField(max_length=254, null=True, blank=True) #RemoteEndPoint
     file_data = models.FileField("Upload CSV File", upload_to='uploads', blank=True, null=True)
+    create_date = models.DateTimeField(null=True, blank=True, auto_now=False, auto_now_add=True)
+    edit_date = models.DateTimeField(null=True, blank=True, auto_now=True, auto_now_add=False) #RemoteEndPoint
+    
 
     class Meta:
         ordering = ('create_date',)
@@ -55,8 +66,9 @@ class ReadAdmin(admin.ModelAdmin):
 class Silo(models.Model):
     owner = models.ForeignKey('auth.User')
     name = models.TextField()
-    source = models.ForeignKey(Read)
+    reads = models.ManyToManyField(Read, related_name='silos')
     description = models.TextField()
+    public = models.BooleanField()
     create_date = models.DateTimeField(null=True, blank=True)
     class Meta:
         ordering = ('create_date',)
@@ -68,62 +80,14 @@ class Silo(models.Model):
         return self.name
 
 
-class RemoteEndPoint(models.Model):
-    """
-    Remote_end_points are end-points that data could be exported to
-    or imported from on a per silo basis.
-    """
-    name = models.CharField(max_length=60, null=False, blank=False)
-    silo = models.ForeignKey(Silo, related_name = "remote_end_points")
-    link = models.URLField(null=False, blank=False)
-    resource_id = models.CharField(max_length=200, null=True, blank=True)
-    token = models.CharField(max_length=254, null=True, blank=True)
-    username = models.CharField(max_length=20, null=True, blank=True)
-    create_date = models.DateTimeField(auto_now=True, auto_now_add=False)
-    edit_date = models.DateTimeField(auto_now=True, auto_now_add=False)
-
-    def __unicode__(self):
-        return self.name
-
 
 class SiloAdmin(admin.ModelAdmin):
     list_display = ('owner', 'name', 'source', 'description', 'create_date')
     display = 'Data Feeds'
+    
 
-
-class DataField(models.Model):
-    silo = models.ForeignKey(Silo)
-    original_name = models.CharField(max_length=765, blank=True)
-    name = models.CharField(max_length=765, blank=True)
-    is_uid = models.NullBooleanField(null=True,blank=True)
-    published = models.BooleanField(default="0")
-    create_date = models.DateTimeField(null=True, blank=True)
-    edit_date = models.DateTimeField(null=True, blank=True)
-
-    def __unicode__(self):
-        return self.name
-
-
-class DataFieldAdmin(admin.ModelAdmin):
-    list_display = ('silo','name','is_uid','create_date','edit_date')
-    display = 'Data Fields'
-
-
-class ValueStore(models.Model):
-    field = models.ForeignKey(DataField)
-    char_store = models.CharField(null=True, blank=True,max_length=3000)
-    row_number = models.IntegerField(max_length=10, null=True)
-    create_date = models.DateTimeField(null=True, blank=True)
-    edit_date = models.DateTimeField(null=True, blank=True)
-
-    #set the label based on the type of value store
-    def __unicode__(self):
-        return self.char_store
-
-
-class ValueStoreAdmin(admin.ModelAdmin):
-    list_display = ('field', 'char_store', 'create_date', 'edit_date')
-    display = 'Stored Values'
-
-
-
+from mongoengine import *
+class LabelValueStore(DynamicDocument):
+    silo_id = IntField()
+    create_date = DateTimeField(help_text='date created')
+    edit_date = DateTimeField(help_text='date editted')

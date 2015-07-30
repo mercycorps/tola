@@ -1,0 +1,134 @@
+{% extends "base.html" %} 
+{% load crispy_forms_tags %}
+
+{% block page_title %}ONA Forms{% endblock %} 
+
+{% block content %}
+
+    {% if not data %}
+        {% crispy form %}
+    {% else %}
+        <table id="onaforms" class="table table-bordered table-hover table-striped">
+            <tr>
+                <th>No</th>
+                <th>Title</title>
+                <th>Description</th>
+                <th>URL</th>
+                <th>Silo</th>
+                <th>Action</th>
+            </tr>
+        {% for row in data %}
+            <tr>
+                <form action="/new_read" method="POST" id = "{{ forloop.counter }}">{% csrf_token %}
+                <td> {{ forloop.counter }} </td>
+                <td> <input type="hidden" value="{{ row.title }}" name="title"></input>{{ row.title }} </td>
+                <td> <input type="hidden" value="{{ row.description }}" name="description"></input>{{ row.description }} </td>
+                <td> <input type="hidden" value="{{ row.url }}" name="read_url"></input>{{ row.url }} </td>
+                     <input type="hidden" value="1" name="title"></input>
+                     <input type="hidden" value="1" name="type"></input>
+                     <input type="hidden" value="{{ request.user.id }}" name="owner"></input>
+                <td>
+                    <select id="id_silo-{{forloop.counter}}" name="silo_id" class="form-control input-sm">
+                        <option selected="selected" value=""></option>
+                        <option value="0">Create New Silo</option>
+                        {% for silo in silos %}
+                            <option value="{{ silo.id }}"> {{ silo.name }} </option>
+                        {% endfor %}
+                    </select>
+                </td>
+                <td>
+                    <input type="submit" name="submit-id-save-{{forloop.counter}}" value="Import" class="btn btn-sm btn-primary">
+                </td>
+                </form>
+            </tr>
+        {% endfor %}
+        </table>
+    {% endif %}
+    <div class="modal fade" id="form_modal" tabindex="-1" role="dialog" aria-labelledby="form_modal_label" aria-hidden="true">
+    <div class="modal-dialog modal-lg">
+        <div class="modal-content" id="modal_content">
+            <!-- form will be inserted here -->
+        </div> <!-- .modal-content div collapse -->
+    </div><!-- .modal-dialog .modal-lg div collapse -->
+</div> <!-- .modal fade div collapse -->
+{% endblock content %}
+
+{% block extra_js_in_body %}
+    <script type="text/javascript">
+        $(document).ready(function() {
+            
+            $("select").on("change", function() {
+                //var silo_id =  $("#" + this.id).val());
+                var select_obj = $("#" + this.id);
+                var silo_id =  select_obj.val();
+                if (silo_id <= 0) {
+                    var new_silo_name = prompt("Enter the name of your name silo");
+                    if (new_silo_name) {
+                        var num_options = select_obj.children("option").length;
+                        var new_val = num_options * (-1);
+                        $("#" + select_obj[0].id + " option").eq(2).before($("<option></option>").val(new_val).text(new_silo_name));
+                        $("#" + select_obj[0].id).val(new_val);
+                    }
+                }
+            });          
+  
+            $("#onaforms .btn").click(function(e) {
+                e.preventDefault();
+                var id = $(this).closest('tr').find("td:nth-child(3)").text().trim();
+                var name = $(this).closest('tr').find("td:nth-child(4)").text().trim();
+                var desc = $(this).closest('tr').find("td:nth-child(5)").text().trim();
+                var url = $(this).closest('tr').find("td:nth-child(6)").text().trim();
+                var silo_id = $("#id_silo-"+id).val();
+                if (!silo_id) {
+                    alert("You must select a silo for storing data before you can import");
+                    return;
+                }
+                if (silo_id < 0) {
+                    name = $("#id_silo-"+id).find("option:selected").text();
+                }
+    
+                //console.log("Name: " + name + " description: " + desc + " url: " + url + " silo: " + silo_id);
+                
+                $.post("/saveAndImportRead/", {read_name: name, description: desc, read_url: url, silo_id: silo_id })
+                    .success(function(data, textStatus, xhr) {
+                        /*
+                        console.log("status: " + xhr.status + 
+                              //", data: " + data + 
+                              //", this.data: " + this.data + 
+                              ", responseText: " + xhr.responseText + 
+                              ", textStatus: " + textStatus +
+                              ", this.usl: " + this.url +
+                              ", xhr.getResponseHeader('Content-Type')" + xhr.getResponseHeader("Content-Type")
+                        );
+                        */
+                        //addMessage(data, "success" );
+                        console.log(this.url);
+                        if (xhr.getResponseHeader('show_mapping') == "1") {
+                            $("#modal_content").html(data);
+                            $('#form_modal').modal('toggle');
+                        } else {
+                            addMessage(data, "success" );
+                        }
+                    })
+                    .fail(function(data) {
+                        addMessage(data, "error ");
+                    })
+                    .done(function(data, xhr) {
+                        //alert(xhr.status);
+                        
+                    })
+                    .complete(function(data, xhr) {
+                        //show_column_mapping();
+                    });
+            });
+        });
+        
+        function show_column_mapping() {
+            console.log("OK... showing column mapping.");
+            $.post("/merge_columns", {from_silo_id: "0", to_silo_id: "0"})
+                .success(function(data, textStatus, xhr) {
+                    console.log("OK");
+                });
+        }
+    </script>
+{% endblock %}

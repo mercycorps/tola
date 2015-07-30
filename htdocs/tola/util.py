@@ -3,9 +3,31 @@ import datetime
 import urllib2
 import json
 import base64
+from django.conf import settings
+from silo.models import Read, Silo, LabelValueStore
 
-from silo.models import Read
+import pymongo
+from bson.objectid import ObjectId
+from pymongo import MongoClient
 
+def combineColumns(silo_id):
+    client = MongoClient(settings.MONGODB_HOST)
+    db = client.tola
+    lvs = json.loads(LabelValueStore.objects(silo_id = silo_id).to_json())
+    cols = []
+    for l in lvs:
+        cols.extend([k for k in l.keys() if k not in cols])
+    
+    for l in lvs:
+        for c in cols:
+            if c not in l.keys():
+                db.label_value_store.update_one(
+                    {"_id": ObjectId(l['_id']['$oid'])},
+                    {"$set": {c: ''}},
+                    False
+                )
+    return True
+                    
 #CREATE NEW DATA DICTIONARY OBJECT 
 def siloToDict(silo):
     parsed_data = {}

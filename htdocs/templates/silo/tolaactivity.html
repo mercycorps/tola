@@ -1,0 +1,45 @@
+{% extends "base.html" %} 
+{% load crispy_forms_tags %}
+{% load underscoretags %}
+
+{% block page_title %}PUSH FROM TOLA-DATA SILO TO TOLA-ACTIVITY{% endblock %} 
+
+{% block content %}
+
+{% if not data %}
+    <h3>No Data</h3>
+{% else %}
+
+{% comment %}
+{{ data.items.0.1|get:"read_only"}}
+{{ data.items.0.1.label }}
+{{ data.items|get_by_index:3|get_by_index:1|get:"required" }}
+{% endcomment %}
+<table id="onaforms" class="table table-bordered table-hover table-striped">
+    <tr>
+        <th>Name</th>
+        <th>Label</th>
+        <th>Type</th>
+        <th>Choices</th>
+        <th>Required</th>
+    </tr>
+    {% for k,v in data.items %}
+        <tr>            
+            <td> {{ k }} </td>
+            <td> {{ v }} {{ v.label }}</td>
+            <td> {{ v.type }} </td>
+            <td> {{ v.choices.0 }} </td>
+            <td> {{ v.required }}</td>
+        </tr>
+    {% endfor %}
+</table>
+
+
+{% endif %}
+
+
+{% endblock content %}
+
+{% block extra_js_in_body %}
+
+{% endblock %}

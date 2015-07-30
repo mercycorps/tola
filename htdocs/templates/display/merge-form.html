@@ -12,7 +12,7 @@
 		</tr>
 		<tr>
 			<td>{{ getSource.name }}</td>
-			<td align="middle"><select name="to_silo_id">{% for item2 in getSourceTo %}  {% if item2.name != getSource.name  %}<option value="{{ item2.id }}">{{ item2.name }}</option>{% endif %}{% endfor %}</select></td>
+			<td align="middle"><select name="to_silo_id">{% for item2 in getSourceTo %}  {% if item2.id != getSource.id  %}<option value="{{ item2.id }}">{{ item2.name }}</option>{% endif %}{% endfor %}</select></td>
 		</tr>
 	</table>
 	
