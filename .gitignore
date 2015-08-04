@@ -39,5 +39,11 @@ htdocs/tola/settings/local.py
 client_secrets.json
 djangocosign
 htdocs/djangocosign
+<<<<<<< HEAD
+ssl.tola-data.conf
+tola.crt
+tola.key
+=======
+>>>>>>> 5add53b91b9421c3b9095e5a60663986720e4eeb
 htdocs/tola/db.sqlite3
 error.log
