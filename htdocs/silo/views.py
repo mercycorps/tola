@@ -161,7 +161,7 @@ def saveAndImportRead(request):
                     #setattr(lvs, new_label, new_value)=
                     pass
             lvs.create_date = timezone.now()
-            #result = lvs.save()
+            result = lvs.save()
         if num_rows == (counter+1):
             combineColumns(silo_id)
             return HttpResponse("View silo data at <a href='/silo_detail/%s' target='_blank'>See your data</a>" % silo.pk)
@@ -409,6 +409,14 @@ def getJSON(request):
 #INDEX
 def index(request):
     return render(request, 'index.html')
+
+
+def toggle_silo_publicity(request):
+    silo_id = request.GET.get('silo_id', None)
+    silo = Silo.objects.get(pk=silo_id)
+    silo.public = not silo.public
+    silo.save()
+    return HttpResponse("Your change has been saved")
 
 #SILOS
 @login_required

@@ -15,6 +15,7 @@
             <th>Silo Source(s)</th>            
             <th>Silo Operations</th>
             <th>Share Data</th>
+            <th>Public</th>
             </tr>
             {% for silo in get_silos %}
             <tr>
@@ -49,7 +50,10 @@
                     </div><!-- /btn-group -->
                     <div id="silo_id" style="display: none;"> {{ silo.id }} </div>
                 </td>
-            </tr>   
+                <td>
+                    <a href="#" id="id_public-{{forloop.counter}}" class="public btn btn-sm {% if silo.public %} btn-warning {% else %} btn-primary {% endif %}" role="button">{% if silo.public %} Public {% else %} Private {% endif %}</a>
+                </td>
+            </tr>
             {% endfor %}
           </table>
       {% endif %}
@@ -57,6 +61,25 @@
     </div>
 {% endblock content %}
 {% block extra_js_in_body %}
+    <script>
+        $(document).ready(function() {
+            $("a.public").click(function(e) {
+                var btn_id = $(this).attr('id');
+                var silo_id = btn_id.split("-")[1];
+                var btn_txt = $(this).text();
+                var btn = $(this);
+                $.get('/toggle_silo_publicity/', { "silo_id": silo_id } )
+                .done(function() {
+                    btn.text(btn_txt == "Public" ? "Private" : "Public");
+                    btn.toggleClass("btn-warning btn-primary");
+                    btn.blur();
+                })
+                .fail(function(a, b, c) {
+                    alert("Something went wrong: " + c);
+                });
+            });
+        });
+    </script>
     <script type="text/javascript">
 
         // The Client ID obtained from the Google Developers Console.
@@ -161,4 +184,5 @@
         
     </script>
     <script type="text/javascript" src="https://apis.google.com/js/api.js?onload=onApiLoad"></script>
+
 {% endblock extra_js_in_body %}
