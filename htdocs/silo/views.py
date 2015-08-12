@@ -464,12 +464,13 @@ def siloDetail(request,id):
 
 
 #SHOW-MERGE FORM
+@login_required
 def mergeForm(request,id):
     """
     Merge different silos using a multistep column mapping form
     """
     getSource = Silo.objects.get(id=id)
-    getSourceTo = Silo.objects.all()
+    getSourceTo = Silo.objects.filter(owner=request.user)
     return render(request, "display/merge-form.html", {'getSource':getSource,'getSourceTo':getSourceTo})
 
 #SHOW COLUMNS FOR MERGE FORM
