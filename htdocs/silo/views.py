@@ -116,6 +116,7 @@ def saveAndImportRead(request):
     ona_token = ThirdPartyTokens.objects.get(user=request.user, name=provider)
     response = requests.get(read.read_url, headers={'Authorization': 'Token %s' % ona_token.token})
     data = json.loads(response.content)
+
     existing_silo_cols = []
     new_cols = []
     show_mapping = False
@@ -143,11 +144,7 @@ def saveAndImportRead(request):
                 params = {'getSourceFrom':existing_silo_cols, 'getSourceTo':new_cols, 'from_silo_id':0, 'to_silo_id':silo.id}
                 response = render_to_response("display/merge-column-form-inner.html", params, context_instance=RequestContext(request))
                 response['show_mapping'] = '1'
-            else:
-                response = HttpResponse("Your data imported successfully and is available at <a href='/silo_detail/%s' target='_blank'> here </a>" % silo.pk)
-                response['show_mapping'] = '0'
-                
-            return response
+                return response
     
     if silo:
         # import data into this silo
@@ -158,8 +155,7 @@ def saveAndImportRead(request):
             lvs.silo_id = silo.pk
             for new_label, new_value in row.iteritems():
                 if new_value is not "" and new_label is not None and new_label is not "edit_date" and new_label is not "create_date":
-                    #setattr(lvs, new_label, new_value)=
-                    pass
+                    setattr(lvs, new_label, new_value)
             lvs.create_date = timezone.now()
             result = lvs.save()
         if num_rows == (counter+1):
