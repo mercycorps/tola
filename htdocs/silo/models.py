@@ -61,13 +61,25 @@ class ReadAdmin(admin.ModelAdmin):
     list_display = ('owner','read_name','read_url','description','create_date')
     display = 'Read Data Feeds'
 
+class Tag(models.Model):
+    name = models.CharField(max_length=100)
+    owner = models.ForeignKey(User, related_name='tags')
+    created = models.DateTimeField(auto_now=False, auto_now_add=True)
+    updated = models.DateTimeField(auto_now=True, auto_now_add=False)
+    
+    def __str__(self):
+        return self.name
+
+    def __unicode__(self):
+        return self.name
 
 # Create your models here.
 class Silo(models.Model):
     owner = models.ForeignKey('auth.User')
-    name = models.TextField()
+    name = models.CharField(max_length = 60, blank=False, null=False)
     reads = models.ManyToManyField(Read, related_name='silos')
-    description = models.TextField()
+    tags = models.ManyToManyField(Tag, related_name='silos')
+    description = models.CharField(max_length=255, blank=True, null=True)
     public = models.BooleanField()
     create_date = models.DateTimeField(null=True, blank=True)
     class Meta:
@@ -78,8 +90,6 @@ class Silo(models.Model):
 
     def __unicode__(self):
         return self.name
-
-
 
 class SiloAdmin(admin.ModelAdmin):
     list_display = ('owner', 'name', 'source', 'description', 'create_date')
