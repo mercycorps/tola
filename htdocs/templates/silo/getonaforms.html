@@ -66,7 +66,7 @@
                     if (new_silo_name) {
                         var num_options = select_obj.children("option").length;
                         var new_val = num_options * (-1);
-                        $("#" + select_obj[0].id + " option").eq(2).before($("<option></option>").val(new_val).text(new_silo_name));
+                        $("#" + select_obj[0].id + " option").eq(1).after($("<option></option>").val(new_val).text(new_silo_name));
                         $("#" + select_obj[0].id).val(new_val);
                     }
                 }
