@@ -48,7 +48,7 @@ def editSilo(request, id):
         if form.is_valid():  # All validation rules pass
             # save data to read
             updated = form.save()
-            return HttpResponseRedirect('/display')  # Redirect after POST to getLogin
+            return HttpResponseRedirect('/silos/')  # Redirect after POST to getLogin
         else:
             messages.error(request, 'Invalid Form', fail_silently=False)
     else:
