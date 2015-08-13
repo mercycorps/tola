@@ -78,7 +78,7 @@ class Silo(models.Model):
     owner = models.ForeignKey('auth.User')
     name = models.CharField(max_length = 60, blank=False, null=False)
     reads = models.ManyToManyField(Read, related_name='silos')
-    tags = models.ManyToManyField(Tag, related_name='silos')
+    tags = models.ManyToManyField(Tag, related_name='silos', blank=True, null=True)
     description = models.CharField(max_length=255, blank=True, null=True)
     public = models.BooleanField()
     create_date = models.DateTimeField(null=True, blank=True)
