@@ -25,7 +25,7 @@ from django.views.decorators.csrf import csrf_protect
 import django_tables2 as tables
 from django_tables2 import RequestConfig
 
-from .models import Silo, Read, ReadType, ThirdPartyTokens, LabelValueStore
+from .models import Silo, Read, ReadType, ThirdPartyTokens, LabelValueStore, Tag
 from .serializers import SiloSerializer, UserSerializer, ReadSerializer, ReadTypeSerializer
 
 from .tables import define_table
@@ -40,20 +40,32 @@ from django.utils import timezone
 
 # Edit existing silo meta data
 @csrf_protect
+@login_required
 def editSilo(request, id):
-    getSilo = Silo.objects.get(pk=id)
-
+    edited_silo = Silo.objects.get(pk=id)
     if request.method == 'POST':  # If the form has been submitted...
-        form = SiloForm(request.POST, instance=getSilo)  # A form bound to the POST data
-        if form.is_valid():  # All validation rules pass
-            # save data to read
+        tags = request.POST.getlist('tags')
+        post_data = request.POST.copy()
+        
+        #empty the list but do not remove the dictionary element
+        if tags: del post_data.getlist('tags')[:] 
+        
+        for i, t in enumerate(tags):
+            tag, created = Tag.objects.get_or_create(name=t, defaults={'owner': request.user})
+            if created:
+                tags[i] = tag.id
+                
+                #post_data is a QueryDict in which each element is a list
+                post_data.getlist('tags').append(tags[i])
+
+        form = SiloForm(post_data, instance=edited_silo)
+        if form.is_valid():
             updated = form.save()
-            return HttpResponseRedirect('/silos/')  # Redirect after POST to getLogin
+            return HttpResponseRedirect('/silos/')
         else:
             messages.error(request, 'Invalid Form', fail_silently=False)
     else:
-        form = SiloForm(instance=getSilo)  # An unbound form
-
+        form = SiloForm(instance=edited_silo)
     return render(request, 'silo/edit.html', {
         'form': form, 'silo_id': id,
     })
