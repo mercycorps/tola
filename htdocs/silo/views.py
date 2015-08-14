@@ -51,12 +51,15 @@ def editSilo(request, id):
         if tags: del post_data.getlist('tags')[:] 
         
         for i, t in enumerate(tags):
-            tag, created = Tag.objects.get_or_create(name=t, defaults={'owner': request.user})
-            if created:
-                tags[i] = tag.id
-                
+            if t.isdigit():
+                post_data.getlist('tags').append(t)
+            else:
+                tag, created = Tag.objects.get_or_create(name=t, defaults={'owner': request.user})
+                if created:
+                    print("creating tag: %s " % tag)
+                    tags[i] = tag.id    
                 #post_data is a QueryDict in which each element is a list
-                post_data.getlist('tags').append(tags[i])
+                post_data.getlist('tags').append(tag.id)
 
         form = SiloForm(post_data, instance=edited_silo)
         if form.is_valid():
