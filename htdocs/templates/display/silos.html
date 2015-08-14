@@ -51,7 +51,7 @@
                     <div id="silo_id" style="display: none;"> {{ silo.id }} </div>
                 </td>
                 <td>
-                    <a href="#" id="id_public-{{forloop.counter}}" class="public btn btn-sm {% if silo.public %} btn-warning {% else %} btn-primary {% endif %}" role="button">{% if silo.public %} Public {% else %} Private {% endif %}</a>
+                    <a href="#" id="id_public-{{silo.id}}" class="public btn btn-sm {% if silo.public %} btn-warning {% else %} btn-primary {% endif %}" role="button">{% if silo.public %} Public {% else %} Private {% endif %}</a>
                 </td>
             </tr>
             {% endfor %}

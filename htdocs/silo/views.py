@@ -878,8 +878,7 @@ def export_gsheet(request, id):
         messages.success(request, link)
     else:
         messages.error(request, 'Something went wrong; try again; here we go.')
-    print(link)
-    return JsonResponse({'foo': 'bar'})
+    return JsonResponse({"success": True})
 
 @login_required
 def export_new_gsheet(request, id):
@@ -921,7 +920,7 @@ def export_new_gsheet(request, id):
         messages.success(request, link)
     else:
         messages.error(request, 'Something went wrong; try again.')
-    return HttpResponseRedirect("/")
+    return HttpResponseRedirect("/silos/")
 
 @login_required
 def oauth2callback(request):
