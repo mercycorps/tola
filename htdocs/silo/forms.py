@@ -36,7 +36,7 @@ class SiloForm(forms.ModelForm):
         self.helper.layout.append(Submit('save', 'save'))
     class Meta:
         model = Silo
-        fields = ['id', 'name', 'description', 'tags', 'owner']
+        fields = ['id', 'name', 'description', 'tags', 'shared', 'owner']
 
 
 #READ FORMS

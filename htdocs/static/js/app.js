@@ -81,7 +81,8 @@ $(document).ready(function() {
             }
         })
         .ajaxError(function(e, xhr, settings, thrownError) {
-            addMessage("There was an error processing your request, please try again.", "error");
+            //addMessage("There was an error processing your request, please try again.", "error");
+            addMessage("Error " + xhr.status + ": " +  thrownError, "danger");
         });
 
     var $loading = $('#loading');
