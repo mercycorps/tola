@@ -19,7 +19,8 @@
             </tr>
             {% for silo in get_silos %}
             <tr>
-                <td><a href="/silo_edit/{{ silo.id }}">{{ silo.name }}</a></td>
+                <td><a href="/silo_edit/{{ silo.id }}">{{ silo.name }}</a></br>
+                    <span><small>Tags: {{ silo.tags.all|join:", "}}</small></span></td>
                 <td>{{ silo.description }}</td>
                 <td>
                     {% for r in silo.reads.all %}
