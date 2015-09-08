@@ -8,7 +8,7 @@ class SiloSerializer(serializers.HyperlinkedModelSerializer):
 
     class Meta:
         model = Silo
-        fields = ('owner', 'name', 'source', 'description', 'create_date', 'id')
+        fields = ('owner', 'name', 'reads', 'description', 'create_date', 'id')
         depth =1
 
 
@@ -30,4 +30,4 @@ class ReadTypeSerializer(serializers.HyperlinkedModelSerializer):
 
     class Meta:
         model = ReadType
-        fields = ( 'type', 'description')
+        fields = ( 'read_type', 'description')
