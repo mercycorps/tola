@@ -181,6 +181,7 @@ def saveAndImportRead(request):
 @login_required
 def getOnaForms(request):
     data = {}
+    auth_success = False
     ona_token = None
     form = None
     provider = "ONA"
@@ -190,16 +191,24 @@ def getOnaForms(request):
         form = OnaLoginForm(request.POST)
         if form.is_valid():
             response = requests.get(url_user_token, auth=HTTPDigestAuth(request.POST['username'], request.POST['password']))
-            token = json.loads(response.content)['api_token']
-            ona_token, created = ThirdPartyTokens.objects.get_or_create(user=request.user, name=provider, token=token)
-            if created: ona_token.save()
+            if response.status_code == 401:
+                messages.error(request, "Invalid username or password.")
+            elif response.status_code == 200:
+                auth_success = True
+                token = json.loads(response.content)['api_token']
+                ona_token, created = ThirdPartyTokens.objects.get_or_create(user=request.user, name=provider, token=token)
+                if created: ona_token.save()
+            else:
+                messages.error(request, "A %s error has occured: %s " % (response.status_code, response.text))
     else:
         try:
+            auth_success = True
             ona_token = ThirdPartyTokens.objects.get(name=provider, user=request.user)
         except Exception as e:
+            auth_success = False
             form = OnaLoginForm()
     
-    if ona_token:
+    if ona_token and auth_success:
         onaforms = requests.get(url_user_forms, headers={'Authorization': 'Token %s' % ona_token.token})
         data = json.loads(onaforms.content)
         
