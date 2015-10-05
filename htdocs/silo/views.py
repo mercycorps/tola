@@ -758,6 +758,9 @@ FLOW = flow_from_clientsecrets(
     #redirect_uri='http://localhost:8000/oauth2callback/')
 
 
+def picker_view(request):
+    return render(request, 'picker.html')
+
 def export_to_google_spreadsheet(credential_json, silo_id, spreadsheet_key):
 
 
@@ -846,48 +849,52 @@ def export_to_google_spreadsheet(credential_json, silo_id, spreadsheet_key):
 @login_required
 def export_gsheet(request, id):
     gsheet_endpoint = None
+    read_url = request.GET.get('link', None)
+    file_id = request.GET.get('resource_id', None)
+    if read_url == None or file_id == None:
+        messages.error(request, "A Google Spreadsheet is not selected to import data to it.")
+        return HttpResponseRedirect(reverse('listSilos'))
+
     storage = Storage(GoogleCredentialsModel, 'id', request.user, 'credential')
     credential = storage.get()
     if credential is None or credential.invalid == True:
         FLOW.params['state'] = xsrfutil.generate_token(settings.SECRET_KEY, request.user)
         authorize_url = FLOW.step1_get_authorize_url()
-        #return HttpResponseRedirect(authorize_url)
-        messages.error(request, "You must first <a href='%s'>authorize</a> before you could export to Gooogle Spreadsheet." % authorize_url)
-        return JsonResponse({"redirect_url": authorize_url})
+        FLOW.params.update({'redirect_uri_after_step2': "/export_gsheet/%s/?link=%s&resource_id=%s" % (id, read_url, file_id)})
+        return HttpResponseRedirect(authorize_url)
 
     credential_json = json.loads(credential.to_json())
-
     user = User.objects.get(username__exact=request.user)
     gsheet_endpoint = None
     read_type = ReadType.objects.get(read_type="Google Spreadsheet")
     try:
         gsheet_endpoint = Read.objects.get(silos__id=id, type=read_type, silos__owner=user.id, read_name='Google')
     except Read.MultipleObjectsReturned:
-        print("multiple records exist and that should NOT be the case")
+        gsheet_endpoints = Read.objects.get(silos__id=id, type=read_type, silos__owner=user.id, read_name='Google')
+        for endpoint in gsheet_endpoints:
+            if endpoint.resource_id:
+                gsheet_endpoint = endpoint
     except Read.DoesNotExist:
-        print("Remote End point does not exist; creating one...")
-        url = request.GET.get('link', None)
-        file_id = request.GET.get('resource_id', None)
-        if url == None:
-            print ("No link provided for the remote end point")
-        if file_id == None:
-            print("No file id is available")
-        
-        gsheet_endpoint = Read(read_name="Google", type=read_type, owner=user, read_url=url, resource_id=file_id)
+        gsheet_endpoint = Read(read_name="Google", type=read_type, owner=user)
         gsheet_endpoint.save()
         silo = Silo.objects.get(id=id)
         silo.reads.add(gsheet_endpoint)
         silo.save()
     except Exception as e:
-        print(e)
+        messages.error(request, "An error occured: %" % e.message)
+
+    if gsheet_endpoint.resource_id == "None" or gsheet_endpoint.resource_id == None:
+        gsheet_endpoint.resource_id = file_id
+        gsheet_endpoint.read_url = read_url
+        gsheet_endpoint.save()
 
     #print("about to export to gsheet: %s" % gsheet_endpoint.resource_id)
     if export_to_google_spreadsheet(credential_json, id, gsheet_endpoint.resource_id) == True:
         link = "Your exported data is available at <a href=" + gsheet_endpoint.read_url + " target='_blank'>Google Spreadsheet</a>"
         messages.success(request, link)
     else:
-        messages.error(request, 'Something went wrong; try again; here we go.')
-    return JsonResponse({"success": True})
+        messages.error(request, 'Something went wrong.')
+    return HttpResponseRedirect(reverse('listSilos'))
 
 @login_required
 def export_new_gsheet(request, id):
@@ -896,7 +903,7 @@ def export_new_gsheet(request, id):
     if credential is None or credential.invalid == True:
         FLOW.params['state'] = xsrfutil.generate_token(settings.SECRET_KEY, request.user)
         authorize_url = FLOW.step1_get_authorize_url()
-        #print("STEP1 authorize_url: %s", authorize_url)
+        FLOW.params.update({'redirect_uri_after_step2': "/export_new_gsheet/%s/" % id})
         return HttpResponseRedirect(authorize_url)
 
     credential_json = json.loads(credential.to_json())
@@ -933,13 +940,13 @@ def export_new_gsheet(request, id):
 
 @login_required
 def oauth2callback(request):
-    if not xsrfutil.validate_token(settings.SECRET_KEY, request.REQUEST['state'], request.user):
+    if not xsrfutil.validate_token(settings.SECRET_KEY, request.GET['state'], request.user):
         return  HttpResponseBadRequest()
 
     credential = FLOW.step2_exchange(request.REQUEST)
     storage = Storage(GoogleCredentialsModel, 'id', request.user, 'credential')
     storage.put(credential)
     #print(credential.to_json())
-    return HttpResponseRedirect("/")
+    return HttpResponseRedirect(FLOW.params['redirect_uri_after_step2'])
 
 

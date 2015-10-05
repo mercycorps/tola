@@ -18,6 +18,7 @@
             <th>Public</th>
             </tr>
             {% for silo in get_silos %}
+
             <tr>
                 <td><a href="/silo_edit/{{ silo.id }}">{{ silo.name }}</a></br>
                     <span><small>Tags: {{ silo.tags.all|join:", "}}</small></span></td>
@@ -44,12 +45,12 @@
                             <li class="divider"></li>
                             <li><a href="/export_new_gsheet/{{ silo.id }}/"><span class="glyphicon glyphicon-cloud-upload"></span> New Google SHEET</a></li>
                             <li>
-                                <a href="#" onclick="onAuthApiLoad({% for read in silo.reads.all %} {% if read.resource_id %}'{{ read.resource_id }}', '{{ read.read_url }}'{% endif %}{% endfor %});">
+                                <a href="#" onclick="onAuthApiLoad({{ silo.id }});">
                                 <span class="glyphicon glyphicon-cloud"></span> Export Existing GSHEET</a>
                             </li>
                         </ul>
                     </div><!-- /btn-group -->
-                    <div id="silo_id" style="display: none;"> {{ silo.id }} </div>
+                    <!-- <div id="silo_id" style="display: none;"> {{ silo.id }} </div> -->
                 </td>
                 <td>
                     <a href="#" id="id_public-{{silo.id}}" class="public btn btn-sm {% if silo.public %} btn-warning {% else %} btn-primary {% endif %}" role="button">{% if silo.public %} Public {% else %} Private {% endif %}</a>
@@ -86,40 +87,26 @@
         // The Client ID obtained from the Google Developers Console.
         var clientId = "859950034311-r6gsqnipugbtv6a2j4h4eo2tt2a1js2t.apps.googleusercontent.com"
 
-        // The list of scopes to request access to is available at: https://developers.google.com/picker/docs/#otherviews
-        var scope = ['https://www.googleapis.com/auth/drive.readonly'];
+        // developerKey is the same as the Browser API key, at least, as of writing this code.
+        var developerKey = 'AIzaSyCuDmq8DjGziPnfAl4bW7fEZtf25teO3x4';
 
-        // Replace with your own App ID. (Its the first number in your Client ID)
-        var appId = "859950034311";
-        
+        // The list of scopes to request access to is available at: https://developers.google.com/picker/docs/#otherviews
+        var scope = ['https://www.googleapis.com/auth/drive'];
+
+        var silo_id;
         var pickerApiLoaded = false;
         var oauthToken;
-        var silo_id; 
+
         
         // Use the API Loader script to load google.picker and gapi.auth.
         function onApiLoad() {
-            //gapi.load('auth', {'callback': onAuthApiLoad});
-            //gapi.load('picker', {'callback': onPickerApiLoad});
             gapi.load('auth');
             gapi.load('picker', {'callback': onPickerApiLoad});
         }
-        
+
         // After Google's auth library is loaded, this function is called
-        function onAuthApiLoad(resource_id, read_url) {
-            silo_id = $("#silo_id").text().trim();
-            if (silo_id == undefined || silo_id.length <= 0) {
-                alert("No silo selected");
-                return;
-            }
-            
-            if (resource_id != undefined) resource_id = resource_id.toString().trim();
-            if (read_url != undefined) read_url = read_url.toString().trim();
-            
-            if (silo_id && resource_id  && read_url ) {
-                export_to_gsheet(silo_id, read_url,  resource_id);
-                return;
-            }
-        
+        function onAuthApiLoad(siloId) {
+            silo_id = siloId;
             window.gapi.auth.authorize( {
                 'client_id': clientId,
                 'scope': scope,
@@ -127,12 +114,12 @@
             },
             handleAuthResult);
         }
-        
+
         function onPickerApiLoad() {
             pickerApiLoaded = true;
+            //createPicker();
         }
-    
-    
+
         // After the authentication is complete, this method is called
         function handleAuthResult(authResult) {
             if (authResult && !authResult.error) {
@@ -140,7 +127,7 @@
                 createPicker();
             }
         }
-        
+
         // Create and render a Picker object for picking user Photos.
         function createPicker() {
             if (pickerApiLoaded && oauthToken) {
@@ -149,41 +136,42 @@
                 view.setOwnedByMe(true);
                 view.setSelectFolderEnabled(false);
                 view.setMode("DocsViewMode.LIST");
-                var picker = new google.picker.PickerBuilder().
-                    enableFeature(google.picker.Feature.NAV_HIDDEN).
-                    setAppId(appId).
-                    addView(view).
-                    setOAuthToken(oauthToken).
-                    setCallback(pickerCallback).
-                    build();
+                var picker = new google.picker.PickerBuilder()
+                    .enableFeature(google.picker.Feature.NAV_HIDDEN)
+                    .addView(view)
+                    .setOAuthToken(oauthToken)
+                    .setDeveloperKey(developerKey)
+                    .setCallback(pickerCallback)
+                    .build();
                 picker.setVisible(true);
             }
         }
-        
-        function export_to_gsheet(silo_id, url, resource_id) {
-            $.get('/export_gsheet/' + silo_id + "/", { "link": url , "resource_id": resource_id} );
-        }
+
         
         // A simple callback implementation.
         function pickerCallback(data) {
             //console.log(JSON.stringify(data));
-            var url = null;
-            var id = null;
             if (data[google.picker.Response.ACTION] == google.picker.Action.PICKED) {
                 var doc = data[google.picker.Response.DOCUMENTS][0];
                 url = doc[google.picker.Document.URL];
                 id = doc[google.picker.Document.ID];
             }
-            if (url == null | id == null) {
-                return
-            }
+            console.log("URL: " + url);
+            console.log("ID: " + id);
+            console.log("silo_id: " + silo_id);
             
-            //$(location).attr('href', '/export_gsheet/' + silo_id + "/?link=" + url);
+            $(location).attr('href', '/export_gsheet/' + silo_id + "/?link=" + url + "&resource_id=" + id);
             //$.get('/export_gsheet/' + silo_id + "/", { "link": url , "resource_id": id} );
-            export_to_gsheet(silo_id, url, id);
+            // console.log("pickerCallbakc");
+            //export_to_gsheet(silo_id, url, id);
+        }
+
+        function export_to_gsheet(silo_id, url, resource_id) {
+            $.get('/export_gsheet/' + silo_id + "/", { "link": url , "resource_id": resource_id} );
         }
         
     </script>
     <script type="text/javascript" src="https://apis.google.com/js/api.js?onload=onApiLoad"></script>
+    
 
 {% endblock extra_js_in_body %}
