@@ -860,7 +860,8 @@ def export_gsheet(request, id):
     if credential is None or credential.invalid == True:
         FLOW.params['state'] = xsrfutil.generate_token(settings.SECRET_KEY, request.user)
         authorize_url = FLOW.step1_get_authorize_url()
-        FLOW.params.update({'redirect_uri_after_step2': "/export_gsheet/%s/?link=%s&resource_id=%s" % (id, read_url, file_id)})
+        #FLOW.params.update({'redirect_uri_after_step2': "/export_gsheet/%s/?link=%s&resource_id=%s" % (id, read_url, file_id)})
+        request.session['redirect_uri_after_step2'] = "/export_gsheet/%s/?link=%s&resource_id=%s" % (id, read_url, file_id)
         return HttpResponseRedirect(authorize_url)
 
     credential_json = json.loads(credential.to_json())
@@ -903,7 +904,8 @@ def export_new_gsheet(request, id):
     if credential is None or credential.invalid == True:
         FLOW.params['state'] = xsrfutil.generate_token(settings.SECRET_KEY, request.user)
         authorize_url = FLOW.step1_get_authorize_url()
-        FLOW.params.update({'redirect_uri_after_step2': "/export_new_gsheet/%s/" % id})
+        #FLOW.params.update({'redirect_uri_after_step2': "/export_new_gsheet/%s/" % id})
+        request.session['redirect_uri_after_step2'] = "/export_new_gsheet/%s/" % id
         return HttpResponseRedirect(authorize_url)
 
     credential_json = json.loads(credential.to_json())
@@ -936,7 +938,7 @@ def export_new_gsheet(request, id):
         messages.success(request, link)
     else:
         messages.error(request, 'Something went wrong; try again.')
-    return HttpResponseRedirect("/silos/")
+    return HttpResponseRedirect(reverse('listSilos'))
 
 @login_required
 def oauth2callback(request):
@@ -947,6 +949,7 @@ def oauth2callback(request):
     storage = Storage(GoogleCredentialsModel, 'id', request.user, 'credential')
     storage.put(credential)
     #print(credential.to_json())
-    return HttpResponseRedirect(FLOW.params['redirect_uri_after_step2'])
+    redirect_url = request.session['redirect_uri_after_step2']
+    return HttpResponseRedirect(redirect_url)
 
 
