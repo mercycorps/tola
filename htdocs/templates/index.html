@@ -1,36 +1,210 @@
 {% extends "base.html" %}
 
-{% block page_title %}TolaData{% endblock %}
+{% block page_title %}<h2>TolaTables</h2>{% endblock %}
 
 {% block content %}
+<script src="http://code.highcharts.com/highcharts.js"></script>
+<script src="http://code.highcharts.com/highcharts-more.js"></script>
+<script src="http://code.highcharts.com/modules/exporting.js"></script>
 
+<script>
+    $(function () {
+
+    $('#container').highcharts({
+
+        chart: {
+            type: 'gauge',
+            plotBackgroundColor: null,
+            plotBackgroundImage: null,
+            plotBorderWidth: 0,
+            plotShadow: false
+        },
+
+        title: {
+            text: 'Data'
+        },
+
+        pane: {
+            startAngle: -150,
+            endAngle: 150,
+            background: [{
+                backgroundColor: {
+                    linearGradient: { x1: 0, y1: 0, x2: 0, y2: 1 },
+                    stops: [
+                        [0, '#FFF'],
+                        [1, '#333']
+                    ]
+                },
+                borderWidth: 0,
+                outerRadius: '109%'
+            }, {
+                backgroundColor: {
+                    linearGradient: { x1: 0, y1: 0, x2: 0, y2: 1 },
+                    stops: [
+                        [0, '#333'],
+                        [1, '#FFF']
+                    ]
+                },
+                borderWidth: 1,
+                outerRadius: '107%'
+            }, {
+                // default background
+            }, {
+                backgroundColor: '#DDD',
+                borderWidth: 0,
+                outerRadius: '105%',
+                innerRadius: '103%'
+            }]
+        },
+
+        // the value axis
+        yAxis: {
+            min: 0,
+            max: {{ count_max }} ,
+
+            minorTickInterval: 'auto',
+            minorTickWidth: 1,
+            minorTickLength: 10,
+            minorTickPosition: 'inside',
+            minorTickColor: '#666',
+
+            tickPixelInterval: 30,
+            tickWidth: 2,
+            tickPosition: 'inside',
+            tickLength: 10,
+            tickColor: '#666',
+            labels: {
+                step: 2,
+                rotation: 'auto'
+            },
+            title: {
+                text: 'tables'
+            },
+            plotBands: [{
+                from: 0,
+                to: 120,
+                color: '#55BF3B' // green
+            }, {
+                from: 120,
+                to: 160,
+                color: '#DDDF0D' // yellow
+            }, {
+                from: 160,
+                to: 200,
+                color: '#DF5353' // red
+            }]
+        },
+
+        series: [{
+            name: 'Tables',
+            data: [ {{ count_all }} ],
+            tooltip: {
+                valueSuffix: ' tables'
+            }
+        }]
+
+    },
+    // Add some life
+    function (chart) {
+        if (!chart.renderer.forExport) {
+            setInterval(function () {
+                var point = chart.series[0].points[0],
+                    newVal,
+                    inc = Math.round((Math.random() - 0.5) * 2);
+
+                newVal = point.y + inc;
+                if (newVal < 0 || newVal > 200) {
+                    newVal = point.y - inc;
+                }
+
+                point.update(newVal);
+
+            }, 3000);
+        }
+    });
+});
+</script>
     <div class="panel panel-default">
         <div class="panel-heading">Collection, aggregation and sharing of mulitple data sources.</div>
         <div class="panel-body">
-            <p>This application allows you to connect to a third party data collection tool and
-            read in that data into a local data source.You can then edit, combine and share that data in
-            a number of formats.</p>
 
-            <div class="well">
-                Go to the <a href="/read/home/">Source</a> page to enter a new datasource.
-                </br><b>OR</b></br>
-                <p>Select an existing Silo of Data to <a href="/silos/">view or edit</a></p>
-                <ul>
-                    {% for item in get_silo %}
-                        <li>Silo: {{ item.name }}
-                                <ul>
-                                <li>Source: <a href="/silo_detail/{{ item.id }}">{{ item.source }}</a></li>
-                                <li>Description: {{ item.description }}</li>
-                                </ul>
-                        </li>
-                    {% endfor %}
-                </ul>
+            <div class="row">
+                <div class="col-md-8">
+                    <p>This application allows you to connect to a third party data collection tool and
+                    read in that data into a local data source.  You can then edit, combine and share that data in
+                    a number of formats.</p>
+
+                    <div class="well">
+                        Go to the <a href="/read/home/">Source</a> page to enter a new datasource.
+                        </br><b>OR</b></br>
+                        <p>Select an existing Table of Data to <a href="/silos/">view or edit</a></p>
+                        <ul>
+                            {% for item in get_silos %}
+                                <li>Table: {{ item.name }}
+                                        <ul>
+                                        <li>Source: <a href="/silo_detail/{{ item.id }}">{{ item.source }}</a></li>
+                                        <li>Description: {{ item.description }}</li>
+                                        </ul>
+                                </li>
+                            {% endfor %}
+                        </ul>
+                    </div>
+                    {% if user.is_authenticated %}
+                        <a href="/silos/" class="btn btn-lg btn-success">View My Data</a>
+                    {% else %}
+                         <a href="/accounts/register/" class="btn btn-lg btn-success">Register</a>
+                    {% endif %}
+                </div>
+                <div class="col-md-4">
+                    <div id="container" style="min-width: 310px; max-width: 400px; height: 300px; margin: 0 auto"></div>
+                </div>
             </div>
-            {% if user.is_authenticated %}
-                <a href="/silos/" class="btn btn-lg btn-success">View My Data</a>
-            {% else %}
-                 <a href="/accounts/register/" class="btn btn-lg btn-success">Register</a>
-            {% endif %}
+
+        </div>
+    </div>
+
+    <div class="row">
+        <div class="col-md-6">
+            <div class="table-responsive">
+              <h3>Data Tables</h3>
+              <table class="table">
+                  <tr>
+                      <th>Tags</th>
+                      <th>Name</th>
+                      <th>Description</th>
+                      <th>Public</th>
+                      <th>Date Created</th>
+                  </tr>
+                  {% for item in get_public %}
+                  <tr>
+                      <td>{{ item.tags }}</td>
+                      <td><a href="/silo/{{ item.id }}/">{{ item.name }}</a></td>
+                      <td>{{ item.description }}</td>
+                      <td>{{ item.public }}</td>
+                      <td>{{ item.created }}</td>
+                  </tr>
+                  {% endfor %}
+              </table>
+            </div>
+        </div>
+        <div class="col-md-6">
+
+            <h3>Tola Tools</h3>
+            <div class="list-group">
+                <a href="https://tola-data.mercycorps.org" class="list-group-item active">
+                    TolaWork
+                </a>
+                <li class="list-group-item">Latest Release: <a href="{{ tola_url }}"><span class="badge">{{ tola_number }}</span></a></li>
+                <li class="list-group-item">Status: {% if data_up == 0 %} SERVER IS DOWN {% else %} Server is up!{% endif %}</li>
+            </div>
+            <div class="list-group">
+                <a href="https://tola-activity.mercycorps.org" class="list-group-item active">
+                    TolaActivity
+                </a>
+                <li class="list-group-item">Latest Release: <a href="{{ tola_activity_url }}"><span class="badge">{{ tola_activity_number }}</span></a></li>
+                <li class="list-group-item">Status: {% if data_up == 0 %} SERVER IS DOWN {% else %} Server is up!{% endif %}</li>
+            </div>
+
         </div>
     </div>
 

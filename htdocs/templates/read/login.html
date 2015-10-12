@@ -14,13 +14,13 @@
 	password: <input name="password" type="password" value=""> 
 	</div>
 	<br/>
-	Select a Silo to Store Data:
+	Select a Table to Store Data:
 	<select name="silo_id">
 	{% for ss in get_silo %}
 		<option value="{{ ss.id }}">{{ ss.name}}</option>
 	{% endfor %}
 	</select>
-	Or Enter a New Silo
+	Or Enter a New Table
 	<input type="text" name="new_silo" value="">
 	<input type="hidden" name="id" value="{{ id }}">
     <input type="hidden" name="url" value="{{ url }}">

@@ -1,13 +1,13 @@
 {% extends "base.html" %} 
-{% block page_title %}Merge Data Sets{% endblock %} 
+{% block page_title %}Merge Tables{% endblock %}
 
 {% block content %}
 	<p>Select a "From" column to merge data into "to" column.</p>
 	<form action="/update/" method="post">	{% csrf_token %}
 	<table border="1">
 	<tr>
-		<th>From Column</th>
-		<th>To Column</th>
+		<th>From Table</th>
+		<th>To Table</th>
 	</tr>
 	{% for item in getSourceFrom %}
 		<tr>

@@ -1,8 +1,8 @@
 {% extends "base.html" %} 
-{% block page_title %}Silo{% endblock %} 
+{% block page_title %}Tables{% endblock %}
 
 {% block content %}
-    <p>Edit Silo {{ silo_id }}</p>
+    <p>Edit Table {{ silo_id }}</p>
     {% csrf_token %}
     {% load crispy_forms_tags %}
     {% crispy form %}

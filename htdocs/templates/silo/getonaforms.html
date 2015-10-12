@@ -6,6 +6,8 @@
 {% block content %}
 
     {% if not data %}
+        <img src="{{ STATIC_URL }}/img/onadata_logo_white.png">
+        <p>Login to your Ona account:</p>
         {% crispy form %}
     {% else %}
         <table id="onaforms" class="table table-bordered table-hover table-striped">
@@ -14,7 +16,7 @@
                 <th>Title</title>
                 <th>Description</th>
                 <th>URL</th>
-                <th>Silo</th>
+                <th>Table</th>
                 <th>Action</th>
             </tr>
         {% for row in data %}
@@ -30,7 +32,7 @@
                 <td>
                     <select id="id_silo-{{forloop.counter}}" name="silo_id" class="form-control input-sm">
                         <option selected="selected" value=""></option>
-                        <option value="0">Create New Silo</option>
+                        <option value="0">Create New Table</option>
                         {% for silo in silos %}
                             <option value="{{ silo.id }}"> {{ silo.name }} </option>
                         {% endfor %}

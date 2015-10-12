@@ -1,19 +1,19 @@
 {% extends "base.html" %} 
-{% block page_title %}Your Data Silos{% endblock %}
+{% block page_title %}Your Data Tables{% endblock %}
 
 {% block content %}
-	<p>Edit the detail information about silo (data store) or go directly to your silo to edit the data.</p>
+	<p>Edit the detail information about table (data store) or go directly to your table to edit the data.</p>
     <div class='panel panel-default'>
       <!-- Default panel contents -->
-      <div class='panel-heading'>Data Silos</div>
+      <div class='panel-heading'>Data Tables</div>
       {% if get_silos %}
           <!-- Table -->
           <table class="table table-condensed table-responsive">
             <tr>
-            <th>Silo Name</th>
+            <th>Table Name</th>
             <th>Description</th>
-            <th>Silo Source(s)</th>            
-            <th>Silo Operations</th>
+            <th>Table Source(s)</th>
+            <th>Table Operations</th>
             <th>Share Data</th>
             <th>Public</th>
             </tr>
@@ -32,7 +32,7 @@
                     <div class="btn-group" role="group">
                         <a href="/silo_detail/{{ silo.id }}" class="btn btn-sm btn-success">Edit</a>
                         <a href="/merge/{{ silo.id }}" class="btn btn-sm btn-warning">Merge</a>
-                        <a href="/silo_delete/{{ silo.id }}" class="btn btn-del btn-sm btn-danger" title="Are you sure you want to delete this silo? All of the data stored in this Silo will also be deleted.">Delete</a>
+                        <a href="/silo_delete/{{ silo.id }}" class="btn btn-del btn-sm btn-danger" title="Are you sure you want to delete this table? All of the data stored in this table will also be deleted.">Delete</a>
                      </div>
                 </td>
                 <td>

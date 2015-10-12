@@ -1,12 +1,12 @@
 {% extends "base.html" %} 
-{% block page_title %}View/Edit or Merge Silo source data{% endblock %} 
+{% block page_title %}View/Edit or Merge a tables source data{% endblock %}
 
 {% block content %}
 <form action="/merge/" method="post">	{% csrf_token %}
 <p>Select source data</p>
 <ul>
 		{% for item in get_sources %}
-			<li>Silo: {{ item.name }} 
+			<li>Table: {{ item.name }}
 					<ul>
 					<li>View Source: <a href="/silo/{{ item.read_id }}">{{ item.read_name }}</a></li>
 					<li>Description: {{ item.read_description }}</li>

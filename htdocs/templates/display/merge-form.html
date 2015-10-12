@@ -1,14 +1,14 @@
 {% extends "base.html" %} 
-{% block page_title %}Merge Data Sets{% endblock %} 
+{% block page_title %}Merge Tables{% endblock %}
 
 {% block content %}
-	<p>Select a Silo to merge data into.</p>
+	<p>Select a Table to merge your data into.</p>
 	
 	<form action="/merge_columns/" method="post">{% csrf_token %}
 	<table border="1">
 		<tr>
-			<th>From Source</th>
-			<th>To Source</th>
+			<th>From Table</th>
+			<th>To Table</th>
 		</tr>
 		<tr>
 			<td>{{ getSource.name }}</td>
