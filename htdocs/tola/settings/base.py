@@ -205,6 +205,7 @@ DJANGO_APPS = (
     'django.contrib.admin',
     # Uncomment the next line to enable admin documentation:
     'django.contrib.admindocs',
+    'social.apps.django_app.default',
 
 )
 
@@ -221,7 +222,6 @@ THIRD_PARTY_APPS = (
 # Apps specific for this project go here.
 LOCAL_APPS = (
     'silo',
-    'djangocosign',
 )
 
 # See: https://docs.djangoproject.com/en/dev/ref/settings/#installed-apps
@@ -231,11 +231,14 @@ INSTALLED_APPS = DJANGO_APPS + THIRD_PARTY_APPS + LOCAL_APPS
 ####### AUTHENTICATION BAKEND CONFIG ##################
 # https://github.com/django/django/blob/master/django/contrib/auth/backends.py
 AUTHENTICATION_BACKENDS = (
-    'djangocosign.cosign.CosignBackend',
-    'djangocosign.ldapauth.RemoteUserBackend',
+    'social.backends.google.GoogleOAuth2',
     'django.contrib.auth.backends.ModelBackend',
 )
 ############ END OF AUTHENTICATION BACKEND ##############
+
+########## Login redirect ###########
+LOGIN_REDIRECT_URL = '/'
+SOCIAL_AUTH_LOGIN_REDIRECT_URL = '/'
 
 ########## LOGGING CONFIGURATION
 # See: https://docs.djangoproject.com/en/dev/ref/settings/#logging

@@ -1,4 +1,5 @@
-from django.shortcuts import render
+from django.shortcuts import get_object_or_404
+from forms import FeedbackForm, RegistrationForm
 from .forms import FeedbackForm, RegistrationForm
 from django.contrib import messages
 from django import forms
@@ -16,8 +17,8 @@ def contact(request):
     form = FeedbackForm(initial={'submitter': request.user})
 
     if request.method == 'POST':
-        form = FeedbackForm(request.POST) # A form bound to the POST data
-        if form.is_valid(): # All validation rules pass
+        form = FeedbackForm(request.POST)  # A form bound to the POST data
+        if form.is_valid():  # All validation rules pass
             form.save()
             messages.error(request, 'Thank you', fail_silently=False)
         else:
@@ -28,11 +29,23 @@ def contact(request):
 
 
 def faq(request):
-    return render(request, 'faq.html')
+    """
+    Get FAQ and display them on template
+    """
+
+    getFAQ = FAQ.objects.all()
+
+    return render(request, 'faq.html', {'getFAQ': getFAQ})
 
 
 def documentation(request):
-    return render(request, 'documentation.html')
+    """
+    Get Documentation and display them on template
+    """
+
+    getDocumentation = DocumentationApp.objects.all()
+
+    return render(request, 'documentation.html', {'getDocumentation': getDocumentation})
 
 
 def register(request):
@@ -57,25 +70,14 @@ def profile(request):
     otherwise redirect them to registration version
     """
     if request.user.is_authenticated():
-        temp_post = request.POST.copy()
-        temp_post['last_login'] = request.user.last_login
-        temp_post['is_active'] = request.user.is_active
-        temp_post['is_superuser'] = request.user.is_superuser
-        temp_post['last_login'] = request.user.last_login
-        temp_post['is_staff'] = request.user.is_staff
-        temp_post['date_joined'] = request.user.date_joined
+        obj = get_object_or_404(User, username=request.user)
+        form = RegistrationForm(request.POST or None, instance=obj,initial={'username': request.user})
 
         if request.method == 'POST':
-            form = RegistrationForm(temp_post, instance=request.user)
-
             if form.is_valid():
                 form.save()
                 messages.error(request, 'Your profile has been updated.', fail_silently=False)
-            else:
-                messages.error(request, 'Invalid', fail_silently=False)
-                print form.errors
-        else:
-            form = RegistrationForm(instance=request.user)
+
         return render(request, "registration/profile.html", {
             'form': form, 'helper': RegistrationForm.helper
         })

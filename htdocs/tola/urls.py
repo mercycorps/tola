@@ -112,12 +112,18 @@ urlpatterns = patterns('',
                         url(r'^create_feed', 'silo.views.createFeed', name='createFeed'),
 
                         #local login
-                        (r'^accounts/login/',  login),
+                        url(r'^login/$', 'django.contrib.auth.views.login', name='login'),
+                        url(r'^accounts/login/$', 'django.contrib.auth.views.login', name='login'),
+
                         url(r'^accounts/logout/$', 'tola.views.logout_view', name='logout'),
 
                         #accounts
                         url(r'^accounts/profile/$', 'tola.views.profile', name='profile'),
                         url(r'^accounts/register/$', 'tola.views.register', name='register'),
+
+                        #Auth backend URL's
+                        url('', include('django.contrib.auth.urls', namespace='auth')),
+                        url('', include('social.apps.django_app.urls', namespace='social')),
 
                         #FAQ, Contact etc..
                         url(r'^contact', 'tola.views.contact', name='contact'),
