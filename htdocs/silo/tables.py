@@ -31,8 +31,10 @@ def define_table(columns):
         <a class="btn btn-default btn-xs" role="button" href="/value_edit/{{ record|get:'_id'|get:'$oid' }}">Edit</a>
         <a class="btn btn-danger btn-xs btn-del" style="color: #FFF;" role="button" href="/value_delete/{{ record|get:'_id'|get:'$oid'  }}" title="Are you sure you want to delete this record?">Delete</a> 
         '''
-    attrs = dict((c, tables.Column()) for c in columns)
+    #add the operations to the table first then append the dynamic table columns
+    attrs = {}
     attrs['Operation'] = tables.TemplateColumn(EDIT_DEL_TEMPLATE)
+    attrs.update(dict((c, tables.Column()) for c in columns))
     attrs['Meta'] = type('Meta', (), dict(exclude=["_id", "edit_date", "create_date"], attrs={"class":"paleblue", "orderable":"True", "width":"100%"}) )
     
     klass = type('DynamicTable', (tables.Table,), attrs)
