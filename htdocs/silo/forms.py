@@ -39,6 +39,29 @@ class SiloForm(forms.ModelForm):
         fields = ['id', 'name', 'description', 'tags', 'shared', 'owner']
 
 
+class NewColumnForm(forms.Form):
+
+    new_column_name = forms.CharField(required=True, max_length=244)
+    default_value = forms.CharField(required=False, max_length=244)
+    silo_id = forms.IntegerField(required=False, widget=forms.HiddenInput())
+
+    def __init__(self, *args, **kwargs):
+        self.helper = FormHelper()
+        self.helper.form_class = 'form-horizontal'
+        self.helper.label_class = 'col-sm-2'
+        self.helper.field_class = 'col-sm-7'
+        self.helper.html5_required = True
+        self.helper.fields = ['silo_id', 'new_column_name', 'default_value']
+        self.helper.add_input(Submit('save', 'save'))
+
+        self.helper.layout = Layout(
+            'silo_id',
+            'new_column_name',
+            'default_value',
+        )
+        super(NewColumnForm, self).__init__(*args, **kwargs)
+
+
 #READ FORMS
 class ReadForm(forms.ModelForm):
     def __init__(self, *args, **kwargs):

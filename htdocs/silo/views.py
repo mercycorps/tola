@@ -6,7 +6,7 @@ import csv
 import operator
 
 from django.http import HttpResponseRedirect
-from .forms import ReadForm, UploadForm, SiloForm, MongoEditForm
+from .forms import ReadForm, UploadForm, SiloForm, MongoEditForm, NewColumnForm
 from django.contrib import messages
 from django.contrib.auth.models import User
 from django.core.urlresolvers import reverse
@@ -216,6 +216,15 @@ def getOnaForms(request):
     return render(request, 'silo/getonaforms.html', {
         'form': form, 'data': data, 'silos': silos
     })
+
+@login_required
+def onaLogout(request):
+
+    ona_token = ThirdPartyTokens.objects.get(user=request.user, name=provider)
+    ona_token.delete()
+
+    messages.error(request, "You have been logged out of your Ona account.  Any Tables you have created with this account ARE still available, but you must log back in here to update them.")
+    return HttpResponseRedirect(request.META['HTTP_REFERER'])
 
 
 #DELETE-SILO
@@ -484,13 +493,35 @@ def siloDetail(request,id):
             RequestConfig(request).configure(silo)
     
             #send the keys and vars from the json data to the template along with submitted feed info and silos for new form
-            return render(request, "display/stored_values.html", {"silo": silo})
+            return render(request, "display/stored_values.html", {"silo": silo, 'id':id})
         else:
-            messages.error(request, "There is not data in Silo with id = %s" % id)
+            messages.error(request, "There is not data in Table with id = %s" % id)
             return HttpResponseRedirect(request.META['HTTP_REFERER'])
     else:
-        messages.info(request, "You don't have the permission to see data in this silo")
+        messages.info(request, "You don't have the permission to see data in this table")
         return HttpResponseRedirect(request.META['HTTP_REFERER'])
+
+#Add a new column on to a silo
+@login_required
+def newColumn(request,id):
+    """
+    FORM TO CREATE A NEW COLUMN FOR A SILO
+    """
+    silo = Silo.objects.get(id=id)
+    form = NewColumnForm(initial={'silo_id': silo.id})
+
+    if request.method == 'POST':
+        form = NewColumnForm(request.POST)  # A form bound to the POST data
+        if form.is_valid():  # All validation rules pass
+            form.save()
+            messages.error(request, 'Thank you', fail_silently=False)
+        else:
+            messages.error(request, 'Invalid', fail_silently=False)
+            print form.errors
+
+
+    return render(request, "silo/new-column-form.html", {'silo':silo,'form': form})
+
 
 
 #SHOW-MERGE FORM

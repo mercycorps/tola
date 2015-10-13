@@ -1,0 +1,9 @@
+{% extends "base.html" %} 
+{% block page_title %}Tables{% endblock %}
+
+{% block content %}
+    <p>Add a new column to Table {{ silo.name }}</p>
+    {% csrf_token %}
+    {% load crispy_forms_tags %}
+    {% crispy form form.helper%}
+{% endblock content %}

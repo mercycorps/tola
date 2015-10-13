@@ -140,12 +140,7 @@
                         <p>Select an existing Table of Data to <a href="/silos/">view or edit</a></p>
                         <ul>
                             {% for item in get_silos %}
-                                <li>Table: {{ item.name }}
-                                        <ul>
-                                        <li>Source: <a href="/silo_detail/{{ item.id }}">{{ item.source }}</a></li>
-                                        <li>Description: {{ item.description }}</li>
-                                        </ul>
-                                </li>
+                                <li>Table: <a href="/silo_detail/{{ item.id }}">{{ item.name }}</a></li>
                             {% endfor %}
                         </ul>
                     </div>

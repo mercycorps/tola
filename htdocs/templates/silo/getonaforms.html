@@ -10,10 +10,11 @@
         <p>Login to your Ona account:</p>
         {% crispy form %}
     {% else %}
+        <p>List of forms from Ona.  Forms that have been imported are associated with a table. You can also <a href="/logout_ona/{{ request.user.id }}/">Logout</a> of this Ona users forms and <a href="/logout_ona/{{ request.user.id }}/">log in to another Ona account here</a>.</p>
         <table id="onaforms" class="table table-bordered table-hover table-striped">
             <tr>
                 <th>No</th>
-                <th>Title</title>
+                <th>Title</th>
                 <th>Description</th>
                 <th>URL</th>
                 <th>Table</th>
