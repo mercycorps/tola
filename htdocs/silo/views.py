@@ -513,7 +513,18 @@ def newColumn(request,id):
     if request.method == 'POST':
         form = NewColumnForm(request.POST)  # A form bound to the POST data
         if form.is_valid():  # All validation rules pass
-            form.save()
+            client = MongoClient(uri)
+            db = client.tola
+            label = form.cleaned_data['new_column_name']
+            value = form.cleaned_data['default_value']
+            #insert a new column into the existing silo
+            db.label_value_store.update_many(
+                {"silo_id": silo.id},
+                    {
+                    "$set": {label: value},
+                    },
+                False
+            )
             messages.error(request, 'Thank you', fail_silently=False)
         else:
             messages.error(request, 'Invalid', fail_silently=False)

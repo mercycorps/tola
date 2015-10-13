@@ -2,7 +2,7 @@
 {% block page_title %}Tables{% endblock %}
 
 {% block content %}
-    <p>Add a new column to Table {{ silo.name }}</p>
+    <p>Add a new column to Table: <a href="/silo_detail/{{silo.id}}/">{{ silo.name }}</a></p>
     {% csrf_token %}
     {% load crispy_forms_tags %}
     {% crispy form form.helper%}
