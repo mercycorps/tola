@@ -4,8 +4,9 @@
 
 {% block content %}
 <script src="http://code.highcharts.com/highcharts.js"></script>
-<script src="http://code.highcharts.com/highcharts-more.js"></script>
-<script src="http://code.highcharts.com/modules/exporting.js"></script>
+<script src="{{ STATIC_URL }}js/highcharts-more.js"></script>
+<script src="{{ STATIC_URL }}js/highcharts/js/highcharts.js"></script>
+<script src="{{ STATIC_URL }}js/highcharts/js/exporting.js"></script>
 
 <script>
     $(function () {
@@ -173,7 +174,7 @@
                   {% for item in get_public %}
                   <tr>
                       <td>{{ item.tags }}</td>
-                      <td><a href="/silo/{{ item.id }}/">{{ item.name }}</a></td>
+                      <td><a href="/silo_detail/{{ item.id }}/">{{ item.name }}</a></td>
                       <td>{{ item.description }}</td>
                       <td>{{ item.public }}</td>
                       <td>{{ item.created }}</td>
