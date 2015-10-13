@@ -72,7 +72,7 @@ urlpatterns = patterns('',
                         #login data
                         url(r'^read/login/$', 'silo.views.getLogin', name='getLogin'),
                         url(r'^onalogin/$', 'silo.views.getOnaForms', name='getOnaForms'),
-                        url(r'^ona_logout/(?P<id>\w+)/$', 'silo.views.onaLogout', name='onaLogout'),
+                        url(r'^provider_logout/(?P<provider>\w+)/$', 'silo.views.providerLogout', name='providerLogout'),
                         url(r'^saveAndImportRead/$', 'silo.views.saveAndImportRead', name='saveAndImportRead'),
                         url(r'^tolacon/$', 'silo.views.tolaCon', name='tolacon'),
                         url(r'^toggle_silo_publicity/$', 'silo.views.toggle_silo_publicity', name='toggle_silo_publicity'),
@@ -105,6 +105,12 @@ urlpatterns = patterns('',
 
                         #new silo column
                         url(r'^new_column/(?P<id>\w+)/$', 'silo.views.newColumn', name='newColumn'),
+
+                        #edit silo columns
+                        url(r'^edit_columns/(?P<id>\w+)/$', 'silo.views.editColumns', name='editColumns'),
+
+                        #delete silo column
+                        url(r'^delete_column/(?P<id>\w+)/(?P<column>\w+)/$', 'silo.views.deleteColumn', name='deleteColumn'),
 
                         ###FEED
                         url(r'^export/(?P<id>\w+)/$', 'silo.views.export_silo', name='export_silo'),

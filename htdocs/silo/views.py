@@ -6,7 +6,7 @@ import csv
 import operator
 
 from django.http import HttpResponseRedirect
-from .forms import ReadForm, UploadForm, SiloForm, MongoEditForm, NewColumnForm
+from .forms import ReadForm, UploadForm, SiloForm, MongoEditForm, NewColumnForm, EditColumnForm
 from django.contrib import messages
 from django.contrib.auth.models import User
 from django.core.urlresolvers import reverse
@@ -218,7 +218,7 @@ def getOnaForms(request):
     })
 
 @login_required
-def onaLogout(request):
+def providerLogout(request,provider):
 
     ona_token = ThirdPartyTokens.objects.get(user=request.user, name=provider)
     ona_token.delete()
@@ -532,6 +532,92 @@ def newColumn(request,id):
 
 
     return render(request, "silo/new-column-form.html", {'silo':silo,'form': form})
+
+#Add a new column on to a silo
+@login_required
+def editColumns(request,id):
+    """
+    FORM TO CREATE A NEW COLUMN FOR A SILO
+    """
+    silo = Silo.objects.get(id=id)
+    doc = LabelValueStore.objects(silo_id=id).to_json()
+    data = {}
+    jsondoc = json.loads(doc)
+    for item in jsondoc:
+        for k, v in item.iteritems():
+            #print("The key and value are ({}) = ({})".format(k, v))
+            if k == "_id":
+                #data[k] = item['_id']['$oid']
+                pass
+            elif k == "silo_id":
+                silo_id = v
+            elif k == "edit_date":
+                edit_date = datetime.datetime.fromtimestamp(item['edit_date']['$date']/1000)
+                data[k] = edit_date.strftime('%Y-%m-%d %H:%M:%S')
+            elif k == "create_date":
+                create_date = datetime.datetime.fromtimestamp(item['create_date']['$date']/1000)
+                data[k] = create_date.strftime('%Y-%m-%d')
+            else:
+                data[k] = v
+    form = EditColumnForm(initial={'silo_id': silo.id}, extra=data)
+
+    if request.method == 'POST':
+        form = EditColumnForm(request.POST or None, extra = data)  # A form bound to the POST data
+        if form.is_valid():  # All validation rules pass
+            client = MongoClient(uri)
+            db = client.tola
+            for label,value in form.cleaned_data.iteritems():
+                #update the column name if it doesn't have delete in it
+                if "_delete" not in label and str(label) != str(value) and label != "silo_id" and label != "suds" and label != "id":
+                    #update a column in the existing silo
+                    db.label_value_store.update_many(
+                        {"silo_id": silo.id},
+                            {
+                            "$rename": {label: value},
+                            },
+                        False
+                    )
+                #if we see delete then it's a check box to delete that column
+                elif "_delete" in label and value == 1:
+                    column = label.replace("_delete", "")
+                    db.label_value_store.update_many(
+                        {"silo_id": silo.id},
+                            {
+                            "$unset": {column: value},
+                            },
+                        False
+                    )
+
+
+            messages.error(request, 'Thank you', fail_silently=False)
+        else:
+            messages.error(request, 'Invalid', fail_silently=False)
+            print form.errors
+
+
+    return render(request, "silo/edit-column-form.html", {'silo':silo,'form': form})
+
+#Delete a column from a table silo
+@login_required
+def deleteColumn(request,id,column):
+    """
+    DELETE A COLUMN FROM A SILO
+    """
+    silo = Silo.objects.get(id=id)
+    client = MongoClient(uri)
+    db = client.tola
+
+    #delete a column from the existing table silo
+    db.label_value_store.update_many(
+        {"silo_id": silo.id},
+            {
+            "$unset": {column: ""},
+            },
+        False
+    )
+
+    messages.info(request, "Column has been deleted")
+    return HttpResponseRedirect(request.META['HTTP_REFERER'])
 
 
 

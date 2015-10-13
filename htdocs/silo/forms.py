@@ -98,7 +98,30 @@ class FileField(Field):
     template_name = 'filefield.html'
 
 
-#Display forms
+class EditColumnForm(forms.Form):
+    """
+    A form that saves a document from mongodb
+    """
+    id = forms.CharField(required=False, max_length=24, widget=forms.HiddenInput())
+    silo_id = forms.IntegerField(required=False, widget=forms.HiddenInput())
+
+    def __init__(self, *args, **kwargs):
+        extra = kwargs.pop("extra")
+        self.helper = FormHelper()
+        self.helper.form_class = 'form-horizontal'
+        self.helper.label_class = 'col-sm-5'
+        self.helper.field_class = 'col-sm-7'
+        #self.helper.label_size = ' col-sm-offset-2'
+        self.helper.html5_required = True
+        self.helper.form_tag = True
+        self.helper.add_input(Submit('save', 'save'))
+        super(EditColumnForm, self).__init__(*args, **kwargs)
+
+        for item in extra:
+            print item
+            if item != "_id" and item != "silo_id" and item != "edit_date" and item != "create_date":
+                self.fields[item] = forms.CharField(label=item, initial=item, required=False,widget="")
+                self.fields[item + "_delete"] = forms.BooleanField(label="delete " + item, initial=False, required=False,widget="")
 
 class MongoEditForm(forms.Form):
     """
@@ -113,7 +136,6 @@ class MongoEditForm(forms.Form):
         self.helper.form_class = 'form-horizontal'
         self.helper.label_class = 'col-sm-5'
         self.helper.field_class = 'col-sm-7'
-        #self.helper.label_size = ' col-sm-offset-2'
         self.helper.html5_required = True
         self.helper.form_tag = False
         super(MongoEditForm, self).__init__(*args, **kwargs)

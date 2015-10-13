@@ -1,0 +1,9 @@
+{% extends "base.html" %} 
+{% block page_title %}Tables{% endblock %}
+
+{% block content %}
+    <p>Edit Column name, or delete a column by checking the box next to it's name for Table: <a href="/silo_detail/{{silo.id}}/">{{ silo.name }}</a></p>
+    {% csrf_token %}
+    {% load crispy_forms_tags %}
+    {% crispy form form.helper%}
+{% endblock content %}
