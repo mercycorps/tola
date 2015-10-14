@@ -2,14 +2,13 @@
 {% block page_title %}Get Data From an External Data Collection Tool{% endblock %}
 
 {% block content %}
-	<p>Upload data file:</p>
-    {% load crispy_forms_tags %}
-    {% crispy form %}
+	<p>Select a Table to store the data from your Uploaded File</p>
     <form action="" method="post">{% csrf_token %}
     <input type="hidden" name="read_id" value="{{ read_id }}">
     <BR/>
-    Select a Table to Store Data:
+    Select an Existing table from the drop down:
 	<select name="silo_id">
+		<option value="">-- select --</option>
 	{% for ss in get_silo %}
 		<option value="{{ ss.id }}">{{ ss.name}}</option>
 	{% endfor %}

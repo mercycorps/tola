@@ -78,7 +78,7 @@ class ReadForm(forms.ModelForm):
 
     class Meta:
         model = Read
-        fields = ['read_name', 'read_url', 'description','type','file_data']
+        fields = ['read_name', 'read_url', 'description','type','file_data', 'owner']
         #exclude = ['create_date',]
 
 class UploadForm(forms.Form):
@@ -88,7 +88,7 @@ class UploadForm(forms.Form):
         # If you pass FormHelper constructor a form instance
         # It builds a default layout with all its fields
         self.helper = FormHelper(self)
-
+        self.helper.layout.append(Field('file_data'))
         # Append the read_id for edits and save button
         self.helper.layout.append(Hidden('read_id', '{{read_id}}'))
         self.helper.form_tag = False

@@ -169,7 +169,7 @@ def saveAndImportRead(request):
             lvs = LabelValueStore()
             lvs.silo_id = silo.pk
             for new_label, new_value in row.iteritems():
-                if new_value is not "" and new_label is not None and new_label is not "edit_date" and new_label is not "create_date":
+                if new_label is not "" and new_label is not None and new_label is not "edit_date" and new_label is not "create_date":
                     setattr(lvs, new_label, new_value)
             lvs.create_date = timezone.now()
             result = lvs.save()
@@ -353,8 +353,9 @@ def uploadFile(request, id):
                 lvs.save()
             
             return HttpResponseRedirect('/silo_detail/' + str(silo_id) + '/')
-    else:
-        form = UploadForm()  # An unbound form
+        else:
+            messages.error(request, "There was a problem with reading the contents of your file" + form.errors)
+            print form.errors
 
     user = User.objects.get(username__exact=request.user)
     # get all of the silo info to pass to the form
@@ -362,7 +363,7 @@ def uploadFile(request, id):
     
     # display login form
     return render(request, 'read/file.html', {
-        'form': form, 'read_id': id, 'get_silo': get_silo,
+        'read_id': id, 'get_silo': get_silo,
     })
 
 
@@ -477,8 +478,9 @@ def siloDetail(request,id):
     Show silo source details
     """
     owner = Silo.objects.get(id = id).owner
-    
-    if str(owner.username) == str(request.user):
+    public = Silo.objects.get(id = id).public
+
+    if str(owner.username) == str(request.user) or public:
         table = LabelValueStore.objects(silo_id=id).to_json()
         decoded_json = json.loads(table)
         column_names = []
@@ -525,9 +527,9 @@ def newColumn(request,id):
                     },
                 False
             )
-            messages.error(request, 'Thank you', fail_silently=False)
+            messages.info(request, 'Your column has been added', fail_silently=False)
         else:
-            messages.error(request, 'Invalid', fail_silently=False)
+            messages.error(request, 'There was a problem adding your column', fail_silently=False)
             print form.errors
 
 
@@ -589,9 +591,9 @@ def editColumns(request,id):
                     )
 
 
-            messages.error(request, 'Thank you', fail_silently=False)
+            messages.info(request, 'Updates Saved', fail_silently=False)
         else:
-            messages.error(request, 'Invalid', fail_silently=False)
+            messages.error(request, 'ERROR: There was a problem with your request', fail_silently=False)
             print form.errors
 
 

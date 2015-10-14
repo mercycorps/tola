@@ -2,12 +2,29 @@
 {% block page_title %}Read Data from an existing source or create a new source{% endblock %}
 
 {% block content %}
-	<h3>View a Source</h3>
-	<ul class="list-group">
-			{% for item in getReads %}
-				<li class="list-group-item">Update Data from Source: <a href="/show_read/{{ item.id }}">{{ item.read_name }}</a></li>
-			{% endfor %}
-	</ul>
+	<p>View an Existing Data Source, or Create a New One</p>
+
+	<table id="onaforms" class="table table-bordered table-hover table-striped">
+            <tr>
+                <th>Name</th>
+                <th>Type</th>
+                <th>Description</th>
+                <th>URL</th>
+				<th>Date Created</th>
+				<th>Update</th>
+            </tr>
+        {% for item in getReads %}
+            <tr>
+                <td> <a href="/show_read/{{ item.id }}">{{ item.read_name }}</a></td>
+                <td> {{ item.type }} </td>
+                <td> {{ item.description }} </td>
+                <td> {{ item.read_url }} </td>
+				<td> {{ item.create_date }} </td>
+				<td><a href="/show_read/{{ item.id }}" class="btn btn-xs btn-success">Update Data </a></td>
+            </tr>
+        {% endfor %}
+        </table>
+
 	<h4><a href="/new_read" class="btn btn-sm btn-info">Create a New Source</a> <!--<a href="/new_odk" class="btn btn-sm btn-info">Create a New Ona/FormHub Source</a>--></h4>
 
 {% endblock content %}
