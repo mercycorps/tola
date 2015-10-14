@@ -78,7 +78,7 @@ class ReadForm(forms.ModelForm):
 
     class Meta:
         model = Read
-        fields = ['read_name', 'read_url', 'description','type','file_data','owner']
+        fields = ['read_name', 'read_url', 'description','type','file_data']
         #exclude = ['create_date',]
 
 class UploadForm(forms.Form):
