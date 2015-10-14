@@ -172,7 +172,7 @@
                   </tr>
                   {% for item in get_public %}
                   <tr>
-                      <td>{{ item.tags }}</td>
+                      <td>{{ item.tag_list }}</td>
                       <td><a href="/silo_detail/{{ item.id }}/">{{ item.name }}</a></td>
                       <td>{{ item.description }}</td>
                       <td>{{ item.public }}</td>
@@ -186,17 +186,17 @@
 
             <h3>Tola Tools</h3>
             <div class="list-group">
-                <a href="https://tola-data.mercycorps.org" class="list-group-item active">
-                    TolaWork
-                </a>
-                <li class="list-group-item">Latest Release: <a href="{{ tola_url }}"><span class="badge">{{ tola_number }}</span></a></li>
-                <li class="list-group-item">Status: {% if data_up == 0 %} SERVER IS DOWN {% else %} Server is up!{% endif %}</li>
-            </div>
-            <div class="list-group">
                 <a href="https://tola-activity.mercycorps.org" class="list-group-item active">
                     TolaActivity
                 </a>
-                <li class="list-group-item">Latest Release: <a href="{{ tola_activity_url }}"><span class="badge">{{ tola_activity_number }}</span></a></li>
+                <li class="list-group-item"><a href="https://tola-activity.mercycorps.org">http://tola-activity.mercycorps.org</a> Country Dashboard, Indicator Tracking and Project Workflow.</li>
+                <li class="list-group-item">Status: {% if data_up == 0 %} SERVER IS DOWN {% else %} Server is up!{% endif %}</li>
+            </div>
+            <div class="list-group">
+                <a href="http://tola.work" class="list-group-item active">
+                    TolaWork
+                </a>
+                <li class="list-group-item"><a href="http://tola.work">http://tola.work</a> Submit support tickets and find help documentation, request and track new features, follow and update documentation.</li>
                 <li class="list-group-item">Status: {% if data_up == 0 %} SERVER IS DOWN {% else %} Server is up!{% endif %}</li>
             </div>
 

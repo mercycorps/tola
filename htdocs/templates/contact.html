@@ -11,7 +11,8 @@
 {% endif %}
 
 {% block content %}
-	<p>Let us know if you are having a problem or would like to see something change.</p>
+	<p>Let us know if you are having a problem or would like to see something change.  For more detailed information or to submit an issue directly
+    go to <a href="http://tola.work">http://tola.work</a></p>
         {% csrf_token %}
     {% load crispy_forms_tags %}
     {% crispy form form.helper %}

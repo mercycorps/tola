@@ -8,7 +8,7 @@ from django.contrib.auth.models import User
 from django.contrib.auth.forms import UserChangeForm
 
 
-from .models import Feedback
+from silo.models import Feedback
 
 
 class FeedbackForm(forms.ModelForm):
