@@ -1,5 +1,5 @@
 /**
- * @license Highcharts JS v4.1.4 (2015-03-10)
+ * @license Highcharts JS v4.1.9 (2015-10-07)
  * Plugin for displaying a message when there is no data visible in chart.
  *
  * (c) 2010-2014 Highsoft AS
@@ -36,6 +36,7 @@
 			fontSize: '12px',
 			color: '#60606a'		
 		}
+		// useHTML: false // docs
 	};
 
 	/**
@@ -67,7 +68,18 @@
 			noDataOptions = options.noData;
 
 		if (!chart.noDataLabel) {
-			chart.noDataLabel = chart.renderer.label(text, 0, 0, null, null, null, null, null, 'no-data')
+			chart.noDataLabel = chart.renderer
+				.label(
+					text, 
+					0, 
+					0, 
+					null, 
+					null, 
+					null, 
+					noDataOptions.useHTML, 
+					null, 
+					'no-data'
+				)
 				.attr(noDataOptions.attr)
 				.css(noDataOptions.style)
 				.add();

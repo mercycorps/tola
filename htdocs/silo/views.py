@@ -185,8 +185,8 @@ def getOnaForms(request):
     ona_token = None
     form = None
     provider = "ONA"
-    url_user_token = "https://ona.io/api/v1/user.json"
-    url_user_forms = 'https://ona.io/api/v1/data'
+    url_user_token = "https://api.ona.io/api/v1/user.json"
+    url_user_forms = 'https://api.ona.io/api/v1/data'
     if request.method == 'POST':
         form = OnaLoginForm(request.POST)
         if form.is_valid():

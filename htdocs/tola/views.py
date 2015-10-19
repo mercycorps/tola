@@ -9,6 +9,7 @@ from django.http import HttpResponseRedirect
 from django.shortcuts import render
 from django.contrib import auth
 from silo.models import DocumentationApp, FAQ, Feedback
+from django.contrib.auth.models import User
 
 
 def contact(request):
