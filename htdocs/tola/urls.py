@@ -23,9 +23,6 @@ router.register(r'read', ReadViewSet)
 router.register(r'readtype', ReadTypeViewSet)
 
 
-
-
-
 urlpatterns = patterns('',
                         #rest framework
                         url(r'^api/', include(router.urls)),
@@ -76,7 +73,7 @@ urlpatterns = patterns('',
                         url(r'^saveAndImportRead/$', 'silo.views.saveAndImportRead', name='saveAndImportRead'),
                         url(r'^tolacon/$', 'silo.views.tolaCon', name='tolacon'),
                         url(r'^toggle_silo_publicity/$', 'silo.views.toggle_silo_publicity', name='toggle_silo_publicity'),
-                        
+
                         ###DISPLAY
                         #list all silos
                         url(r'^silos', 'silo.views.listSilos', name='listSilos'),
@@ -87,7 +84,7 @@ urlpatterns = patterns('',
                         #merge select columns
                         url(r'^merge_columns', 'silo.views.mergeColumns', name='mergeColumns'),
                         url(r'^doMerge', 'silo.views.doMerge', name='doMerge'),
-                        
+
                         #view silo detail
                         url(r'^silo_detail/(?P<id>\w+)/$', 'silo.views.siloDetail', name='siloDetail'),
 

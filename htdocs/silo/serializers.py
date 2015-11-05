@@ -1,15 +1,19 @@
 from django.forms import widgets
 from rest_framework import serializers
-from silo.models import Silo, Read, ReadType
+from silo.models import Silo, Read, ReadType, LabelValueStore
 from django.contrib.auth.models import User
-
+import json
 
 class SiloSerializer(serializers.HyperlinkedModelSerializer):
-
+    data = serializers.SerializerMethodField()
     class Meta:
         model = Silo
-        fields = ('owner', 'name', 'reads', 'description', 'create_date', 'id')
+        fields = ('owner', 'name', 'reads', 'description', 'create_date', 'id', 'data')
         depth =1
+
+    def get_data(self, obj):
+        mongodata = LabelValueStore.objects(silo_id=obj.id).to_json()
+        return json.loads(mongodata)
 
 
 class UserSerializer(serializers.HyperlinkedModelSerializer):
