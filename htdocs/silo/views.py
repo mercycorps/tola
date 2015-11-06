@@ -19,21 +19,18 @@ from django.template import RequestContext, Context
 from django.db import models
 from django.shortcuts import render_to_response
 from django.shortcuts import render
-from django.db.models import Max
-from django.db.models import F
+from django.db.models import Max, F
 from django.views.decorators.csrf import csrf_protect
 import django_tables2 as tables
 from django_tables2 import RequestConfig
 
 from .models import Silo, Read, ReadType, ThirdPartyTokens, LabelValueStore, Tag
-from .serializers import SiloSerializer, UserSerializer, ReadSerializer, ReadTypeSerializer
 
 from .tables import define_table
 
 from django.contrib.auth.decorators import login_required
 from tola.util import siloToDict, combineColumns
 
-from rest_framework import renderers, viewsets
 from django.core.urlresolvers import reverse
 
 from django.utils import timezone
@@ -785,38 +782,6 @@ def valueDelete(request,id):
     messages.success(request, "Record deleted successfully")
     return HttpResponseRedirect('/silo_detail/%s/' % silo_id)
 
-#FEED VIEWS
-# API Classes
-
-class UserViewSet(viewsets.ModelViewSet):
-    queryset = User.objects.all()
-    serializer_class = UserSerializer
-
-class SiloViewSet(viewsets.ModelViewSet):
-    """
-    This viewset automatically provides `list`, `create`, `retrieve`,
-    `update` and `destroy` actions.
-    """
-    queryset = Silo.objects.all()
-    serializer_class = SiloSerializer
-
-class ReadViewSet(viewsets.ModelViewSet):
-    """
-    This viewset automatically provides `list`, `create`, `retrieve`,
-    `update` and `destroy` actions.
-    """
-    queryset = Read.objects.all()
-    serializer_class = ReadSerializer
-
-class ReadTypeViewSet(viewsets.ModelViewSet):
-    """
-    This viewset automatically provides `list`, `create`, `retrieve`,
-    `update` and `destroy` actions.
-    """
-    queryset = ReadType.objects.all()
-    serializer_class = ReadTypeSerializer
-
-# End API Classes
 
 
 def customFeed(request,id):

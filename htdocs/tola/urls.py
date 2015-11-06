@@ -1,5 +1,5 @@
 from silo import views
-from silo.views import  UserViewSet, ReadViewSet, ReadTypeViewSet, SiloViewSet
+
 from django.conf.urls import patterns, include, url
 from django.views.generic import TemplateView
 from django.contrib.auth.models import User
