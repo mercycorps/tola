@@ -53,7 +53,7 @@
     <h2>Step 1: Columns Selection</h2>
     <p>Select the columns from each table that you would like to keep and/or map and merge into a single table and click Next.</p>
     <div id='step1_btns_div'>
-        <button id='choose_columns_btn' type="button" class="pull-right btn btn-primary" onclick="next_step_mapping_cols();">Select Columns</button>
+        <button id='choose_columns_btn' type="button" class="pull-right btn btn-primary" onclick="select_columns();">Select Columns</button>
     </div>
     <div class="clearfix"></div>
 </div>
@@ -62,8 +62,8 @@
     <h2>Step 2: Columns Mapping</h2>
     <p>Select one or more columns from the left table and then select a single column from the right table and then click on "Map Selected Columns" button</p>
     <div id='step2_btns_div'>
-        <button id='reset_columns_selection' type='button' class='pull-left btn btn-info' onclick='reset_cols_selection();'>Back</button>
-        <button id='map_btn' type="button" class="btn btn-warning pull-right">Map Selected Columns</button>
+        <button id='reset_columns_selection' type='button' class='pull-left btn btn-info' onclick='back_to_cols_selection();'>Back</button>
+        <button id='map_cols_btn' type="button" class="btn btn-warning pull-right">Map Selected Columns</button>
     </div>
     <div class="clearfix"></div>
 </div>
@@ -97,15 +97,16 @@
 
 {% block extra_js_in_body %}
 <script type-"text/javascript">
-
-    function reset_cols_selection() {
+    /*
+     * Goes Back to column selection screen
+     */
+    function back_to_cols_selection() {
         $('#step2_div').hide();
         $('#step1_div').show();
         var $table_1_visible_cols = $('#table_1_cols_bucket').children('.list-group-item:visible');
         $table_1_visible_cols.each(function() {
             $(this).addClass('list-group-item-success');
         });
-        
         $('#table_1_cols_bucket li:hidden').show();
         
         var $table_2_visible_cols = $('#table_2_cols_bucket').children('.list-group-item:visible');
@@ -115,7 +116,10 @@
         $('#table_2_cols_bucket li:hidden').show();
     }
 
-    function next_step_mapping_cols() {
+    /*
+     * Takes the current columns selection to the next step of mapping them.
+     */
+    function select_columns() {
         $('#step1_div').hide();
         $('#step2_div').show();
         var $table_1_cols_bucket = $('#table_1_cols_bucket').children().not('.list-group-item-success');
@@ -144,34 +148,38 @@
         
         var row_bg_class = 'class="info"';
         
-        /*
-         * Toggle background color as columns are clicked
-         */
+        
+        // Toggle background color as columns are clicked
         $('div#step1_of_merge').on('click', '.list-group-item', function() {
             $(this).toggleClass("list-group-item-success");
         });
-        
-        
-        $('#map_btn').click(function() {
+
+        // map selected columns
+        $('div#step2_btns_div').on('click', '#map_cols_btn', function() {
             $('#mapped_columns_div').show();
             var undo_btn = '<input type="button" class="btn btn-danger btn-xs undo" value="Undo" />';
             var row = undefined;
+
             // Get all the selected column from the right table
             var $table_2_cols_bucket = $('#table_2_cols_bucket').children('.list-group-item-success');
             var table_2_cols_bucket_str = '';
+
+            // STOP if more than one column is selected from the right table.
             if ($table_2_cols_bucket.length > 1) {
                 alert("You must choose only a single column from the right table");
                 return;
             }
+
+            // Get a column from the right table and remove it from the right bucket
             $table_2_cols_bucket.each(function () {
                 table_2_cols_bucket_str =  $(this).text() + "</td>";
                 $(this).remove();
             });
 
-            // alternate bgcolor for mappings mapping
+            // alternate bgcolor for mapped columns
             if (row_bg_class == 'class="info"') { row_bg_class = ''; } else { row_bg_class = 'class="info"'; }
 
-            // Get all the column from the left table
+            // Get all the columns from the left table and then remove them from the left bucket
             var $table_1_cols_bucket = $('#table_1_cols_bucket').children('.list-group-item-success');
             $table_1_cols_bucket.each(function () {
                 if (row == undefined) {
@@ -204,6 +212,10 @@
             // Remove the rows that were unmapped from the mapped-table.
             for (var i=0; i<(num_rows_to_iterate); i++) {
                 $('#mapped_columns_table').find('tr').eq((clicked_row_index)).remove();
+            }
+            
+            if ($('#mapped_columns_table').find('tr').length == 1) {
+                $('#mapped_columns_div').hide();
             }
         });
 
