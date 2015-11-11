@@ -36,7 +36,7 @@
 </div>
 -->
 
-<div id = 'mapped_columns' class="table-responsive" style="display: none;">
+<div id = 'mapped_columns_div' class="table-responsive" style="display: none;">
     <h3>Mapped columns from the two tables are shown below</h3>
     <table id = 'mapped_columns_table' class='table table-striped table-bordered'>
         <tr>
@@ -46,24 +46,24 @@
         </tr>
         <!-- more rows are added dynamically as a user maps columns from table_1 to table_2 -->
     </table>
+    <button id='next' type="button" class="btn btn-primary pull-right">Submit</button>
 </div>
 
-<div id='step1' class="page-header">
+<div id='step1_div' class="page-header">
     <h2>Step 1: Columns Selection</h2>
     <p>Select the columns from each table that you would like to keep and/or map and merge into a single table and click Next.</p>
-    <div id='step1_btns'>
-        <button id='choose_columns_btn' type="button" class="pull-right btn btn-primary" onclick="next_step_mapping_cols();">Next</button>
+    <div id='step1_btns_div'>
+        <button id='choose_columns_btn' type="button" class="pull-right btn btn-primary" onclick="next_step_mapping_cols();">Select Columns</button>
     </div>
     <div class="clearfix"></div>
 </div>
 
-<div id='step2' class="page-header" style='display: none;'>
+<div id='step2_div' class="page-header" style='display: none;'>
     <h2>Step 2: Columns Mapping</h2>
     <p>Select one or more columns from the left table and then select a single column from the right table and then click on "Map Selected Columns" button</p>
-    <div id='step2_btns'>
-        <button id='reset_columns_selection' type='button' class='pull-left btn btn-warning' onclick='reset_cols_selection();'>Back</button>
-        <button id='next' type="button" class="btn btn-warning pull-right">Next</button>
-        <button id='map_btn' type="button" class="btn btn-primary pull-right">Map Selected Columns</button>
+    <div id='step2_btns_div'>
+        <button id='reset_columns_selection' type='button' class='pull-left btn btn-info' onclick='reset_cols_selection();'>Back</button>
+        <button id='map_btn' type="button" class="btn btn-warning pull-right">Map Selected Columns</button>
     </div>
     <div class="clearfix"></div>
 </div>
@@ -72,7 +72,7 @@
     <div class="col-sm-6">
         <div class="panel panel-default">
             <div class="panel-heading"><h3 class="panel-title">Table 1 </h3></div>
-            <ul id = 'table_1_cols' class="list-group">
+            <ul id = 'table_1_cols_bucket' class="list-group">
                 {% for item in getSourceFrom %}
                     <li class="list-group-item">{{ item }}</li>
                 {% endfor %}
@@ -82,7 +82,7 @@
     <div class="col-sm-6">
         <div class="panel panel-default">
             <div class="panel-heading"><h3 class="panel-title">Table 2 </h3></div>
-            <ul id = 'table_2_cols' class="list-group">
+            <ul id = 'table_2_cols_bucket' class="list-group">
                 {% for item in getSourceTo %}
                     <li class="list-group-item">{{ item }}</li>
                 {% endfor %}
@@ -99,64 +99,72 @@
 <script type-"text/javascript">
 
     function reset_cols_selection() {
-        $('#step2').hide();
-        $('#step1').show();
-        var $table_1_visible_cols = $('#table_1_cols').children('.list-group-item:visible');
+        $('#step2_div').hide();
+        $('#step1_div').show();
+        var $table_1_visible_cols = $('#table_1_cols_bucket').children('.list-group-item:visible');
         $table_1_visible_cols.each(function() {
             $(this).addClass('list-group-item-success');
         });
         
-        $('#table_1_cols li:hidden').show();
+        $('#table_1_cols_bucket li:hidden').show();
         
-        var $table_2_visible_cols = $('#table_2_cols').children('.list-group-item:visible');
+        var $table_2_visible_cols = $('#table_2_cols_bucket').children('.list-group-item:visible');
         $table_2_visible_cols.each(function() {
             $(this).addClass('list-group-item-success');
         });
-        $('#table_2_cols li:hidden').show();
+        $('#table_2_cols_bucket li:hidden').show();
     }
 
     function next_step_mapping_cols() {
-        $('#step1').hide();
-        $('#step2').show();
-        var $table_1_cols = $('#table_1_cols').children().not('.list-group-item-success');
-        $table_1_cols.each(function () {
+        $('#step1_div').hide();
+        $('#step2_div').show();
+        var $table_1_cols_bucket = $('#table_1_cols_bucket').children().not('.list-group-item-success');
+        $table_1_cols_bucket.each(function () {
             $(this).hide();
         });
 
-        var $table_1_selected_cols = $('#table_1_cols').children('.list-group-item-success');
+        var $table_1_selected_cols = $('#table_1_cols_bucket').children('.list-group-item-success');
         $table_1_selected_cols.each(function() {
             $(this).removeClass('list-group-item-success');
         });
         
-        var $table_2_cols = $('#table_2_cols').children().not('.list-group-item-success');
-        $table_2_cols.each(function () {
+        var $table_2_cols_bucket = $('#table_2_cols_bucket').children().not('.list-group-item-success');
+        $table_2_cols_bucket.each(function () {
             $(this).hide();
         });
 
-        var $table_2_selected_cols = $('#table_2_cols').children('.list-group-item-success');
+        var $table_2_selected_cols = $('#table_2_cols_bucket').children('.list-group-item-success');
         $table_2_selected_cols.each(function() {
             $(this).removeClass('list-group-item-success');
         });
     }
+    
+
     $(document).ready(function() {
-        $('#mapped_columns').show();
+        
         var row_bg_class = 'class="info"';
         
-        $('div#step1_of_merge .list-group-item').click(function() {
+        /*
+         * Toggle background color as columns are clicked
+         */
+        $('div#step1_of_merge').on('click', '.list-group-item', function() {
             $(this).toggleClass("list-group-item-success");
         });
+        
+        
         $('#map_btn').click(function() {
-            var undo_btn = '<button type="button" class="btn btn-danger btn-xs">Undo</button>';
+            $('#mapped_columns_div').show();
+            var undo_btn = '<input type="button" class="btn btn-danger btn-xs undo" value="Undo" />';
             var row = undefined;
             // Get all the selected column from the right table
-            var $table_2_cols = $('#table_2_cols').children('.list-group-item-success');
-            var table_2_cols_str = '';
-            if ($table_2_cols.length > 1) {
+            var $table_2_cols_bucket = $('#table_2_cols_bucket').children('.list-group-item-success');
+            var table_2_cols_bucket_str = '';
+            if ($table_2_cols_bucket.length > 1) {
                 alert("You must choose only a single column from the right table");
                 return;
             }
-            $table_2_cols.each(function () {
-                table_2_cols_str =  $(this).text() + "</td>";
+            $table_2_cols_bucket.each(function () {
+                table_2_cols_bucket_str =  $(this).text() + "</td>";
                 $(this).remove();
             });
 
@@ -164,10 +172,10 @@
             if (row_bg_class == 'class="info"') { row_bg_class = ''; } else { row_bg_class = 'class="info"'; }
 
             // Get all the column from the left table
-            var $table_1_cols = $('#table_1_cols').children('.list-group-item-success');
-            $table_1_cols.each(function () {
+            var $table_1_cols_bucket = $('#table_1_cols_bucket').children('.list-group-item-success');
+            $table_1_cols_bucket.each(function () {
                 if (row == undefined) {
-                    row = "<tr " + row_bg_class + "><td>" + $(this).text() + "</td><td rowspan=" + $table_1_cols.length + ">" + table_2_cols_str   + "<td rowspan=" + $table_1_cols.length + ">" + undo_btn + "</td></tr>";
+                    row = "<tr " + row_bg_class + "><td>" + $(this).text() + "</td><td rowspan=" + $table_1_cols_bucket.length + ">" + table_2_cols_bucket_str   + "<td rowspan=" + $table_1_cols_bucket.length + ">" + undo_btn + "</td></tr>";
                 } else {
                     row = "<tr " + row_bg_class + "><td>" + $(this).text() + "</td></tr>";
                 }
@@ -175,6 +183,30 @@
                 $('#mapped_columns_table').append(row);
             });
         });
+
+        // Undo individual mapping
+        $('div#mapped_columns_div').on('click', 'input[type=button].undo', function() {
+            var clicked_row_index = $(this).closest('tr').index('tr');
+
+            var $rows = $('#mapped_columns_table').find('tr');
+            var num_rows_to_iterate = $rows.eq(clicked_row_index).children().eq(1).attr('rowspan');
+
+            // Get the right table column added back to the right bucket
+            var cell_value = $rows.eq((clicked_row_index)).children().eq(1).text();
+            $('#table_2_cols_bucket').append('<li class="list-group-item">' + cell_value + '</li>');
+
+            // Get the left table column(s) added back to the left bucket.
+            for (var i=0; i<=(num_rows_to_iterate-1); i++) {
+                var cell_value = $rows.eq((clicked_row_index+i)).children().eq(0).text();
+                $('#table_1_cols_bucket').append('<li class="list-group-item">' + cell_value + '</li>');                
+            }
+
+            // Remove the rows that were unmapped from the mapped-table.
+            for (var i=0; i<(num_rows_to_iterate); i++) {
+                $('#mapped_columns_table').find('tr').eq((clicked_row_index)).remove();
+            }
+        });
+
     });
 </script>
 {% endblock %}

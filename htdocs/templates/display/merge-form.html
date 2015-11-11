@@ -2,26 +2,31 @@
 {% block page_title %}Merge Tables{% endblock %}
 
 {% block content %}
-	<p>Select a Table to merge your data into.</p>
-	
-	<form action="/merge_columns/" method="post">{% csrf_token %}
-	<table border="1">
-		<tr>
-			<th>From Table</th>
-			<th>To Table</th>
-		</tr>
-		<tr>
-			<td>{{ getSource.name }}</td>
-			<td align="middle"><select name="to_silo_id">{% for item2 in getSourceTo %}  {% if item2.id != getSource.id  %}<option value="{{ item2.id }}">{{ item2.name }}</option>{% endif %}{% endfor %}</select></td>
-		</tr>
-	</table>
-	
-	<br>
-	<input type="hidden" name="from_silo_id" value="{{ getSource.id }}">
-	<input type="submit" value="Submit" />
-	</form>
-	
-	
-	
+    <p>Select a Table to merge your data into.</p>
+
+    <form action="/merge_columns/" method="post">{% csrf_token %}
+    <table border="1">
+        <tr>
+            <th>From Table</th>
+            <th>To Table</th>
+        </tr>
+        <tr>
+            <td>{{ getSource.name }}</td>
+            <td align="middle">
+                <select name="to_silo_id">
+                    {% for item2 in getSourceTo %} 
+                        {% if item2.id != getSource.id  %}
+                            <option value="{{ item2.id }}">{{ item2.name }}</option>
+                        {% endif %}
+                    {% endfor %}
+                </select>
+            </td>
+        </tr>
+    </table>
+
+    <br>
+    <input type="hidden" name="from_silo_id" value="{{ getSource.id }}">
+    <input type="submit" value="Submit" />
+    </form>
 
 {% endblock content %}
