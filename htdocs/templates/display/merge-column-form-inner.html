@@ -35,7 +35,8 @@
     </form>
 </div>
 -->
-
+<div style="display:none;">{{ from_silo_id }}</div>
+<div style="display:none;">{{ to_silo_id }}</div>
 <div class="modal fade" id="myModal">
     <div class="modal-dialog">
         <div class="modal-content">
@@ -52,8 +53,7 @@
                 </select>
             </div>
             <div class="modal-footer">
-                <button type="button" class="btn btn-default" data-dismiss="modal">Close</button>
-                <button type="button" class="btn btn-primary save">Save changes</button>
+                <button type="button" class="btn btn-success" data-dismiss="modal">Submit</button>
             </div>
         </div><!-- /.modal-content -->
     </div><!-- /.modal-dialog -->
@@ -65,7 +65,7 @@
         <tr>
             <th>Table One</th>
             <th>Table Two</th>
-            <th style='width:80px;'>Merge Type</th>
+            <th style='width:90px;'>Merge Type</th>
             <th style='width:50px;'>Action</th>
         </tr>
         <!-- more rows are added dynamically as a user maps columns from table_1 to table_2 -->
@@ -173,12 +173,19 @@
         var undo_btn = '<input type="button" class="btn btn-danger btn-xs undo" value="Undo" />';
         var row = undefined;
         var merge_type = $('#merge_type option:selected').text();
-        //$("#merge_type option[value='concatenate']").attr('selected', true);
         $("#merge_type").val('');
 
         // Get all the selected column from the right table
         var $table_2_cols_bucket = $('#table_2_cols_bucket').children('.list-group-item-success');
         var table_2_cols_bucket_str = '';
+
+        // Get all the columns from the left table and then remove them from the left bucket
+        var $table_1_cols_bucket = $('#table_1_cols_bucket').children('.list-group-item-success');
+
+        if ($table_1_cols_bucket.length == 0 || $table_2_cols_bucket.length == 0 ){
+            alert("You must select at least one column from the left table and exactly one column from the right table");
+            return;
+        }
 
         // STOP if more than one column is selected from the right table.
         if ($table_2_cols_bucket.length > 1) {
@@ -192,9 +199,7 @@
             $(this).remove();
         });
 
-        // Get all the columns from the left table and then remove them from the left bucket
-        var $table_1_cols_bucket = $('#table_1_cols_bucket').children('.list-group-item-success');
-        console.log(row_bg_class);
+        
         $table_1_cols_bucket.each(function () {
             if (row == undefined) {
                 row = "<tr " + row_bg_class + "><td>" + $(this).text() + "</td><td rowspan=" + $table_1_cols_bucket.length + ">" + table_2_cols_bucket_str   + "<td rowspan=" + $table_1_cols_bucket.length + ">"  + merge_type + "</td><td rowspan=" + $table_1_cols_bucket.length + ">" + undo_btn + "</td></tr>";
