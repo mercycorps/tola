@@ -70,7 +70,7 @@
         </tr>
         <!-- more rows are added dynamically as a user maps columns from table_1 to table_2 -->
     </table>
-    <button id='next' type="button" class="btn btn-primary pull-right">Submit</button>
+    <button id='submit' type="button" class="btn btn-primary pull-right">Submit</button>
 </div>
 
 <div id='step1_div' class="page-header">
@@ -168,6 +168,9 @@
         });
     }
 
+    /*
+     * Add the currently selected columns from the left and right buckets into the mapped table
+     */
     function map_selected_column(){
         $('#mapped_columns_div').show();
         var undo_btn = '<input type="button" class="btn btn-danger btn-xs undo" value="Undo" />';
@@ -238,7 +241,7 @@
             }
         });
 
-        // Every time the modal closes, call the function that map selected columns
+        // Every time the modal closes, call the function that maps selected columns
         $('#myModal').on('hidden.bs.modal', function (e) {
             var merge_type = $('#merge_type option:selected').text();
             if (merge_type.length == 0) { 
@@ -274,7 +277,77 @@
                 $('#mapped_columns_div').hide();
             }
         });
+        
+        $('#mapped_columns_div').on('click', '#submit', function() {
+            var columns_data = {};
+            var cols = [];
+            var right_col = undefined;
+            var counter = 0;
+            
+            columns_data['left_table_id'] = {{ from_silo_id }};
+            columns_data['right_table_id'] = {{ to_silo_id }};
+            
+            // Get all of the column mapping from the table.
+            $('#mapped_columns_table tr').each(function (i, tr) {
+                if (i == 0) { return; }
+                var rowspan = $("td",tr).eq(1).attr('rowspan');
+                if (rowspan > 0 ){
+                    if (cols.length > 0) { //first time
+                        columns_data[counter] = {'left': cols, 'right': right_col, 'merge_type': merge_type};
+                        counter++;
+                    }
+                    right_col = $("td", tr).eq(1).text();
+                    merge_type = $("td", tr).eq(2).text();
+                    cols = [];
+                }
+                cols.push($("td",tr).eq(0).text());
+                
+            });
+            columns_data[counter] = {'left': cols, 'right': right_col, 'merge_type': merge_type};
+            
+            // Get all of the remainder columns from the left and right buckets.
+            //var $table_1_cols_bucket = $('#table_1_cols_bucket').children();
+            var $table_1_visible_cols = $('#table_1_cols_bucket').children('.list-group-item:visible');
+            cols = [];
+            $table_1_visible_cols.each(function () {
+                cols.push($(this).text());
+            });
+            columns_data['left_unmapped_cols'] = cols;
 
-    });
+            var $table_2_visible_cols = $('#table_2_cols_bucket').children('.list-group-item:visible');
+            cols = [];
+            $table_2_visible_cols.each(function () {
+                cols.push($(this).text());
+            });
+            columns_data['right_unmapped_cols'] = cols;
+
+            console.log(columns_data);
+/*
+            // Now post the data object to the server
+            $.post("/doMerge/", columns_data)
+                .success(function(data, textStatus, xhr) {
+                    //addMessage(data, "success" );
+                    console.log(this.url);
+                    if (xhr.getResponseHeader('show_mapping') == "1") {
+                        $("#modal_content").html(data);
+                        $('#form_modal').modal('toggle');
+                    } else {
+                        addMessage(data, "info" );
+                    }
+                })
+                .fail(function(data) {
+                    // addMessage(data, "error ");
+                })
+                .done(function(data, xhr) {
+                    //alert(xhr.status);
+                })
+                .complete(function(data, xhr) {
+                    //show_column_mapping();
+                });
+*/
+
+
+        }); // end of '#mapped_columns_div' on click event
+    }); // end of document ready
 </script>
 {% endblock %}
