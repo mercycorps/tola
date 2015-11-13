@@ -277,23 +277,20 @@
                 $('#mapped_columns_div').hide();
             }
         });
-        
+
         $('#mapped_columns_div').on('click', '#submit', function() {
             var columns_data = {};
             var cols = [];
             var right_col = undefined;
             var counter = 0;
-            
-            columns_data['left_table_id'] = {{ from_silo_id }};
-            columns_data['right_table_id'] = {{ to_silo_id }};
-            
+
             // Get all of the column mapping from the table.
             $('#mapped_columns_table tr').each(function (i, tr) {
                 if (i == 0) { return; }
                 var rowspan = $("td",tr).eq(1).attr('rowspan');
                 if (rowspan > 0 ){
                     if (cols.length > 0) { //first time
-                        columns_data[counter] = {'left': cols, 'right': right_col, 'merge_type': merge_type};
+                        columns_data[counter] = {'left_table_cols': cols, 'right_table_col': right_col, 'merge_type': merge_type};
                         counter++;
                     }
                     right_col = $("td", tr).eq(1).text();
@@ -301,12 +298,10 @@
                     cols = [];
                 }
                 cols.push($("td",tr).eq(0).text());
-                
             });
-            columns_data[counter] = {'left': cols, 'right': right_col, 'merge_type': merge_type};
-            
-            // Get all of the remainder columns from the left and right buckets.
-            //var $table_1_cols_bucket = $('#table_1_cols_bucket').children();
+            columns_data[counter] = {'left_table_cols': cols, 'right_table_col': right_col, 'merge_type': merge_type};
+
+            // add all of the unmapped columns from the left bucket
             var $table_1_visible_cols = $('#table_1_cols_bucket').children('.list-group-item:visible');
             cols = [];
             $table_1_visible_cols.each(function () {
@@ -314,6 +309,7 @@
             });
             columns_data['left_unmapped_cols'] = cols;
 
+            // add all of the unmapped columns from the right bucket
             var $table_2_visible_cols = $('#table_2_cols_bucket').children('.list-group-item:visible');
             cols = [];
             $table_2_visible_cols.each(function () {
@@ -321,10 +317,12 @@
             });
             columns_data['right_unmapped_cols'] = cols;
 
-            console.log(columns_data);
-/*
             // Now post the data object to the server
-            $.post("/doMerge/", columns_data)
+            $.post("/doMerge/", {
+                'columns_data': JSON.stringify(columns_data), 
+                'left_table_id': {{ from_silo_id  }}, 
+                'right_table_id': {{ to_silo_id }} 
+                })
                 .success(function(data, textStatus, xhr) {
                     //addMessage(data, "success" );
                     console.log(this.url);
@@ -344,8 +342,6 @@
                 .complete(function(data, xhr) {
                     //show_column_mapping();
                 });
-*/
-
 
         }); // end of '#mapped_columns_div' on click event
     }); // end of document ready

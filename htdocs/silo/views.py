@@ -660,10 +660,105 @@ import pymongo
 from bson.objectid import ObjectId
 from pymongo import MongoClient
 uri = 'mongodb://localhost/tola'
-def doMerge(request):
-    from_silo_id = request.POST['from_silo_id']
-    to_silo_id = request.POST["to_silo_id"]
 
+def doMerge(request):
+
+    # setup mongodb conn.
+    client = MongoClient(uri)
+    db = client.tola
+
+    # get the table_ids.
+    left_table_id = request.POST['left_table_id']
+    right_table_id = request.POST["right_table_id"]
+
+    data = request.POST.get('columns_data', None)
+    if not data:
+        return HttpResponse("no columns data passed")
+
+    columns_mapping = json.loads(data)
+
+    left_unmapped_cols = columns_mapping.pop('left_unmapped_cols')
+    right_unmapped_cols = columns_mapping.pop('right_unmapped_cols')
+
+    merged_data = []
+
+    # STEP 1: Loop over left table
+    left_table = LabelValueStore.objects(silo_id=left_table_id).to_json()
+    left_table_json = json.loads(left_table)
+    unique_cols = set()
+    for row in left_table_json:
+        #column_names.extend([k for k in row.keys() if k not in column_names])
+        merge_data_row = {}
+        for k, v in columns_mapping.iteritems():
+            merge_type = v['merge_type']
+            left_cols = v['left_table_cols']
+            right_col = v['right_table_col']
+            if merge_type: # we must have multiple columns in the left_cols array
+                merged_value = ''
+                for col in left_cols:
+                    unique_cols.add(col)
+                    if merge_type == 'Concatenate':
+                        merged_value += ' ' + str(row[col])
+                    elif merge_type == 'Sum':
+                        merged_value += 'SUM ' + str(row[col])
+                    elif merge_type == 'Avg':
+                        merged_value += 'AVG ' + str(row[col])
+                    else:
+                        pass
+                #print(k, merge_type, left_cols, right_cols)
+                #print("merged_value: %s" % merged_value)
+            else: # there is only a single column in left_cols array
+                col = str(left_cols[0])
+                unique_cols.add(col)
+                merged_value = row[col]
+            merge_data_row[right_col] = merged_value
+        #merged_data.append(merge_data_row)
+
+        #merge_data_row = {}
+        for col in left_unmapped_cols:
+            unique_cols.add(col)
+            merge_data_row[col] = row[col]
+
+        for col in right_unmapped_cols:
+            unique_cols.add(col)
+            merge_data_row[col] = ''
+        merged_data.append(merge_data_row)
+
+    # Get the right silo and add its data to merge_data
+    right_table = LabelValueStore.objects(silo_id=right_table_id).to_json()
+    right_table_json = json.loads(left_table)
+    for row in right_table_json:
+        merge_data_row = {}
+        for col in unique_cols:
+            if col in row.keys():
+                merge_data_row[col] = str(row[col])
+            else:
+                merge_data_row[col] = ''
+
+        merged_data.append(merge_data_row)
+
+
+
+    print(merged_data)
+    # STEP 2: Loop over right table
+
+    # STEP 3: MERGE as needed
+
+    # insert a new silo data in MongoClient
+
+    return HttpResponse("All Good!")
+
+
+def doMerge2(request):
+
+    if request.method != 'POST':
+        return HttpResponseBadRequest("HTTP method, %s, is not supported" % request.method)
+
+    table_one_id = request.POST['from_silo_id']
+    table_two_id = request.POST['to_silo_id']
+
+    print(request.POST['columns_data'])
+    return
     try:
         from_silo_id = int(from_silo_id)
         to_silo_id = int(to_silo_id)
