@@ -712,9 +712,7 @@ def doMerge(request):
                 unique_cols.add(col)
                 merged_value = row[col]
             merge_data_row[right_col] = merged_value
-        #merged_data.append(merge_data_row)
 
-        #merge_data_row = {}
         for col in left_unmapped_cols:
             unique_cols.add(col)
             merge_data_row[col] = row[col]
@@ -737,14 +735,20 @@ def doMerge(request):
 
         merged_data.append(merge_data_row)
 
+    new_silo = Silo(name="mergeing of %s and %s" % (left_table_id, right_table_id) , public=False, owner=request.user)
+    new_silo.save()
 
-
-    print(merged_data)
-    # STEP 2: Loop over right table
-
-    # STEP 3: MERGE as needed
-
-    # insert a new silo data in MongoClient
+    for counter, row in enumerate(merged_data):
+        lvs = LabelValueStore()
+        lvs.silo_id = new_silo.pk
+        for l, v in row.iteritems():
+            if l == 'silo_id' or l == '_id' or l == 'create_date' or l == 'edit_date':
+                print(l)
+                continue
+            else:
+                setattr(lvs, l, v)
+        lvs.create_date = timezone.now()
+        result = lvs.save()
 
     return HttpResponse("All Good!")
 
