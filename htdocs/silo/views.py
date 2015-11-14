@@ -694,11 +694,13 @@ def doMerge(request):
             left_cols = v['left_table_cols']
             right_col = v['right_table_col']
 
+            unique_cols.add(right_col)
+
             # if merge_type is specified then there must be multiple columns in the left_cols array
             if merge_type:
                 mapped_value = ''
                 for col in left_cols:
-                    unique_cols.add(col)
+                    #unique_cols.add(col)
                     if merge_type == 'Concatenate':
                         mapped_value += ' ' + str(row[col])
                     elif merge_type == 'Sum':
@@ -710,7 +712,7 @@ def doMerge(request):
             # there is only a single column in left_cols array
             else:
                 col = str(left_cols[0])
-                unique_cols.add(col)
+                #unique_cols.add(col)
                 mapped_value = row[col]
 
             # finally add the mapped_value to the merge_data_row
@@ -728,6 +730,8 @@ def doMerge(request):
             unique_cols.add(col)
             merge_data_row[col] = ''
 
+        merge_data_row['source_table_id'] = left_table_id
+
         # add the complete row/object to the merged_data array
         merged_data.append(merge_data_row)
 
@@ -737,11 +741,13 @@ def doMerge(request):
     for row in right_table_data_json:
         merge_data_row = {}
         for col in unique_cols:
+            #print(row.keys())
             if col in row.keys():
                 merge_data_row[col] = str(row[col])
             else:
                 merge_data_row[col] = ''
 
+        merge_data_row['source_table_id'] = right_table_id
         # add the complete row/object to the merged_data array
         merged_data.append(merge_data_row)
 
