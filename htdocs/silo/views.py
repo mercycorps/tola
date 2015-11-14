@@ -682,50 +682,59 @@ def doMerge(request):
 
     merged_data = []
 
-    # STEP 1: Loop over left table
-    left_table = LabelValueStore.objects(silo_id=left_table_id).to_json()
-    left_table_json = json.loads(left_table)
+    left_table_data = LabelValueStore.objects(silo_id=left_table_id).to_json()
+    left_table_data_json = json.loads(left_table_data)
     unique_cols = set()
-    for row in left_table_json:
-        #column_names.extend([k for k in row.keys() if k not in column_names])
+    for row in left_table_data_json:
         merge_data_row = {}
+
+        # Loop through the mapped_columns for each row in left_table.
         for k, v in columns_mapping.iteritems():
             merge_type = v['merge_type']
             left_cols = v['left_table_cols']
             right_col = v['right_table_col']
-            if merge_type: # we must have multiple columns in the left_cols array
-                merged_value = ''
+
+            # if merge_type is specified then there must be multiple columns in the left_cols array
+            if merge_type:
+                mapped_value = ''
                 for col in left_cols:
                     unique_cols.add(col)
                     if merge_type == 'Concatenate':
-                        merged_value += ' ' + str(row[col])
+                        mapped_value += ' ' + str(row[col])
                     elif merge_type == 'Sum':
-                        merged_value += 'SUM ' + str(row[col])
+                        mapped_value += ' ' + str(row[col])
                     elif merge_type == 'Avg':
-                        merged_value += 'AVG ' + str(row[col])
+                        mapped_value += ' ' + str(row[col])
                     else:
                         pass
-                #print(k, merge_type, left_cols, right_cols)
-                #print("merged_value: %s" % merged_value)
-            else: # there is only a single column in left_cols array
+            # there is only a single column in left_cols array
+            else:
                 col = str(left_cols[0])
                 unique_cols.add(col)
-                merged_value = row[col]
-            merge_data_row[right_col] = merged_value
+                mapped_value = row[col]
 
+            # finally add the mapped_value to the merge_data_row
+            merge_data_row[right_col] = mapped_value
+
+        # Loop through the left_unmapped_columns for each row in left_table.
         for col in left_unmapped_cols:
             unique_cols.add(col)
             merge_data_row[col] = row[col]
 
+        # Loop through all of hte right_unmapped_cols for each row left_table; however,
+        # the value is set to nothing b/c the left_table does not have any values for the
+        # columns in the right table. The right table is iterated over below.
         for col in right_unmapped_cols:
             unique_cols.add(col)
             merge_data_row[col] = ''
+
+        # add the complete row/object to the merged_data array
         merged_data.append(merge_data_row)
 
-    # Get the right silo and add its data to merge_data
-    right_table = LabelValueStore.objects(silo_id=right_table_id).to_json()
-    right_table_json = json.loads(left_table)
-    for row in right_table_json:
+    # Get the right silo and append its data to merged_data array
+    right_table_data = LabelValueStore.objects(silo_id=right_table_id).to_json()
+    right_table_data_json = json.loads(right_table_data)
+    for row in right_table_data_json:
         merge_data_row = {}
         for col in unique_cols:
             if col in row.keys():
@@ -733,24 +742,26 @@ def doMerge(request):
             else:
                 merge_data_row[col] = ''
 
+        # add the complete row/object to the merged_data array
         merged_data.append(merge_data_row)
 
+    # Create a new silo
     new_silo = Silo(name="mergeing of %s and %s" % (left_table_id, right_table_id) , public=False, owner=request.user)
     new_silo.save()
 
+    # put the new silo data in mongo db.
     for counter, row in enumerate(merged_data):
         lvs = LabelValueStore()
         lvs.silo_id = new_silo.pk
         for l, v in row.iteritems():
             if l == 'silo_id' or l == '_id' or l == 'create_date' or l == 'edit_date':
-                print(l)
                 continue
             else:
                 setattr(lvs, l, v)
         lvs.create_date = timezone.now()
         result = lvs.save()
 
-    return HttpResponse("All Good!")
+    return JsonResponse({'status': "success",  'message': 'The merged table is accessible at <a href="/silo_detail/%s/" target="_blank">Merged Table</a>'})
 
 
 def doMerge2(request):
