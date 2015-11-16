@@ -721,7 +721,10 @@ def doMerge(request):
         # Loop through the left_unmapped_columns for each row in left_table.
         for col in left_unmapped_cols:
             unique_cols.add(col)
-            merge_data_row[col] = row[col]
+            if col in row.keys():
+                merge_data_row[col] = row[col]
+            else:
+                merge_data_row[col] = ''
 
         # Loop through all of hte right_unmapped_cols for each row left_table; however,
         # the value is set to nothing b/c the left_table does not have any values for the
