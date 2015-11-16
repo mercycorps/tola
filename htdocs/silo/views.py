@@ -700,15 +700,19 @@ def doMerge(request):
             if merge_type:
                 mapped_value = ''
                 for col in left_cols:
-                    #unique_cols.add(col)
-                    if merge_type == 'Concatenate':
-                        mapped_value += ' ' + str(row[col])
-                    elif merge_type == 'Sum':
-                        mapped_value += ' ' + str(row[col])
-                    elif merge_type == 'Avg':
-                        mapped_value += ' ' + str(row[col])
-                    else:
-                        pass
+                    try:
+                        if merge_type == 'Concatenate':
+                            mapped_value += ' ' + str(row[col])
+                        elif merge_type == 'Sum' or merge_type == 'Avg':
+                            mapped_value = mapped_value + row[col]
+                        else:
+                            pass
+                    except Exception as e:
+                        return JsonResponse({'status': "danger",  'message': 'Failed to apply %s to column, %s : %s ' % (merge_type, col, e.message)})
+
+                if merge_type == 'Avg':
+                    mapped_value = mapped_value / len(left_cols)
+
             # there is only a single column in left_cols array
             else:
                 col = str(left_cols[0])
