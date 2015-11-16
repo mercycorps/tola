@@ -774,7 +774,7 @@ def doMerge(request):
         lvs.create_date = timezone.now()
         result = lvs.save()
 
-    return JsonResponse({'status': "success",  'message': 'The merged table is accessible at <a href="/silo_detail/%s/" target="_blank">Merged Table</a>'})
+    return JsonResponse({'status': "success",  'message': 'The merged table is accessible at <a href="/silo_detail/%s/" target="_blank">Merged Table</a>' % new_silo.pk})
 
 
 #EDIT A SINGLE VALUE STORE
