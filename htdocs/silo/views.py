@@ -704,7 +704,7 @@ def doMerge(request):
                         if merge_type == 'Concatenate':
                             mapped_value += ' ' + str(row[col])
                         elif merge_type == 'Sum' or merge_type == 'Avg':
-                            mapped_value = mapped_value + row[col]
+                            mapped_value = mapped_value + float(row[col])
                         else:
                             pass
                     except Exception as e:

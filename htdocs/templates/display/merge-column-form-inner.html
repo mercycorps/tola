@@ -330,7 +330,7 @@
                         $("#modal_content").html(data);
                         $('#form_modal').modal('toggle');
                     } else {
-                        addMessage(data, "info" );
+                        addMessage(data['message'], data['status'] );
                     }
                 })
                 .fail(function(data) {
