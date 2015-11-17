@@ -95,7 +95,10 @@
 <div id = "step1_of_merge" class = "row">
     <div class="col-sm-6">
         <div class="panel panel-default">
-            <div class="panel-heading"><h3 class="panel-title">Table 1 </h3></div>
+            <div class="panel-heading">
+                <h3 class="panel-title">Table 1 <button id='select_all_left_columns' class='btn-xs btn-link pull-right'>Select All</button></h3>
+            </div>
+            <div class="clearfix"></div>
             <ul id = 'table_1_cols_bucket' class="list-group">
                 {% for item in getSourceFrom %}
                     <li class="list-group-item">{{ item }}</li>
@@ -105,7 +108,10 @@
     </div>
     <div class="col-sm-6">
         <div class="panel panel-default">
-            <div class="panel-heading"><h3 class="panel-title">Table 2 </h3></div>
+            <div class="panel-heading">
+                <h3 class="panel-title">Table 2 <button id='select_all_right_columns' class='btn-xs btn-link pull-right'>Select All</button></h3>
+            </div>
+            <div class="clearfix"></div>
             <ul id = 'table_2_cols_bucket' class="list-group">
                 {% for item in getSourceTo %}
                     <li class="list-group-item">{{ item }}</li>
@@ -239,6 +245,18 @@
             } else {
                 map_selected_column();
             }
+        });
+        
+        $('div.panel-heading').on('click', '#select_all_left_columns', function() {
+            $('#table_1_cols_bucket').children().each(function() {
+                $(this).addClass('list-group-item-success');
+            });
+        });
+
+        $('div.panel-heading').on('click', '#select_all_right_columns', function() {
+            $('#table_2_cols_bucket').children().each(function() {
+                $(this).addClass('list-group-item-success');
+            });
         });
 
         // Every time the modal closes, call the function that maps selected columns
