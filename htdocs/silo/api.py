@@ -46,8 +46,6 @@ class SiloViewSet(viewsets.ModelViewSet):
             return HttpResponseBadRequest("The silo_id = %s is invalid" % id)
 
         data = LabelValueStore.objects(silo_id=id).to_json()
-        print id
-        print data
         json_data = json.loads(data)
         return JsonResponse(json_data, safe=False)
 
