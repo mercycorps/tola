@@ -5,15 +5,11 @@ from django.contrib.auth.models import User
 import json
 
 class SiloSerializer(serializers.HyperlinkedModelSerializer):
-    data = serializers.SerializerMethodField()
+
     class Meta:
         model = Silo
-        fields = ('owner', 'name', 'reads', 'description', 'create_date', 'id', 'data')
+        fields = ('owner', 'name', 'reads', 'description', 'create_date', 'id')
         depth =1
-
-    def get_data(self, obj):
-        mongodata = LabelValueStore.objects(silo_id=obj.id).to_json()
-        return json.loads(mongodata)
 
 
 class UserSerializer(serializers.HyperlinkedModelSerializer):

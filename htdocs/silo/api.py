@@ -3,10 +3,15 @@ import json
 from django.http import HttpResponseBadRequest, JsonResponse
 from django.contrib.auth.models import User
 
-from rest_framework import renderers, viewsets
+from rest_framework import renderers, viewsets,filters,permissions
 
 from .models import Silo, LabelValueStore
 from .serializers import *
+from silo.permissions import IsOwnerOrReadOnly
+from django.contrib.auth.models import User
+from rest_framework.decorators import detail_route, list_route
+
+import django_filters
 
 def silo_data_api(request, id):
     if id <= 0:
@@ -28,6 +33,24 @@ class SiloViewSet(viewsets.ModelViewSet):
     """
     queryset = Silo.objects.all()
     serializer_class = SiloSerializer
+    lookup_field = 'id'
+    permission_classes = (permissions.IsAuthenticatedOrReadOnly,
+                          IsOwnerOrReadOnly,)
+    filter_backends = (filters.DjangoFilterBackend,)
+
+    paginate_by = 2
+
+    @detail_route()
+    def data(self, request, id):
+        if id <= 0:
+            return HttpResponseBadRequest("The silo_id = %s is invalid" % id)
+
+        data = LabelValueStore.objects(silo_id=id).to_json()
+        print id
+        print data
+        json_data = json.loads(data)
+        return JsonResponse(json_data, safe=False)
+
 
 class ReadViewSet(viewsets.ModelViewSet):
     """

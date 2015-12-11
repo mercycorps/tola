@@ -27,7 +27,7 @@ urlpatterns = patterns('',
                         #rest framework
                         url(r'^api/', include(router.urls)),
                         url(r'^api-auth/', include('rest_framework.urls', namespace='rest_framework')),
-                        url(r'^api/silodata/(?P<id>[0-9]+)/$', 'silo.api.silo_data_api', name='silodata'),
+                        url(r'^api/silodata/(?P<id>[0-9]+)/$', 'silo.api.silo_data_api', name='silo-detail'),
 
                         #index
                         url(r'^$', 'silo.views.index', name='index'),

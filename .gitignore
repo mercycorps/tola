@@ -40,3 +40,4 @@ client_secrets.json
 *.crt
 *.key
 error.log
+conf/
