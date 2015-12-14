@@ -8,7 +8,7 @@ class SiloSerializer(serializers.HyperlinkedModelSerializer):
     data = serializers.SerializerMethodField()
     class Meta:
         model = Silo
-        fields = ('owner', 'name', 'reads', 'description', 'create_date', 'id', 'data')
+        fields = ('owner', 'name', 'reads', 'description', 'create_date', 'id', 'data','shared','tags','public')
         depth =1
 
     def get_data(self, obj):
