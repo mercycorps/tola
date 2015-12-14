@@ -49,6 +49,15 @@ class SiloViewSet(viewsets.ModelViewSet):
         return JsonResponse(json_data, safe=False)
 
 
+class TagViewSet(viewsets.ModelViewSet):
+    """
+    This viewset automatically provides `list`, `create`, `retrieve`,
+    `update` and `destroy` actions.
+    """
+    queryset = Tag.objects.all()
+    serializer_class = TagSerializer
+
+
 class ReadViewSet(viewsets.ModelViewSet):
     """
     This viewset automatically provides `list`, `create`, `retrieve`,

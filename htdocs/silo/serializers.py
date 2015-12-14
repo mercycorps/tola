@@ -1,6 +1,6 @@
 from django.forms import widgets
 from rest_framework import serializers
-from silo.models import Silo, Read, ReadType, LabelValueStore
+from silo.models import Silo, Read, ReadType, LabelValueStore, Tag
 from django.contrib.auth.models import User
 import json
 
@@ -14,6 +14,11 @@ class SiloSerializer(serializers.HyperlinkedModelSerializer):
     def get_data(self, obj):
         link = "/api/silo/" + str(obj.id) + "/data/"
         return (self.context['request'].build_absolute_uri(link))
+
+class TagSerializer(serializers.HyperlinkedModelSerializer):
+    class Meta:
+        model = Tag
+        fields = ('name', 'owner')
 
 class UserSerializer(serializers.HyperlinkedModelSerializer):
 

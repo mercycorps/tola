@@ -21,6 +21,7 @@ router.register(r'silo', SiloViewSet)
 router.register(r'users', UserViewSet)
 router.register(r'read', ReadViewSet)
 router.register(r'readtype', ReadTypeViewSet)
+router.register(r'tag', TagViewSet)
 
 
 urlpatterns = patterns('',
