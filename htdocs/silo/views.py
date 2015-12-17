@@ -4,6 +4,7 @@ import json
 import base64
 import csv
 import operator
+from collections import OrderedDict
 
 from .forms import ReadForm, UploadForm, SiloForm, MongoEditForm, NewColumnForm, EditColumnForm
 from django.contrib import messages
@@ -33,6 +34,8 @@ from tola.util import siloToDict, combineColumns
 from django.core.urlresolvers import reverse
 
 from django.utils import timezone
+from django.utils.encoding import smart_str
+
 
 # Edit existing silo meta data
 @csrf_protect
@@ -870,7 +873,6 @@ def createFeed(request):
         return render(request, 'feed/json.html', {"jsonData": jsonData}, content_type="application/json")
 
 
-from collections import OrderedDict
 def export_silo(request, id):
 
     silo_name = Silo.objects.get(id=id).name
@@ -902,7 +904,7 @@ def export_silo(request, id):
         for r, row in enumerate(silo_data):
             for col in row:
                 # Map values to column names and place them in the correct position in the data array
-                data[r][cols.index(col)] = row[col]
+                data[r][cols.index(col)] = smart_str(row[col])
             writer.writerow(data[r])
     return response
 
