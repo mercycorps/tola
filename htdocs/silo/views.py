@@ -434,11 +434,11 @@ def getJSON(request):
             lvs = LabelValueStore()
             lvs.silo_id = silo_id
             for new_label, new_value in row.iteritems():
-                if new_value is not "" and new_label is not None and new_label is not "edit_date" and new_label is not "create_date":
+                if new_label is not "" and new_label is not None and new_label is not "edit_date" and new_label is not "create_date":
                     setattr(lvs, new_label, new_value)
             lvs.create_date = timezone.now()
             lvs.save()
-        messages.success(request, "Data imported correctly into MONGO")
+        messages.success(request, "Data imported successfully.")
         return HttpResponseRedirect('/silo_detail/' + str(silo_id) + '/')
     else:
         messages.error(request, "Invalid Request for importing JSON data")
