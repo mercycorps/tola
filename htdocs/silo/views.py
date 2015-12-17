@@ -351,7 +351,9 @@ def uploadFile(request, id):
                 lvs = LabelValueStore()
                 lvs.silo_id = silo_id
                 for col_counter, val in enumerate(row):
-                    if labels[col_counter] is not "" and labels[col_counter] is not None: setattr(lvs, labels[col_counter], val)
+                    key = str(labels[col_counter]).replace(".", "_").replace("$", "USD")
+                    if key is not "" and key is not None:
+                        setattr(lvs, key, val)
                 lvs.create_date = timezone.now()
                 lvs.save()
 
