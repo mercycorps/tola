@@ -22,7 +22,7 @@ class OnaLoginForm(forms.Form):
         self.helper.add_input(Submit('submit', 'Submit'))
         self.helper.add_input(Reset('rest', 'Reset', css_class='btn-warning'))
         super(OnaLoginForm, self).__init__(*args, **kwargs)
-        
+
 
 class SiloForm(forms.ModelForm):
     def __init__(self, *args, **kwargs):
@@ -78,7 +78,7 @@ class ReadForm(forms.ModelForm):
 
     class Meta:
         model = Read
-        fields = ['read_name', 'read_url', 'description','type','file_data', 'owner']
+        fields = ['read_name', 'read_url', 'description', 'autopull', 'autopull_frequency', 'type','file_data', 'owner']
         #exclude = ['create_date',]
 
 class UploadForm(forms.Form):

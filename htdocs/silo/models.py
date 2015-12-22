@@ -35,10 +35,17 @@ class ReadTypeAdmin(admin.ModelAdmin):
 
 
 class Read(models.Model):
+    FREQUENCY_DAILY = 'daily'
+    FREQUENCY_WEEKLY = 'weekly'
+    FREQUENCY_CHOICES = (
+        (FREQUENCY_DAILY, 'Daily'),
+        (FREQUENCY_WEEKLY, 'Weekly'),
+    )
     owner = models.ForeignKey(User)
-    #silo = models.ManyToManyField(Silo, related_name = "reads") #RemoteEndPoint
     type = models.ForeignKey(ReadType)
     read_name = models.CharField(max_length=100, blank=True, default='', verbose_name='source name') #RemoteEndPoint = name
+    autopull = models.BooleanField(default=False)
+    autopull_frequency = models.CharField(max_length=25, choices=FREQUENCY_CHOICES, null=True, blank=True)
     description = models.TextField()
     read_url = models.CharField(max_length=100, blank=True, default='', verbose_name='source url') #RemoteEndPoint = link
     resource_id = models.CharField(max_length=200, null=True, blank=True) #RemoteEndPoint
@@ -47,7 +54,6 @@ class Read(models.Model):
     file_data = models.FileField("Upload CSV File", upload_to='uploads', blank=True, null=True)
     create_date = models.DateTimeField(null=True, blank=True, auto_now=False, auto_now_add=True)
     edit_date = models.DateTimeField(null=True, blank=True, auto_now=True, auto_now_add=False) #RemoteEndPoint
-    
 
     class Meta:
         ordering = ('create_date',)
@@ -69,7 +75,7 @@ class Tag(models.Model):
     owner = models.ForeignKey(User, related_name='tags')
     created = models.DateTimeField(auto_now=False, auto_now_add=True)
     updated = models.DateTimeField(auto_now=True, auto_now_add=False)
-    
+
     def __str__(self):
         return self.name
 
@@ -103,7 +109,7 @@ class Silo(models.Model):
 class SiloAdmin(admin.ModelAdmin):
     list_display = ('owner', 'name', 'source', 'description', 'create_date')
     display = 'Data Feeds'
-    
+
 
 from mongoengine import *
 class LabelValueStore(DynamicDocument):
